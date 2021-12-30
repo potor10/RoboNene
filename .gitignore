@@ -9,6 +9,9 @@
 # config
 config.json
 
+# logs
+/logs
+
 # local env files
 .env.local
 .env.development.local
