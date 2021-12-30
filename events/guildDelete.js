@@ -6,6 +6,8 @@ module.exports = {
   execute(guild, client, logger) {
     logger.log({
       level: 'info',
+      guild_id: guild.id,
+      guild_name: guild.name,
       message: `Removed From ${guild.name} (id: ${guild.id})`
     })
     client.user.setActivity(BOT_ACTIVITY + 
