@@ -1,0 +1,27 @@
+{
+  "name": "robonene",
+  "version": "1.0.0",
+  "description": "A Prosekai Tiering Discord Bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "better-sqlite3": "7.4.6",
+    "discord.js": "13.4.0",
+    "@discordjs/rest": "0.2.0-canary.0",
+    "@discordjs/builders": "0.10.0",
+    "discord-api-types": "0.26.0",
+    "winston": "3.3.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/potor10/RoboNene.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/potor10/RoboNene/issues"
+  },
+  "homepage": "https://github.com/potor10/RoboNene#readme"
+}
