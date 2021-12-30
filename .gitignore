@@ -7,7 +7,7 @@
 .DS_Store
 
 # config
-.config.json
+config.json
 
 # local env files
 .env.local
