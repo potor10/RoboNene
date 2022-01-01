@@ -6,7 +6,7 @@ module.exports = {
   requiresLink: true,
   data: new SlashCommandBuilder()
     .setName('profile')
-    .setDescription('Display your Project Sekai Profile')
+    .setDescription('Project Sekai Profile')
     .addUserOption(op =>
       op.setName('user')
         .setDescription('Discord user')

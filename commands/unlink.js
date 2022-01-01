@@ -18,11 +18,11 @@ module.exports = {
       sc.setName('authenticate')
         .setDescription('Confirm that the code is set to your Project Sekai profile description')),
   
-  async execute(interaction, logger, userDb) {
+  async execute(interaction, logger, db) {
     switch(interaction.options._subcommand) {
       case 'request':
         const accountId = interaction.options._hoistedOptions[0].value.toString()
-        const sekaiCheck = userDb.prepare('SELECT * FROM users WHERE sekai_id=@sekaiId').all({
+        const sekaiCheck = db.prepare('SELECT * FROM users WHERE sekai_id=@sekaiId').all({
           sekaiId: accountId
         })
 
@@ -30,7 +30,7 @@ module.exports = {
           generatedCodes[interaction.user.id] = {
             code: Math.random().toString(36).slice(-5),
             accountId: accountId,
-            expiry: Math.round(Date.now()/1000) + 300
+            expiry: Math.floor(Date.now()/1000) + 300
           }
           await interaction.reply({
             content: `**Unlink Code:** \`${generatedCodes[interaction.user.id].code}\`\n` + 
@@ -46,7 +46,7 @@ module.exports = {
         }
         break;
       case 'authenticate':
-        const discordCheck = userDb.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
+        const discordCheck = db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
           discordId: interaction.user.id, 
         })
 
@@ -60,14 +60,14 @@ module.exports = {
         }
 
         if (interaction.user.id in generatedCodes) {
-          if (generatedCodes[interaction.user.id].expiry < Math.round(Date.now()/1000)) {
+          if (generatedCodes[interaction.user.id].expiry < Math.floor(Date.now()/1000)) {
             await interaction.reply({
               content: LINK.EXPIRED_CODE_ERR,
               ephemeral: true 
             });
           } else if (Math.random() < 0.5) {
             // Check through the client if the code is set in the description
-            userDb.prepare('DELETE FROM users WHERE sekai_id=@sekaiId').run({
+            db.prepare('DELETE FROM users WHERE sekai_id=@sekaiId').run({
               sekaiId: generatedCodes[interaction.user.id].accountId
             })
 
@@ -95,7 +95,10 @@ module.exports = {
         }
         break;
       default:
-        await interaction.reply(ERR_COMMAND);
+        await interaction.reply({
+          content: ERR_COMMAND,
+          ephemeral: true 
+        });
     }
   }
 }

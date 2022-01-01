@@ -14,10 +14,17 @@ const generateLeaderboard = (page, target) => {
 
   let leaderboardText = ''
   for (i = start; i < end; i++) {
+    let digit = i + 1
+    let rankText = ''
+    while (digit > 0) {
+      rankText = `${LEADERBOARD[digit % 10]}` + rankText;
+      digit = Math.floor(digit / 10)
+    }
+
     if (i + 1 === target) {
-      leaderboardText += `**[${i+1}] ${'temp name'} : ${temp_leader[i]}**`
+      leaderboardText += `**${rankText} ${'temp name'} [${temp_leader[i]}]**`
     } else {
-      leaderboardText += `[${i+1}] ${'temp name'} : ${temp_leader[i]}`
+      leaderboardText += `${rankText} ${'temp name'} [${temp_leader[i]}]`
     }
     if (i != end - 1) {
       leaderboardText += '\n'
@@ -35,38 +42,50 @@ const generateLeaderboard = (page, target) => {
   return leaderboardEmbed
 }
 
+const awaitReactions = (interaction, message, page, target) => {
+  let availableReactions = []
+  const filter = (reaction, user) => {
+    if (page === 0) {
+      availableReactions = [LEADERBOARD.RIGHT]
+    } else if (page === Math.floor(99 / LEADERBOARD.RESULTS_PER_PAGE)) {
+      availableReactions = [LEADERBOARD.LEFT]
+    } else {
+      availableReactions = [LEADERBOARD.LEFT, LEADERBOARD.RIGHT]
+    }
+    return availableReactions.includes(reaction.emoji.name) && user.id === interaction.user.id;
+  };
+
+  message.awaitReactions({ filter, max: 1, time: 60000, errors: ['time'] })
+    .then(async (collected) => {
+      const reaction = collected.first();
+      if (reaction.emoji.name === LEADERBOARD.LEFT) {
+        await message.edit({ embeds: [generateLeaderboard(page-1, target)] })
+        awaitReactions(interaction, message, page-1, target)
+      } else if (reaction.emoji.name === LEADERBOARD.RIGHT) {
+        await message.edit({ embeds: [generateLeaderboard(page+1, target)] })
+        awaitReactions(interaction, message, page+1, target)
+      }
+    })
+    .catch(collected => {});
+}
+
 const createLeaderboard = async (interaction, logger, page, target) => {
-  const message = await interaction.reply({ embeds: [generateLeaderboard(page, target)], fetchReply: true  });
-  message.react('⬅️')
-    .then(() => message.react('➡️'))
+  const message = await interaction.reply({ embeds: [generateLeaderboard(page, target)], fetchReply: true  })
+
+  message.react(LEADERBOARD.LEFT)
+    .then(() => message.react(LEADERBOARD.RIGHT))
     .catch(error => logger.log({
       level: 'error',
       message: `One of the emojis failed to react: ${error}`
     }));
 
-  const filter = (reaction, user) => {
-    return ['⬅️', '➡️'].includes(reaction.emoji.name) && user.id === interaction.user.id;
-  };
-
-  message.awaitReactions({ filter, max: 1, time: 60000, errors: ['time'] })
-	.then(collected => {
-		const reaction = collected.first();
-
-		if (reaction.emoji.name === '⬅️') {
-			message.reply('You reacted with a thumbs up.');
-		} else {
-			message.reply('You reacted with a thumbs down.');
-		}
-	})
-	.catch(collected => {
-		message.reply('You reacted with neither a thumbs up, nor a thumbs down.');
-	});
+  awaitReactions(interaction, message, page, target)
 }
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
-    .setDescription('Display the top 100 players and their scores')
+    .setDescription('Top 100 players and their scores')
     .addIntegerOption(op =>
       op.setName('rank')
         .setDescription('Jump to rank')
@@ -83,7 +102,7 @@ module.exports = {
             });
         } else {
           const target = interaction.options._hoistedOptions[0].value;
-          const page = Math.floor(target / LEADERBOARD.RESULTS_PER_PAGE)
+          const page = Math.floor((target - 1) / LEADERBOARD.RESULTS_PER_PAGE)
           
           createLeaderboard(interaction, logger, page, target) 
         }

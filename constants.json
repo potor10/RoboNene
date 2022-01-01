@@ -1,17 +1,32 @@
 {
+  "BOT_NAME": "Robo Nene",
   "BOT_ACTIVITY": "Dreaming in ",
 
   "ERR_COMMAND": "Could not understand your command, please try again!",
 
   "NENE_COLOR": "#34DD9A",
-  "FOOTER": "Nene Bot",
+  "FOOTER": "Robo Nene",
   "CREDITS": "Created by Potor10#3237, Contributions from Ult#0001",
 
   "NO_ACCESS": "You can not access this command until you link your Discord to a Project Sekai account. Use /link to begin.",
 
   "LEADERBOARD": {
     "RESULTS_PER_PAGE": 10,
-    "BAD_RANGE_ERR": "Error! Please choose a rank within the range of 1 to 100"
+    "BAD_RANGE_ERR": "Error! Please choose a rank within the range of 1 to 100",
+
+    "0": "0️⃣",
+    "1": "1️⃣",
+    "2": "2️⃣",
+    "3": "3️⃣",
+    "4": "4️⃣",
+    "5": "5️⃣",
+    "6": "6️⃣",
+    "7": "7️⃣",
+    "8": "8️⃣",
+    "9": "9️⃣",
+
+    "LEFT": "⬅️",
+    "RIGHT": "➡️"
   },
 
   "LINK": {

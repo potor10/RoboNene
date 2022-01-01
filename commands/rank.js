@@ -10,7 +10,7 @@ module.exports = {
         .setDescription('Discord user')
         .setRequired(false)),
   
-  async execute(interaction, logger, userDb) {
+  async execute(interaction, logger, db) {
 
   }
 }

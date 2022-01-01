@@ -55,14 +55,23 @@ const rest = new REST({ version: '9' }).setToken(token);
 })();
 
 // Initialize the user database instance
-const userDb = new Database('./databases/users.db');
-userDb.prepare('CREATE TABLE IF NOT EXISTS users (discord_id TEXT PRIMARY KEY, sekai_id TEXT)').run()
+const db = new Database('./databases/database.db');
+db.prepare('CREATE TABLE IF NOT EXISTS users ' + 
+  '(discord_id TEXT PRIMARY KEY, sekai_id TEXT, ' + 
+  'rank_warning INTEGER DEFAULT 0, rank_lost INTEGER DEFAULT 0, ' + 
+  'event_time INTEGER DEFAULT 0)').run()
 
 // Initialize the event database instance
-const eventDb = new Database('./databases/event.db');
+db.prepare('CREATE TABLE IF NOT EXISTS events ' + 
+  '(event_id INTEGER, sekai_id TEXT, rank INTEGER, timestamp INTEGER)').run()
+
+// Initialize the tracking database instance
+db.prepare('CREATE TABLE IF NOT EXISTS tracking ' + 
+  '(guild_id TEXT, channel_id TEXT, tracking_type INTEGER)').run()
 
 // Create a new client instance
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+const client = new Client({ 
+  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS] });
 
 for (const file of eventFiles) {
   const event = require(`./events/${file}`);
@@ -71,7 +80,7 @@ for (const file of eventFiles) {
 	} else if (event.requestClient) {
 		client.on(event.name, (...args) => event.execute(...args, client, logger));
 	} else {
-    client.on(event.name, (...args) => event.execute(...args, commands, userDb, eventDb, logger));
+    client.on(event.name, (...args) => event.execute(...args, commands, db, logger));
   }
 }
 

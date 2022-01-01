@@ -2,7 +2,7 @@ const { NO_ACCESS } = require('../constants.json');
 
 module.exports = {
   name: "interactionCreate",
-  async execute(interaction, commands, userDb, eventDb, logger) {
+  async execute(interaction, commands, database, logger) {
     if (!interaction.isCommand()) return;
 
     logger.log({
@@ -31,8 +31,8 @@ module.exports = {
 
           return;
         }
-      } 
-      await commands[interactionIdx].execute(interaction, logger, userDb, eventDb)
+      }
+      await commands[interactionIdx].execute(interaction, logger, database)
     }
 
     //console.log(interaction);
