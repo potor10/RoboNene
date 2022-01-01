@@ -17,44 +17,43 @@ module.exports = {
         .setDescription('Enable or disable the specified alert')
         .setRequired(true)),
   
-  async execute(interaction, logger, db) {
-    console.log(interaction)
-    let alertStatus = (interaction.options._hoistedOptions[1].value) ? 1 : 0
-    let alertAmt = (interaction.options._hoistedOptions.length > 2) ? interaction.options._hoistedOptions[2].value : -1
+  async execute(interaction, commandParams) {
+    console.log(interaction);
+    let alertStatus = (interaction.options._hoistedOptions[1].value) ? 1 : 0;
     switch (interaction.options._hoistedOptions[0].value) {
       case 'rank_warning':
-        db.prepare('UPDATE users SET rank_warning=@alertStatus WHERE discord_id=@discordId').run({
+        commandParams.db.prepare('UPDATE users SET rank_warning=@alertStatus WHERE discord_id=@discordId').run({
           discordId: interaction.user.id,
           alertStatus: alertStatus
-        })
+        });
         await interaction.reply({
           content: `Success! Alerts ${(alertStatus) ? 'enabled' : 'disabled'} ` + 
-            `for rank loss warnings.`,
+            'for rank loss warnings.',
           ephemeral: true 
-        })
-        break
+        });
+        break;
       case 'rank_lost':
-        db.prepare('UPDATE users SET rank_lost=@alertStatus WHERE discord_id=@discordId').run({
+        commandParams.db.prepare('UPDATE users SET rank_lost=@alertStatus WHERE discord_id=@discordId').run({
           discordId: interaction.user.id,
           alertStatus: alertStatus
-        })
+        });
         await interaction.reply({
           content: `Success! Alerts ${(alertStatus) ? 'enabled' : 'disabled'} ` + 
-            `for when your rank is overtaken.`,
+            'for when your rank is overtaken.',
           ephemeral: true 
-        })
-        break
+        });
+        break;
       case 'event_time':
-        db.prepare('UPDATE users SET event_time=@alertStatus WHERE discord_id=@discordId').run({
+        commandParams.db.prepare('UPDATE users SET event_time=@alertStatus WHERE discord_id=@discordId').run({
           discordId: interaction.user.id,
           alertStatus: alertStatus,
-        })
+        });
         await interaction.reply({
           content: `Success! Alerts ${(alertStatus) ? 'enabled' : 'disabled'} ` + 
-            `for events.`,
+            'for events.',
           ephemeral: true 
-        })
-        break
+        });
+        break;
       default:
         await interaction.reply({
           content: ERR_COMMAND,
@@ -62,4 +61,4 @@ module.exports = {
         });
     }
   }
-}
+};

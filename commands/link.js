@@ -1,7 +1,18 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ERR_COMMAND, LINK } = require('../constants.json');
+const { ERR_COMMAND } = require('../constants.json');
 
-const generatedCodes = {}
+const LINK_CONSTANTS = {
+  'DISCORD_LINKED_ERR': 'Error! Your Discord account is already linked to a Project Sekai account.',
+  'SEKAI_LINKED_ERR': 'Error! That Project Sekai account is already linked to another Discord account.',
+
+  'LINK_SUCC': 'Success! Your account is now linked.',
+
+  'EXPIRED_CODE_ERR': 'Error! Your link code has expired',
+  'GEN_ERR': 'Error! Invalid code on Project Sekai profile',
+  'NO_CODE_ERR': 'Error! Please request a link code first.',
+};
+
+const generatedCodes = {};
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -10,7 +21,7 @@ module.exports = {
     .addSubcommand(sc =>
       sc.setName('request')
         .setDescription('Request a code to link your Project Sekai user ID to your Discord Account')
-        .addNumberOption(op =>
+        .addStringOption(op =>
           op.setName('id')
             .setDescription('Your Project Sekai user ID')
             .setRequired(true)))
@@ -18,24 +29,24 @@ module.exports = {
       sc.setName('authenticate')
         .setDescription('Confirm that the code is set to your Project Sekai profile description')),
   
-  async execute(interaction, logger, db) {
+  async execute(interaction, commandParams) {
     switch(interaction.options._subcommand) {
       case 'request':
-        const accountId = interaction.options._hoistedOptions[0].value.toString()
-        const userCheck = db.prepare('SELECT * FROM users WHERE discord_id=@discordId OR sekai_id=@sekaiId').all({
+        const accountId = interaction.options._hoistedOptions[0].value;
+        const userCheck = commandParams.db.prepare('SELECT * FROM users WHERE discord_id=@discordId OR sekai_id=@sekaiId').all({
           discordId: interaction.user.id, 
           sekaiId: accountId
-        })
+        });
 
         if (userCheck.length > 0) {
           if (userCheck[0].discord_id === interaction.user.id) {
             await interaction.reply({
-              content: LINK.DISCORD_LINKED_ERR,
+              content: LINK_CONSTANTS.DISCORD_LINKED_ERR,
               ephemeral: true 
             });
           } else if (userCheck[0].sekai_id === accountId) {
             await interaction.reply({
-              content: LINK.SEKAI_LINKED_ERR,
+              content: LINK_CONSTANTS.SEKAI_LINKED_ERR,
               ephemeral: true 
             });
           } else {
@@ -49,7 +60,7 @@ module.exports = {
             code: Math.random().toString(36).slice(-5),
             accountId: accountId,
             expiry: Math.floor(Date.now()/1000) + 300
-          }
+          };
           await interaction.reply({
             content: `**Link Code:** \`${generatedCodes[interaction.user.id].code}\`\n` + 
               `**Account ID:** \`${generatedCodes[interaction.user.id].accountId}\`\n` + 
@@ -59,55 +70,58 @@ module.exports = {
         }
         break;
       case 'authenticate':
-        const discordCheck = db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
+        const discordCheck = commandParams.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
           discordId: interaction.user.id, 
-        })
+        });
 
         if (discordCheck.length > 0) {
           if (discordCheck[0].discord_id === interaction.user.id) {
             await interaction.reply({
-              content: LINK.DISCORD_LINKED_ERR,
+              content: LINK_CONSTANTS.DISCORD_LINKED_ERR,
               ephemeral: true 
             });
 
-            return
+            return;
           }
         }
 
         if (interaction.user.id in generatedCodes) {
           if (generatedCodes[interaction.user.id].expiry < Math.floor(Date.now()/1000)) {
             await interaction.reply({
-              content: LINK.EXPIRED_CODE_ERR,
+              content: LINK_CONSTANTS.EXPIRED_CODE_ERR,
               ephemeral: true 
             });
-          } else if (Math.random() < 0.5) {
-            // Check through the client if the code is set in the description
-
-            db.prepare('REPLACE INTO users (discord_id, sekai_id) VALUES(@discordId, @sekaiId)').run({
+            return;
+          } 
+          
+          const accountData = await commandParams.api.userProfile(generatedCodes[interaction.user.id].accountId);
+          if (accountData.userProfile.word === generatedCodes[interaction.user.id].code) {
+            commandParams.db.prepare('REPLACE INTO users (discord_id, sekai_id) VALUES(@discordId, @sekaiId)').run({
               discordId: interaction.user.id,
               sekaiId: generatedCodes[interaction.user.id].accountId
-            })
+            });
 
-            logger.log({
+            commandParams.logger.log({
               level: 'info',
               discord_id: interaction.user.id,
               sekai_id: generatedCodes[interaction.user.id].accountId,
-              message: `Added to DB`
-            })
+              message: 'Added to DB',
+              timestamp: Date.now()
+            });
 
             await interaction.reply({
-              content: LINK.LINK_SUCC,
+              content: LINK_CONSTANTS.LINK_SUCC,
               ephemeral: true 
             });
           } else {
             await interaction.reply({
-              content: LINK.GEN_ERR,
+              content: LINK_CONSTANTS.GEN_ERR,
               ephemeral: true 
             });
           }
         } else {
           await interaction.reply({
-            content: LINK.NO_CODE_ERR,
+            content: LINK_CONSTANTS.NO_CODE_ERR,
             ephemeral: true 
           });
         }
@@ -119,4 +133,4 @@ module.exports = {
         });
     }
   }
-}
+};

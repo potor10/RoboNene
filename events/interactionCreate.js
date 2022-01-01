@@ -1,11 +1,11 @@
-const { NO_ACCESS } = require('../constants.json');
+const { BOT_ADMIN_IDS, NO_ACCESS_ADMIN, NO_ACCESS_LINK } = require('../constants.json');
 
 module.exports = {
-  name: "interactionCreate",
-  async execute(interaction, commands, database, logger) {
+  name: 'interactionCreate',
+  async execute(interaction, interactionParams) {
     if (!interaction.isCommand()) return;
 
-    logger.log({
+    interactionParams.logger.log({
       level: 'info',
       discord_id: interaction.user.id,
       discord_name: `${interaction.user.username}#${interaction.user.discriminator}`,
@@ -14,27 +14,46 @@ module.exports = {
       time: Date.now(),
       command: interaction.commandName,
       subcommand: interaction.options._subcommand,
-      inputs: interaction.options._hoistedOptions
+      inputs: interaction.options._hoistedOptions,
+      timestamp: Date.now()
     });
 
-    const interactionIdx = commands.map(c => c.data.name).indexOf(interaction.commandName)
+    const interactionIdx = interactionParams.commands
+      .map(c => c.data.name)
+      .indexOf(interaction.commandName);
+    
     if (interactionIdx != -1) {
-      if (commands[interactionIdx].requiresLink) {
-        const request = userDb.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
-          discordId: interaction.user.id
-        })
-        if (request.length === 0) {
+      if (interactionParams.commands[interactionIdx].adminOnly) {
+        if (!BOT_ADMIN_IDS.includes(interaction.user.id)) {
           await interaction.reply({
-            content: NO_ACCESS,
+            content: NO_ACCESS_ADMIN,
             ephemeral: true 
           });
 
           return;
         }
       }
-      await commands[interactionIdx].execute(interaction, logger, database)
+      
+      if (interactionParams.commands[interactionIdx].requiresLink) {
+        const request = db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
+          discordId: interaction.user.id
+        });
+        if (request.length === 0) {
+          await interaction.reply({
+            content: NO_ACCESS_LINK,
+            ephemeral: true 
+          });
+
+          return;
+        }
+      }
+      await interactionParams.commands[interactionIdx].execute(interaction, {
+        logger: interactionParams.logger, 
+        db: interactionParams.db,
+        api: interactionParams.api
+      });
     }
 
     //console.log(interaction);
   }
-}
+};

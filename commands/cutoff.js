@@ -35,6 +35,6 @@ module.exports = {
         .addChoice('t100000', 100000)),
   
   async execute(interaction, logging, db) {
-    return
+    return;
   }
-}
+};

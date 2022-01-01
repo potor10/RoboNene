@@ -1,6 +1,9 @@
 {
   "BOT_NAME": "Robo Nene",
   "BOT_ACTIVITY": "Dreaming in ",
+  "BOT_ADMIN_IDS": [
+    154775062178824192
+  ],
 
   "ERR_COMMAND": "Could not understand your command, please try again!",
 
@@ -8,40 +11,6 @@
   "FOOTER": "Robo Nene",
   "CREDITS": "Created by Potor10#3237, Contributions from Ult#0001",
 
-  "NO_ACCESS": "You can not access this command until you link your Discord to a Project Sekai account. Use /link to begin.",
-
-  "LEADERBOARD": {
-    "RESULTS_PER_PAGE": 10,
-    "BAD_RANGE_ERR": "Error! Please choose a rank within the range of 1 to 100",
-
-    "0": "0️⃣",
-    "1": "1️⃣",
-    "2": "2️⃣",
-    "3": "3️⃣",
-    "4": "4️⃣",
-    "5": "5️⃣",
-    "6": "6️⃣",
-    "7": "7️⃣",
-    "8": "8️⃣",
-    "9": "9️⃣",
-
-    "LEFT": "⬅️",
-    "RIGHT": "➡️"
-  },
-
-  "LINK": {
-    "DISCORD_LINKED_ERR": "Error! Your Discord account is already linked to a Project Sekai account.",
-    "SEKAI_LINKED_ERR": "Error! That Project Sekai account is already linked to another Discord account.",
-
-    "LINK_SUCC": "Success! Your account is now linked.",
-
-    "EXPIRED_CODE_ERR": "Error! Your link code has expired",
-    "GEN_ERR": "Error! Invalid code on Project Sekai profile",
-    "NO_CODE_ERR": "Error! Please request a link code first.",
-
-    "NO_SEKAI_ERR": "Error! This Project Sekai account is not linked to any Discord account.",
-    "NO_DISCORD_LINK": "Error! This Discord account is not linked to any Project Sekai account.",
-
-    "UNLINK_SUCC": "Success! Your account is now unlinked."
-  }
+  "NO_ACCESS_ADMIN": "You can not access this command.",
+  "NO_ACCESS_LINK": "You can not access this command until you link your Discord to a Project Sekai account. Use /link to begin."
 }

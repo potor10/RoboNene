@@ -40,4 +40,4 @@ module.exports = {
       await interaction.reply(JSON.stringify(interaction.options._hoistedOptions));
     }
   }
-}
+};

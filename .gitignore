@@ -11,7 +11,7 @@ config.json
 
 # logs and databses
 /logs
-/databases
+/databses
 
 # local env files
 .env.local
