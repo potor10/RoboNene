@@ -7,15 +7,16 @@ module.exports = {
     .setName('about')
     .setDescription('About Robo Nene'),
   
-  async execute(interaction) {
+  async execute(interaction, commandParams) {
     const aboutEmbed = new MessageEmbed()
       .setColor(NENE_COLOR)
       .setTitle(`About ${BOT_NAME}`)
-      .setDescription('')
+      .setDescription('Contributions and Credits')
+      .setThumbnail(commandParams.client.user.displayAvatarURL())
       .addFields(
-        { name: '**Programming**', value: 'Potor10#3237\nUlt#0001\nRedside#1337' },
-        { name: '**Design**', value: 'Potor10#3237\nReinhäla#4444' },
-        { name: '**Testing**', value: 'Potor10#3237\nReinhäla#4444' },
+        { name: '**Programming**', value: 'Potor10#3237\nUlt#0001\nRedside#1337\nYuu#6883', inline: true},
+        { name: '**Design**', value: 'Potor10#3237\nReinhäla#4444', inline: true},
+        { name: '**Testing**', value: 'Potor10#3237\nReinhäla#4444', inline: true },
         { name: '**Schedule Data**', value: '[Sekai World](https://github.com/Sekai-World/sekai-master-db-en-diff/blob/main/events.json)' },
         { name: '**Discord**', value: 'Robo Nene logs the usage of her commands to prevent abuse. ' + 
           'Outside of the use of her commands, Robo Nene does not collect any user data, chat logs, or server information. ' + 
@@ -29,7 +30,7 @@ module.exports = {
         { name: '**License**', value: 'MIT' },
       )
       .setTimestamp()
-      .setFooter(FOOTER, 'https://i.imgur.com/AfFp7pu.png');
+      .setFooter(FOOTER, commandParams.client.user.displayAvatarURL());
 
     await interaction.reply({ embeds: [aboutEmbed] });
   }

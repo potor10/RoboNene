@@ -51,15 +51,16 @@ const getSchedule = (logger) => {
     });
   });
 
-  let nextReset = getNextReset(new Date());
-  let eta_ms = nextReset.getTime() - Date.now(); 
   logger.log({
     level: 'info',
     message: 'Retrieved schedule data',
     timestamp: Date.now()
   });
+
+  let nextReset = getNextReset(new Date());
+  let eta_ms = nextReset.getTime() - Date.now();
   console.log(`Schedule Retrieved, Pausing For ${eta_ms} ms`);
-  setTimeout(getSchedule, eta_ms);
+  setTimeout(() => {getSchedule(logger)}, eta_ms);
 };
 
 module.exports = getSchedule;

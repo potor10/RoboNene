@@ -17,7 +17,7 @@ const getNextReset = (currentDate) => {
   return Math.floor(nextReset.getTime() / 1000);
 };
 
-const createScheduleEmbed = (data) => {
+const createScheduleEmbed = (data, client) => {
   let currentDate = new Date();
   let nextReset = getNextReset(currentDate);
   let currentEventIdx = -1;
@@ -46,7 +46,7 @@ const createScheduleEmbed = (data) => {
       { name: '** **', value: '** **' },
     )
     .setTimestamp()
-    .setFooter(FOOTER, 'https://i.imgur.com/AfFp7pu.png');
+    .setFooter(FOOTER, client.user.avatar_url);
 
   if (currentEventIdx !== -1) {
     let startTime = Math.floor(data[currentEventIdx].startAt / 1000);
@@ -80,9 +80,9 @@ module.exports = {
     .setName('schedule')
     .setDescription('Event Schedule Times'),
   
-  async execute(interaction) {
+  async execute(interaction, commandParams) {
     const schedule = JSON.parse(fs.readFileSync('./schedule.json'));
-    const scheduleEmbed = createScheduleEmbed(schedule);
+    const scheduleEmbed = createScheduleEmbed(schedule, commandParams.client);
     await interaction.reply({ embeds: [scheduleEmbed] });
   }    
 };

@@ -24,7 +24,7 @@ module.exports = {
     
     if (interactionIdx != -1) {
       if (interactionParams.commands[interactionIdx].adminOnly) {
-        if (!BOT_ADMIN_IDS.includes(interaction.user.id)) {
+        if (!(BOT_ADMIN_IDS.includes(interaction.user.id))) {
           await interaction.reply({
             content: NO_ACCESS_ADMIN,
             ephemeral: true 
@@ -35,7 +35,8 @@ module.exports = {
       }
       
       if (interactionParams.commands[interactionIdx].requiresLink) {
-        const request = db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
+        const request = interactionParams.db.prepare('SELECT * FROM users ' +
+          'WHERE discord_id=@discordId').all({
           discordId: interaction.user.id
         });
         if (request.length === 0) {
@@ -48,6 +49,7 @@ module.exports = {
         }
       }
       await interactionParams.commands[interactionIdx].execute(interaction, {
+        client: interactionParams.client,
         logger: interactionParams.logger, 
         db: interactionParams.db,
         api: interactionParams.api

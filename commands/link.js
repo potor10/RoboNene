@@ -7,6 +7,9 @@ const LINK_CONSTANTS = {
 
   'LINK_SUCC': 'Success! Your account is now linked.',
 
+  'WRONG_ACC_ERR': 'Error! There was an issue in finding this account. Please request a new link code.' + 
+    'Make sure all the digits are typed correctly.',
+
   'EXPIRED_CODE_ERR': 'Error! Your link code has expired',
   'GEN_ERR': 'Error! Invalid code on Project Sekai profile',
   'NO_CODE_ERR': 'Error! Please request a link code first.',
@@ -95,6 +98,17 @@ module.exports = {
           } 
           
           const accountData = await commandParams.api.userProfile(generatedCodes[interaction.user.id].accountId);
+
+          if (accountData.httpStatus) {
+            await interaction.reply({
+              content: LINK_CONSTANTS.WRONG_ACC_ERR,
+              ephemeral: true 
+            });
+
+            delete generatedCodes[interaction.user.id]
+            return
+          }
+
           if (accountData.userProfile.word === generatedCodes[interaction.user.id].code) {
             commandParams.db.prepare('REPLACE INTO users (discord_id, sekai_id) VALUES(@discordId, @sekaiId)').run({
               discordId: interaction.user.id,

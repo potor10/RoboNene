@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { ERR_COMMAND } = require('../constants.json');
 
 module.exports = {
   adminOnly: true,
@@ -22,47 +23,52 @@ module.exports = {
   
   async execute(interaction, commandParams) {
     console.log(interaction);
-    let alertStatus = (interaction.options._hoistedOptions[2].value) ? 1 : 0;
+    console.log(JSON.stringify(interaction.options))
+
+    const channelData = interaction.options._hoistedOptions[0]
+    if (channelData.channel.type !== 'GUILD_TEXT') {
+      await interaction.reply({
+        content: 'Error! The channel you have selected is not a valid text channel',
+        ephemeral: true 
+      });
+
+      return
+    }
+
+    if (interaction.options._hoistedOptions[2].value) {
+      commandParams.db.prepare('INSERT INTO tracking (guild_id, channel_id, tracking_type) ' + 
+        'VALUES (@guildId, @channelId, @trackingType)').run({
+        guildId: channelData.channel.guildId,
+        channelId: channelData.value,
+        trackingType: interaction.options._hoistedOptions[1].value
+      });
+      await interaction.reply({
+        content: `Success! ${interaction.options._hoistedOptions[1].value} min ` + 
+          'tracking alerts enabled in ' +
+          `channel #${channelData.channel.name}.`,
+        ephemeral: true 
+      });
+    } else {
+      const query = commandParams.db.prepare('DELETE FROM tracking WHERE ' + 
+        'guild_id=@guildId AND channel_id=@channelId AND tracking_type=@trackingType').run({
+          guildId: channelData.channel.guildId,
+          channelId: channelData.value,
+        trackingType: interaction.options._hoistedOptions[1].value
+      });
     
-    switch (interaction.options._hoistedOptions[0].value) {
-      case 'rank_warning':
-        commandParams.db.prepare('UPDATE users SET rank_warning=@alertStatus WHERE discord_id=@discordId').run({
-          discordId: interaction.user.id,
-          alertStatus: alertStatus
-        });
+      if (query.changes === 1) {
         await interaction.reply({
-          content: `Success! Alerts ${(alertStatus) ? 'enabled' : 'disabled'} ` + 
-            'for rank loss warnings.',
+          content: `Success! ${interaction.options._hoistedOptions[1].value} min ` + 
+            'tracking alerts disabled in ' +
+            `channel #${channelData.channel.name}.`,
           ephemeral: true 
         });
-        break;
-      case 'rank_lost':
-        commandParams.db.prepare('UPDATE users SET rank_lost=@alertStatus WHERE discord_id=@discordId').run({
-          discordId: interaction.user.id,
-          alertStatus: alertStatus
-        });
+      } else {
         await interaction.reply({
-          content: `Success! Alerts ${(alertStatus) ? 'enabled' : 'disabled'} ` + 
-            'for when your rank is overtaken.',
+          content: 'Error! There are no tracking alerts for these parameters',
           ephemeral: true 
         });
-        break;
-      case 'event_time':
-        commandParams.db.prepare('UPDATE users SET event_time=@alertStatus WHERE discord_id=@discordId').run({
-          discordId: interaction.user.id,
-          alertStatus: alertStatus,
-        });
-        await interaction.reply({
-          content: `Success! Alerts ${(alertStatus) ? 'enabled' : 'disabled'} ` + 
-            'for events.',
-          ephemeral: true 
-        });
-        break;
-      default:
-        await interaction.reply({
-          content: ERR_COMMAND,
-          ephemeral: true 
-        });
+      }
     }
   }
 };

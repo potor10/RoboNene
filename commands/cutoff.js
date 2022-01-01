@@ -21,20 +21,18 @@ module.exports = {
         .addChoice('t80', 80)
         .addChoice('t90', 90)
         .addChoice('t100', 100)
+        .addChoice('t200', 200)
+        .addChoice('t300', 300)
+        .addChoice('t400', 400)
         .addChoice('t500', 500)
         .addChoice('t1000', 1000)
         .addChoice('t2000', 2000)
         .addChoice('t3000', 3000)
         .addChoice('t4000', 4000)
         .addChoice('t5000', 5000)
-        .addChoice('t10000', 10000)
-        .addChoice('t20000', 20000)
-        .addChoice('t30000', 30000)
-        .addChoice('t40000', 40000)
-        .addChoice('t50000', 50000)
-        .addChoice('t100000', 100000)),
+        .addChoice('t10000', 10000)),
   
-  async execute(interaction, logging, db) {
+  async execute(interaction, commandParams) {
     return;
   }
 };

@@ -12,6 +12,7 @@ const winston = require('winston');
 
 // Import Scripts
 const getSchedule = require('./scripts/getSchedule');
+const getRankingData = require('./scripts/getRankingData');
 
 const commands = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
@@ -34,6 +35,29 @@ const logger = winston.createLogger({
   ],
 });
 
+// Sekai Api Init
+const api = new SekaiClient();
+
+// Create a new client instance
+const client = new Client({ 
+  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS] });
+
+// Initialize the user database instance
+const db = new Database('./databases/database.db');
+db.prepare('CREATE TABLE IF NOT EXISTS users ' + 
+  '(discord_id TEXT PRIMARY KEY, sekai_id TEXT, ' + 
+  'rank_warning INTEGER DEFAULT 0, rank_lost INTEGER DEFAULT 0, ' + 
+  'event_time INTEGER DEFAULT 0)').run();
+
+// Initialize the event database instance
+db.prepare('CREATE TABLE IF NOT EXISTS events ' + 
+  '(event_id INTEGER, sekai_id TEXT, name TEXT, ' + 
+  'rank INTEGER, score INTEGER, timestamp INTEGER)').run();
+
+// Initialize the tracking database instance
+db.prepare('CREATE TABLE IF NOT EXISTS tracking ' + 
+  '(guild_id TEXT, channel_id TEXT, tracking_type INTEGER)').run();
+
 // Parse commands
 for (const file of commandFiles) {
 	const command = require(`./commands/${file}`);
@@ -41,9 +65,26 @@ for (const file of commandFiles) {
 	commands.push(command);
 }
 
-const rest = new REST({ version: '9' }).setToken(token);
+// Parse events
+for (const file of eventFiles) {
+  const event = require(`./events/${file}`);
+	if (event.once) {
+		client.once(event.name, (...args) => event.execute(...args));
+	} else if (event.requestClient) {
+		client.on(event.name, (...args) => event.execute(...args, client, logger));
+	} else {
+    client.on(event.name, (...args) => event.execute(...args, {
+      client: client,
+      commands: commands, 
+      db: db, 
+      logger: logger, 
+      api: api
+    }));
+  }
+}
 
 // Register the slash commands with Discord
+const rest = new REST({ version: '9' }).setToken(token);
 (async () => {
 	try {
     commandNames = commands.map(c => c.data.name);
@@ -60,48 +101,19 @@ const rest = new REST({ version: '9' }).setToken(token);
 	}
 })();
 
-// Initialize the user database instance
-const db = new Database('./databases/database.db');
-db.prepare('CREATE TABLE IF NOT EXISTS users ' + 
-  '(discord_id TEXT PRIMARY KEY, sekai_id TEXT, ' + 
-  'rank_warning INTEGER DEFAULT 0, rank_lost INTEGER DEFAULT 0, ' + 
-  'event_time INTEGER DEFAULT 0)').run();
+// Wait for API to finish before continuing
+(async () => {
+  await api.login()
 
-// Initialize the event database instance
-db.prepare('CREATE TABLE IF NOT EXISTS events ' + 
-  '(event_id INTEGER, sekai_id TEXT, rank INTEGER, timestamp INTEGER)').run();
+  // Login to Discord with your client's token
+  await client.login(token);
 
-// Initialize the tracking database instance
-db.prepare('CREATE TABLE IF NOT EXISTS tracking ' + 
-  '(guild_id TEXT, channel_id TEXT, tracking_type INTEGER)').run();
+  // Begin the scripts
+  getRankingData(logger, client, api, db)
+  getSchedule(logger);
+})();
 
-// Begin The Scripts
-getSchedule(logger);
-const api = new SekaiClient();
 
-// Create a new client instance
-const client = new Client({ 
-  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS] });
-
-// Parse events
-for (const file of eventFiles) {
-  const event = require(`./events/${file}`);
-	if (event.once) {
-		client.once(event.name, (...args) => event.execute(...args));
-	} else if (event.requestClient) {
-		client.on(event.name, (...args) => event.execute(...args, client, logger));
-	} else {
-    client.on(event.name, (...args) => event.execute(...args, {
-      commands: commands, 
-      db: db, 
-      logger: logger, 
-      api: api
-    }));
-  }
-}
-
-// Login to Discord with your client's token
-client.login(token);
 
 // Initialize script to begin scraping data from the event
 /**

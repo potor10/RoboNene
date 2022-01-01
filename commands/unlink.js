@@ -12,6 +12,9 @@ const UNLINK_CONSTANTS = {
   'NO_SEKAI_ERR': 'Error! This Project Sekai account is not linked to any Discord account.',
   'NO_DISCORD_LINK': 'Error! This Discord account is not linked to any Project Sekai account.',
 
+  'WRONG_ACC_ERR': 'Error! There was an issue in finding this account. Please request a new link code.' + 
+    'Make sure all the digits are typed correctly.',
+
   'UNLINK_SUCC': 'Success! Your account is now unlinked.'
 };
 
@@ -83,6 +86,17 @@ module.exports = {
           } 
 
           const accountData = await commandParams.api.userProfile(generatedCodes[interaction.user.id].accountId);
+          
+          if (accountData.httpStatus) {
+            await interaction.reply({
+              content: LINK_CONSTANTS.WRONG_ACC_ERR,
+              ephemeral: true 
+            });
+
+            delete generatedCodes[interaction.user.id]
+            return
+          }
+
           if (accountData.userProfile.word === generatedCodes[interaction.user.id].code) {
             // Check through the client if the code is set in the description
             commandParams.db.prepare('DELETE FROM users WHERE sekai_id=@sekaiId').run({
