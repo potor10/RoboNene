@@ -9,8 +9,9 @@
 # config
 config.json
 
-# logs
+# logs and databses
 /logs
+/databases
 
 # local env files
 .env.local
