@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ERR_COMMAND } = require('../constants.json');
+const { ERR_COMMAND } = require('../../constants.json');
 
 module.exports = {
   data: new SlashCommandBuilder()

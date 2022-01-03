@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ERR_COMMAND } = require('../constants.json');
+const { ERR_COMMAND } = require('../../constants.json');
 
 const UNLINK_CONSTANTS = {
   'DISCORD_LINKED_ERR': 'Error! Your Discord account is already linked to a Project Sekai account.',

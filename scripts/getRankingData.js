@@ -28,7 +28,7 @@ const generateTracking = (data, currentRankingEvent, currentTimestamp, client) =
     let rank = " ".repeat(maxRankLength - user.rank.toString().length) + user.rank
     let name = " ".repeat(maxNameLength - user.name.length) + user.name
     let score = " ".repeat(maxScoreLength - user.score.toString().length) + user.score
-    leaderboardText += `\`${rank} ${name} [${score}]\`\n`
+    leaderboardText += `\`\`${rank} ${name} [${score}]\`\`\n`
   })
 
   const leaderboardEmbed = new MessageEmbed()

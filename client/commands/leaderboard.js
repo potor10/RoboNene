@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../constants.json');
-const { getEvent } = require('../scripts/getEvent');
+const { NENE_COLOR, FOOTER } = require('../../constants.json');
+const { getEvent } = require('../../scripts/getEvent');
 
 const LEADERBOARD_CONSTANTS = {
   'RESULTS_PER_PAGE': 10,
@@ -44,7 +44,7 @@ const generateLeaderboard = (leaderboardParams) => {
       leaderboardParams.rankingData[i].score.toString().length) + 
       leaderboardParams.rankingData[i].score
     
-    leaderboardText += `\`${rank} ${name} [${score}]\``;
+    leaderboardText += `\`\`${rank} ${name} [${score}]\`\``;
     if (i + 1 === leaderboardParams.target) {
       leaderboardText += '⭐';
     } 
