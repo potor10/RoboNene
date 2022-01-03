@@ -1,4 +1,4 @@
-const { BOT_ACTIVITY } = require('../../constants.json');
+const { BOT_ACTIVITY } = require('../../constants');
 
 module.exports = {
   name: 'ready',

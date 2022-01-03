@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../../constants.json');
+const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
 
 const getNextReset = (currentDate) => {

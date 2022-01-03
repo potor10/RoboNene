@@ -1,4 +1,4 @@
-const { BOT_ADMIN_IDS } = require('../../constants.json');
+const { BOT_ADMIN_IDS } = require('../../constants');
 
 const INTERACTION_CONST = {
   "NO_ACCESS_ADMIN": "You can not access this command.",

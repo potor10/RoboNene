@@ -1,37 +1,15 @@
 const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../constants.json');
+const { RESULTS_PER_PAGE, NENE_COLOR, FOOTER } = require('../constants');
 const RANKING_RANGE = require('./rankingRange.json')
 const fs = require('fs');
+const generateRankingText = require('../client/methods/generateRankingText')
+
 
 const trackingChannels = {}
 
 const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
   const generateTrackingEmbed = () => {
-    let maxRankLength = 0
-    let maxNameLength = 0
-    let maxScoreLength = 0
-  
-    data.slice(0, 10).forEach((user) => {
-      if (user.rank.toString().length > maxRankLength) {
-        maxRankLength = user.rank.toString().length
-      }
-      if (user.name.length > maxNameLength) {
-        maxNameLength = user.name.length
-      }
-      if (user.score.toString().length > maxScoreLength) {
-        const commaAmt = Math.floor(user.score.toString().length / 3)
-        maxScoreLength = user.score.toString().length + commaAmt
-      }
-    })
-  
-    let leaderboardText = '';
-    data.slice(0, 10).forEach((user) => {
-      let rank = " ".repeat(maxRankLength - user.rank.toString().length) + user.rank
-      let name = user.name + " ".repeat(maxNameLength - user.name.length)
-      let score = " ".repeat(maxScoreLength - user.score.toString().length) + 
-        user.score.toLocaleString()
-      leaderboardText += `\`\`${rank} ${name} ${score}\`\`\n`
-    })
+    let leaderboardText = generateRankingText(data.slice(0, RESULTS_PER_PAGE), 0, 0)
   
     const leaderboardEmbed = new MessageEmbed()
       .setColor(NENE_COLOR)

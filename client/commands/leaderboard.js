@@ -1,10 +1,10 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER, REPLY_TIMEOUT, TIMEOUT_ERR } = require('../../constants.json');
+const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE, 
+  REPLY_TIMEOUT, TIMEOUT_ERR, NO_EVENT_ERR } = require('../../constants');
+const generateRankingText = require('../methods/generateRankingText')
 
 const LEADERBOARD_CONSTANTS = {
-  'RESULTS_PER_PAGE': 10,
-  'NO_EVENT_ERR': 'There is currently no event going on',
   'BAD_RANGE_ERR': 'Error! Please choose a rank within the range of 1 to 100',
 
   'LEFT': '⬅️',
@@ -12,54 +12,19 @@ const LEADERBOARD_CONSTANTS = {
 };
 
 const createLeaderboard = async (interaction, leaderboardParams) => {
-  const generateLeaderboardEmbed = () => {
-    const start = leaderboardParams.page * LEADERBOARD_CONSTANTS.RESULTS_PER_PAGE;
-    const end = start + LEADERBOARD_CONSTANTS.RESULTS_PER_PAGE;
-  
-    let maxRankLength = 0
-    let maxNameLength = 0
-    let maxScoreLength = 0
-  
-    for (i = start; i < end; i++) {
-      if (leaderboardParams.rankingData[i].rank.toString().length > maxRankLength) {
-        maxRankLength = leaderboardParams.rankingData[i].rank.toString().length
-      }
-      if (leaderboardParams.rankingData[i].name.length > maxNameLength) {
-        maxNameLength = leaderboardParams.rankingData[i].name.length
-      }
-      if (leaderboardParams.rankingData[i].score.toString().length > maxScoreLength) {
-        const scoreStrLen = leaderboardParams.rankingData[i].score.toString().length
-        const commaAmt = Math.floor(scoreStrLen/3)
-        maxScoreLength = scoreStrLen + commaAmt
-      }
-    }
-  
-    let leaderboardText = '';
-    for (i = start; i < end; i++) {
-      let rank = " ".repeat(maxRankLength - 
-        leaderboardParams.rankingData[i].rank.toString().length) + 
-        leaderboardParams.rankingData[i].rank
-      let name = leaderboardParams.rankingData[i].name + 
-        " ".repeat(maxNameLength - 
-        leaderboardParams.rankingData[i].name.length) 
-      let score = " ".repeat(maxScoreLength - 
-        leaderboardParams.rankingData[i].score.toString().length) + 
-        leaderboardParams.rankingData[i].score.toLocaleString()
-      
-      leaderboardText += `\`\`${rank} ${name} ${score}\`\``;
-      if (i + 1 === leaderboardParams.target) {
-        leaderboardText += '⭐';
-      } 
-      leaderboardText += '\n';
-    }
+  const generateLeaderboardEmbed = ({client, event, page, rankingData, target}) => {
+    const start = page * RESULTS_PER_PAGE;
+    const end = start + RESULTS_PER_PAGE;
+
+    let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target)
   
     const leaderboardEmbed = new MessageEmbed()
       .setColor(NENE_COLOR)
-      .setTitle(`${leaderboardParams.event.name}`)
+      .setTitle(`${event.name}`)
       .setDescription('T100 Leaderboard')
-      .addField(`Page ${leaderboardParams.page+1}`, leaderboardText, false)
+      .addField(`Page ${page+1}`, leaderboardText, false)
       .setTimestamp()
-      .setFooter(FOOTER, leaderboardParams.client.user.displayAvatarURL());
+      .setFooter(FOOTER, client.user.displayAvatarURL());
   
     return leaderboardEmbed;
   };
@@ -79,7 +44,7 @@ const createLeaderboard = async (interaction, leaderboardParams) => {
       if (leaderboardParams.page === 0) {
         availableReactions = [LEADERBOARD_CONSTANTS.RIGHT];
       } else if (leaderboardParams.page === 
-        Math.floor(99 / LEADERBOARD_CONSTANTS.RESULTS_PER_PAGE)) {
+        Math.floor((leaderboardParams.rankingData.length - 1) / RESULTS_PER_PAGE)) {
         availableReactions = [LEADERBOARD_CONSTANTS.LEFT];
       } else {
         availableReactions = [LEADERBOARD_CONSTANTS.LEFT, LEADERBOARD_CONSTANTS.RIGHT];
@@ -119,7 +84,7 @@ module.exports = {
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {
       await interaction.reply({
-        content: LEADERBOARD_CONSTANTS.NO_EVENT_ERR,
+        content: NO_EVENT_ERR,
         ephemeral: true 
       });
       return
@@ -148,7 +113,7 @@ module.exports = {
               });
           } else {
             const target = interaction.options._hoistedOptions[0].value;
-            const page = Math.floor((target - 1) / LEADERBOARD_CONSTANTS.RESULTS_PER_PAGE);
+            const page = Math.floor((target - 1) / RESULTS_PER_PAGE);
             
             createLeaderboard(interaction, {
               client: discordClient.client,

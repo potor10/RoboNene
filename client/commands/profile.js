@@ -1,6 +1,71 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../../constants.json');
+const { NENE_COLOR, FOOTER, REPLY_TIMEOUT, TIMEOUT_ERR } = require('../../constants');
+
+const PROF_CONSTANTS = {
+  'NO_ACC_ERROR': 'Error! This user does not have an account with the bot',
+  "BAD_INPUT_ERROR": "BAD"
+};
+
+const generateProfileEmbed = (discordId, discordClient, data) => {
+  const discordUser = discordClient.client.users.cache.get(discordId)
+  // userChallengeLiveSoloStages challenge rank
+  const profileEmbed = new MessageEmbed()
+    .setColor(NENE_COLOR)
+    .setTitle(`${discordUser.username}'s Profile`)
+    .setAuthor({ name: `${discordUser.username}`, iconURL: `${discordUser.displayAvatarURL()}` })
+    .setDescription('Project Sekai Profile')
+    .setThumbnail('')
+    .addFields(
+      { name: 'Name', value: `${data.user.userGamedata.name}`, inline: true },
+      { name: 'User ID', value: `${data.user.userGamedata.userId}`, inline: true },
+      { name: 'Rank', value: `${data.user.userGamedata.rank}`, inline: true },
+      { name: 'Description', value: `${data.userProfile.word}` },
+      { name: 'Twitter', value: `${data.userProfile.twitterId}` },
+      { name: 'Cards', value: `${JSON.stringify(data.userDecks).substring(0, 1000)}` },
+      { name: 'Cards2', value: `${JSON.stringify(data.userCards).substring(0, 1000)}` },
+      { name: 'Character Ranks', value: `${(JSON.stringify(data.userCharacters)).substring(0, 1000)}` },
+      { name: 'Area Items', value: `${JSON.stringify(data.userAreaItems).substring(0, 1000)}` },
+    )
+    .setImage('')
+    .setTimestamp()
+    .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
+
+  return profileEmbed 
+}
+
+const getProfile = (interaction, discordClient, discordId, userId) => {
+  let replied = false
+  discordClient.addSekaiRequest('profile', {
+    userId: userId
+  }, async (response) => {
+    if (interaction.replied) {
+      return
+    } else if (response.httpRequest) {
+      await interaction.reply({
+        content: PROF_CONSTANTS.BAD_INPUT_ERROR,
+        ephemeral: true 
+      });
+      replied = true
+      return
+    }
+
+    const profileEmbed = generateProfileEmbed(discordId, discordClient, response)
+    await interaction.reply({
+      embeds: [profileEmbed]
+    });
+    replied = true
+  })
+
+  setTimeout(async () => {
+    if (!replied) {
+      await interaction.reply({
+        content: TIMEOUT_ERR,
+        ephemeral: true 
+      });
+    }
+  }, REPLY_TIMEOUT)
+}
 
 module.exports = {
   requiresLink: true,
@@ -12,32 +77,23 @@ module.exports = {
         .setDescription('Discord user')
         .setRequired(false)),
 
-  async execute(interaction) {
+  async execute(interaction, discordClient) {
+    const target = (interaction.options._hoistedOptions.length) ? 
+      interaction.options._hoistedOptions[0].value :
+      interaction.user.id
     
-    if (interaction.options._hoistedOptions.length > 0) {
-      // User has targeted another user
-      const exampleEmbed = new MessageEmbed()
-        .setColor(NENE_COLOR)
-        .setTitle(`${'some name'}'s Profile`)
-        .setURL('https://discord.js.org/')
-        .setAuthor({ name: 'Some name', iconURL: 'https://i.imgur.com/AfFp7pu.png', url: 'https://discord.js.org' })
-        .setDescription('Some description here')
-        .setThumbnail('https://i.imgur.com/AfFp7pu.png')
-        .addFields(
-          { name: 'Regular field title', value: 'Some value here' },
-          { name: '\u200B', value: '\u200B' },
-          { name: 'Inline field title', value: 'Some value here', inline: true },
-          { name: 'Inline field title', value: 'Some value here', inline: true },
-        )
-        .addField('Inline field title', 'Some value here', true)
-        .setImage('https://i.imgur.com/AfFp7pu.png')
-        .setTimestamp()
-        .setFooter(FOOTER, 'https://i.imgur.com/AfFp7pu.png');
+    const user = discordClient.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
+      discordId: target
+    })
 
-        await interaction.reply({ embeds: [exampleEmbed] });
-    } else {
-      // User has not targeted another user
-      await interaction.reply(JSON.stringify(interaction.options._hoistedOptions));
+    if (user.length === 0) {
+      await interaction.reply({
+        content: PROF_CONSTANTS.NO_ACC_ERROR,
+        ephemeral: true 
+      });
+      return
     }
+
+    getProfile(interaction, discordClient, target, user[0].sekai_id)
   }
 };

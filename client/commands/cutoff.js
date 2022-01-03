@@ -1,14 +1,12 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER, REPLY_TIMEOUT, TIMEOUT_ERR } = require('../../constants.json');
-
-const CUTOFF_CONSTANTS = {
-  'NO_EVENT_ERR': 'There is currently no event going on',
-};
+const { NENE_COLOR, FOOTER, REPLY_TIMEOUT, 
+  TIMEOUT_ERR, NO_EVENT_ERR } = require('../../constants');
 
 const generateCutoffEmbed = (event, timestamp, tier, data, discordClient) => {
   let score = 'N/A'
   let scorePerHourAll = 'N/A'
+  let timestamp1H = Date.now()
   let scorePerHour1H = 'N/A'
   let estimatedScore = 'N/A'
 
@@ -27,7 +25,7 @@ const generateCutoffEmbed = (event, timestamp, tier, data, discordClient) => {
     const results = discordClient.db.prepare('SELECT * FROM events WHERE ' + 
       'event_id=@eventId AND ' +
       'rank=@rank AND ' + 
-      'timestamp>@timestamp ' + 
+      'timestamp>=@timestamp ' + 
       'ORDER BY timestamp ASC').all({
       eventId: event.id,
       rank: tier,
@@ -36,6 +34,7 @@ const generateCutoffEmbed = (event, timestamp, tier, data, discordClient) => {
 
     if (results.length > 0) {
       const closestScore1H = results[0]
+      timestamp1H = closestScore1H.timestamp
       const msDifference = timestamp - closestScore1H.timestamp
       const score1HPerMs = (data.score - closestScore1H.score) / msDifference
 
@@ -58,7 +57,7 @@ const generateCutoffEmbed = (event, timestamp, tier, data, discordClient) => {
     .setDescription(`<t:${timestampSeconds}> - <t:${timestampSeconds}:R>`)
     .addField(`Score`, `\`${score}\``)
     .addField(`Score/h`, `\`${scorePerHourAll}\``)
-    .addField(`Score/h (Last Hour)`, `\`${scorePerHour1H}\``)
+    .addField(`Score/h From <t:${Math.floor(timestamp1H/1000)}:R>`, `\`${scorePerHour1H}\``)
     .addField(`Estimated Score`, `\`${estimatedScore}\``)
     .addField(`Estimated Score (Smoothing)`, `\`${'N/A'}\``)
     .setTimestamp()
@@ -103,7 +102,7 @@ module.exports = {
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {
       await interaction.reply({
-        content: CUTOFF_CONSTANTS.NO_EVENT_ERR,
+        content: NO_EVENT_ERR,
         ephemeral: true 
       });
       return

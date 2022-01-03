@@ -1,5 +1,5 @@
 const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../constants.json');
+const { NENE_COLOR, FOOTER } = require('../constants');
 const https = require('https');
 const fs = require('fs');
 
