@@ -110,7 +110,7 @@ const rest = new REST({ version: '9' }).setToken(token);
 
   // Begin the scripts
   getRankingData(logger, client, api, db)
-  getSchedule(logger);
+  getSchedule(logger, client, db);
 })();
 
 

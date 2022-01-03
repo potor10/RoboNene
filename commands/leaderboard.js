@@ -123,14 +123,8 @@ module.exports = {
       return
     }
 
-    const rankingData = await commandParams.db.prepare('SELECT * FROM events ' + 
-      'WHERE event_id=@eventId AND rank<=@maxRank AND ' +
-      'timestamp=(SELECT MAX(timestamp) FROM events)').all({
-        eventId: currentEvent.id,
-        maxRank: 100,
-      })
-
-    console.log(rankingData.length)
+    const rankingData = (await commandParams.api.eventRanking(currentEvent.id, 
+      {targetRank: 1, lowerLimit: 99})).rankings
 
     if (interaction.options._hoistedOptions.length > 0) {
       // User has selected a specific rank to jump to

@@ -2,7 +2,9 @@ const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../constants.json');
 const { getRankingEvent } = require('../scripts/getEvent');
 
-const generateTracking = (data, client) => {
+const trackingChannels = {}
+
+const generateTracking = (data, currentRankingEvent, currentTimestamp, client) => {
   console.log(data.length)
 
   let maxRankLength = 0
@@ -31,74 +33,83 @@ const generateTracking = (data, client) => {
 
   const leaderboardEmbed = new MessageEmbed()
     .setColor(NENE_COLOR)
-    .setTitle(`${'event name'} Leaderboard`)
-    .addField('T100 Leaderboard', leaderboardText, false)
+    .setTitle(`${currentRankingEvent.name}`)
+    .addField(`<t:${currentTimestamp}:R>`, 
+      leaderboardText, false)
     .setTimestamp()
     .setFooter(FOOTER, client.user.displayAvatarURL());
 
   return leaderboardEmbed;
 };
 
-const requestRanking = async (logger, client, api, db, it=0) => {
+const requestRanking = async (logger, client, currentRankingEvent, api, db, it=0) => {
   const currentTimestamp = Math.floor(Date.now()/1000)
-  const currentDate = new Date()
+
+  // Date rounded to nearest hour
+  const nearestHour = new Date()
+  nearestHour.setHours(nearestHour.getHours() + Math.round(nearestHour.getMinutes()/60));
+  nearestHour.setMinutes(0, 0, 0)
 
   let totalRankings = []
 
-  // Updated every 2 minutes
-  console.log(currentDate.getMinutes())
-  console.log(currentDate.getMinutes() % 2 == 0)
-
-  // Chronological T100 on every even minute
-  const rankingDataT100 = await api.eventRanking(3, {targetRank: 1, lowerLimit: 99})
+  // Sequential T100 every 2 minutes
+  const rankingDataT100 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 1, lowerLimit: 99})
   totalRankings.push.apply(totalRankings, rankingDataT100.rankings)
 
-  // Updated every 6 minutes
-  if (it % 3 === 0) {
-    const rankingDataT200 = await api.eventRanking(3, {targetRank: 200, lowerLimit: 0})
-    const rankingDataT300 = await api.eventRanking(3, {targetRank: 300, lowerLimit: 0})
-    const rankingDataT400 = await api.eventRanking(3, {targetRank: 400, lowerLimit: 0})
-    const rankingDataT500 = await api.eventRanking(3, {targetRank: 500, lowerLimit: 0})
-    totalRankings.push(rankingDataT200.rankings[0])
-    totalRankings.push(rankingDataT300.rankings[0])
-    totalRankings.push(rankingDataT400.rankings[0])
-    totalRankings.push(rankingDataT500.rankings[0])
-  }
+  const rankingDataT200 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 101, lowerLimit: 99})
+  const rankingDataT300 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 201, lowerLimit: 99})
+  const rankingDataT400 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 301, lowerLimit: 99})
+  const rankingDataT500 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 401, lowerLimit: 99})
+  totalRankings.push.apply(totalRankings, rankingDataT200)
+  totalRankings.push.apply(totalRankings, rankingDataT300)
+  totalRankings.push.apply(totalRankings, rankingDataT400)
+  totalRankings.push.apply(totalRankings, rankingDataT500)
 
-  // Updated every 12 minutes
-  if (it % 6 === 0) {
-    const rankingDataT1000 = await api.eventRanking(3, {targetRank: 1000, lowerLimit: 0})
-    const rankingDataT2000 = await api.eventRanking(3, {targetRank: 2000, lowerLimit: 0})
-    const rankingDataT3000 = await api.eventRanking(3, {targetRank: 3000, lowerLimit: 0})
-    const rankingDataT4000 = await api.eventRanking(3, {targetRank: 4000, lowerLimit: 0})
-    const rankingDataT5000 = await api.eventRanking(3, {targetRank: 5000, lowerLimit: 0})
-    totalRankings.push(rankingDataT1000.rankings[0])
-    totalRankings.push(rankingDataT2000.rankings[0])
-    totalRankings.push(rankingDataT3000.rankings[0])
-    totalRankings.push(rankingDataT4000.rankings[0])
-    totalRankings.push(rankingDataT5000.rankings[0])
-  }
 
-  // Updated every 30 minutes
-  if (it % 15 === 0) {
-    const rankingDataT10000 = await api.eventRanking(3, {targetRank: 10000, lowerLimit: 0})
-    const rankingDataT20000 = await api.eventRanking(3, {targetRank: 20000, lowerLimit: 0})
-    const rankingDataT30000 = await api.eventRanking(3, {targetRank: 30000, lowerLimit: 0})
-    const rankingDataT40000 = await api.eventRanking(3, {targetRank: 40000, lowerLimit: 0})
-    const rankingDataT50000 = await api.eventRanking(3, {targetRank: 50000, lowerLimit: 0})
-    const rankingDataT100000 = await api.eventRanking(3, {targetRank: 100000, lowerLimit: 0})
-    totalRankings.push(rankingDataT10000.rankings[0])
-    totalRankings.push(rankingDataT20000.rankings[0])
-    totalRankings.push(rankingDataT30000.rankings[0])
-    totalRankings.push(rankingDataT40000.rankings[0])
-    totalRankings.push(rankingDataT50000.rankings[0])
-    totalRankings.push(rankingDataT100000.rankings[0])
-  }
+  const rankingDataT1000 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 1000, lowerLimit: 0})
+  const rankingDataT2000 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 2000, lowerLimit: 0})
+  const rankingDataT3000 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 3000, lowerLimit: 0})
+  const rankingDataT4000 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 4000, lowerLimit: 0})
+  const rankingDataT5000 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 5000, lowerLimit: 0})
+  totalRankings.push.apply(totalRankings, rankingDataT1000)
+  totalRankings.push.apply(totalRankings, rankingDataT2000)
+  totalRankings.push.apply(totalRankings, rankingDataT3000)
+  totalRankings.push.apply(totalRankings, rankingDataT4000)
+  totalRankings.push.apply(totalRankings, rankingDataT5000)
+
+  const rankingDataT10000 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 10000, lowerLimit: 0})
+  const rankingDataT20000 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 20000, lowerLimit: 0})
+  const rankingDataT30000 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 30000, lowerLimit: 0})
+  const rankingDataT40000 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 40000, lowerLimit: 0})
+  const rankingDataT50000 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 50000, lowerLimit: 0})
+  const rankingDataT100000 = await api.eventRanking(currentRankingEvent.id, 
+    {targetRank: 100000, lowerLimit: 0})
+  totalRankings.push.apply(totalRankings, rankingDataT10000)
+  totalRankings.push.apply(totalRankings, rankingDataT20000)
+  totalRankings.push.apply(totalRankings, rankingDataT30000)
+  totalRankings.push.apply(totalRankings, rankingDataT40000)
+  totalRankings.push.apply(totalRankings, rankingDataT50000)
+  totalRankings.push.apply(totalRankings, rankingDataT100000)
 
   totalRankings.forEach((user) => {
     db.prepare('INSERT INTO events (event_id, sekai_id, name, rank, score, timestamp) ' + 
       'VALUES(@eventId,	@sekaiId, @name, @rank, @score, @timestamp)').run({
-      eventId: currentEvent,
+      eventId: currentRankingEvent.id,
       sekaiId: user.userId.toString(),
       name: user.name,
       rank: user.rank,
@@ -109,10 +120,25 @@ const requestRanking = async (logger, client, api, db, it=0) => {
 
   if (totalRankings.length > 0) {
     const tracking = await db.prepare('SELECT * FROM tracking').all()
-    const trackingEmbed = generateTracking(totalRankings.slice(0, 10), client)
-    tracking.forEach((target) => {
-      const channel = client.channels.cache.get(target.channel_id);
-      channel.send({ embeds: [trackingEmbed] });
+    const trackingEmbed = generateTracking(totalRankings.slice(0, 10), currentRankingEvent, currentTimestamp, client)
+    tracking.forEach(async (target) => {
+      if (target.tracking_type == 2) {
+        if (target.channel_id in trackingChannels) {
+          trackingChannels[target.channel_id].edit({ embeds: [trackingEmbed] });
+        } else {
+          const channel = client.channels.cache.get(target.channel_id);
+          trackingChannels[target.channel_id] = await channel.send({ embeds: [trackingEmbed], fetchReply: true });
+        }
+      } else {
+        if (Math.abs(Math.floor(nearestHour.getTime()/1000) - currentTimestamp) <= 60) {
+          if (target.channel_id in trackingChannels) {
+            trackingChannels[target.channel_id].edit({ embeds: [trackingEmbed] });
+          } else {
+            const channel = client.channels.cache.get(target.channel_id);
+            trackingChannels[target.channel_id] = await channel.send({ embeds: [trackingEmbed], fetchReply: true });
+          }
+        }
+      }
     })
   }
 
@@ -125,8 +151,8 @@ const requestRanking = async (logger, client, api, db, it=0) => {
 
 const getNextCheck = () => {
   const nextCheck = new Date();
-  nextCheck.setUTCMilliseconds(0);
-  nextCheck.setUTCSeconds(0);
+  nextCheck.setMinutes(nextCheck.getMinutes() + Math.round(nextCheck.getSeconds()/60));
+  nextCheck.setSeconds(0, 0)
 
   if (nextCheck.getMinutes() % 2 !== 0) {
     nextCheck.setMinutes(nextCheck.getMinutes() + 1);
@@ -138,13 +164,15 @@ const getNextCheck = () => {
 
 const getRankingData = async (logger, client, api, db, it=0) => {
   // Identify current event from schedule
-  const currentEvent = getRankingEvent()
-  if (currentEvent != -1) {
+  const currentRankingEvent = getRankingEvent()
+
+  // change later back to correct === -1
+  if (currentRankingEvent.id === -1) {
     let eta_ms = getNextCheck()
     console.log(`No Current Ranking Event Active, Pausing For ${eta_ms} ms`);
     setTimeout(() => {getRankingData(logger, client, api, db)}, eta_ms);
   } else {
-    await requestRanking(logger, client, api, db, it)
+    await requestRanking(logger, client, currentRankingEvent, api, db, it)
     let eta_ms = getNextCheck()
     console.log(`Event Scores Retrieved, Pausing For ${eta_ms} ms`);
     setTimeout(() => {getRankingData(logger, client, api, db, it+1)}, eta_ms);
