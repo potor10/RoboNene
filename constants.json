@@ -9,8 +9,7 @@
 
   "NENE_COLOR": "#34DD9A",
   "FOOTER": "Robo Nene",
-  "CREDITS": "Created by Potor10#3237, Contributions from Ult#0001",
 
-  "NO_ACCESS_ADMIN": "You can not access this command.",
-  "NO_ACCESS_LINK": "You can not access this command until you link your Discord to a Project Sekai account. Use /link to begin."
+  "REPLY_TIMEOUT": 2000,
+  "TIMEOUT_ERR": "Error! Your request has timed out"
 }

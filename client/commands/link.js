@@ -32,11 +32,13 @@ module.exports = {
       sc.setName('authenticate')
         .setDescription('Confirm that the code is set to your Project Sekai profile description')),
   
-  async execute(interaction, commandParams) {
+  async execute(interaction, discordClient) {
+    const db = discordClient.db
+
     switch(interaction.options._subcommand) {
       case 'request':
         const accountId = interaction.options._hoistedOptions[0].value;
-        const userCheck = commandParams.db.prepare('SELECT * FROM users WHERE discord_id=@discordId OR sekai_id=@sekaiId').all({
+        const userCheck = db.prepare('SELECT * FROM users WHERE discord_id=@discordId OR sekai_id=@sekaiId').all({
           discordId: interaction.user.id, 
           sekaiId: accountId
         });
@@ -73,7 +75,7 @@ module.exports = {
         }
         break;
       case 'authenticate':
-        const discordCheck = commandParams.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
+        const discordCheck = db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
           discordId: interaction.user.id, 
         });
 
@@ -97,42 +99,36 @@ module.exports = {
             return;
           } 
           
-          const accountData = await commandParams.api.userProfile(generatedCodes[interaction.user.id].accountId);
-
-          if (accountData.httpStatus) {
-            await interaction.reply({
-              content: LINK_CONSTANTS.WRONG_ACC_ERR,
-              ephemeral: true 
-            });
-
-            delete generatedCodes[interaction.user.id]
-            return
-          }
-
-          if (accountData.userProfile.word === generatedCodes[interaction.user.id].code) {
-            commandParams.db.prepare('REPLACE INTO users (discord_id, sekai_id) VALUES(@discordId, @sekaiId)').run({
-              discordId: interaction.user.id,
-              sekaiId: generatedCodes[interaction.user.id].accountId
-            });
-
-            commandParams.logger.log({
-              level: 'info',
-              discord_id: interaction.user.id,
-              sekai_id: generatedCodes[interaction.user.id].accountId,
-              message: 'Added to DB',
-              timestamp: Date.now()
-            });
-
-            await interaction.reply({
-              content: LINK_CONSTANTS.LINK_SUCC,
-              ephemeral: true 
-            });
-          } else {
-            await interaction.reply({
-              content: LINK_CONSTANTS.GEN_ERR,
-              ephemeral: true 
-            });
-          }
+          discordClient.addSekaiRequest('profile', {
+            userId: generatedCodes[interaction.user.id].accountId
+          }, async (response) => {
+            if (response.httpStatus) {
+              await interaction.reply({
+                content: LINK_CONSTANTS.WRONG_ACC_ERR,
+                ephemeral: true 
+              });
+  
+              delete generatedCodes[interaction.user.id]
+              return
+            }
+  
+            if (response.userProfile.word === generatedCodes[interaction.user.id].code) {
+              db.prepare('REPLACE INTO users (discord_id, sekai_id) VALUES(@discordId, @sekaiId)').run({
+                discordId: interaction.user.id,
+                sekaiId: generatedCodes[interaction.user.id].accountId
+              });
+  
+              await interaction.reply({
+                content: LINK_CONSTANTS.LINK_SUCC,
+                ephemeral: true 
+              });
+            } else {
+              await interaction.reply({
+                content: LINK_CONSTANTS.GEN_ERR,
+                ephemeral: true 
+              });
+            }
+          })
         } else {
           await interaction.reply({
             content: LINK_CONSTANTS.NO_CODE_ERR,

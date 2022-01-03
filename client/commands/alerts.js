@@ -17,12 +17,14 @@ module.exports = {
         .setDescription('Enable or disable the specified alert')
         .setRequired(true)),
   
-  async execute(interaction, commandParams) {
+  async execute(interaction, discordClient) {
+    const db = discordClient.db
     console.log(interaction);
+
     let alertStatus = (interaction.options._hoistedOptions[1].value) ? 1 : 0;
     switch (interaction.options._hoistedOptions[0].value) {
       case 'rank_warning':
-        commandParams.db.prepare('UPDATE users SET rank_warning=@alertStatus WHERE discord_id=@discordId').run({
+        db.prepare('UPDATE users SET rank_warning=@alertStatus WHERE discord_id=@discordId').run({
           discordId: interaction.user.id,
           alertStatus: alertStatus
         });
@@ -32,8 +34,9 @@ module.exports = {
           ephemeral: true 
         });
         break;
+
       case 'rank_lost':
-        commandParams.db.prepare('UPDATE users SET rank_lost=@alertStatus WHERE discord_id=@discordId').run({
+        db.prepare('UPDATE users SET rank_lost=@alertStatus WHERE discord_id=@discordId').run({
           discordId: interaction.user.id,
           alertStatus: alertStatus
         });
@@ -43,8 +46,9 @@ module.exports = {
           ephemeral: true 
         });
         break;
+
       case 'event_time':
-        commandParams.db.prepare('UPDATE users SET event_time=@alertStatus WHERE discord_id=@discordId').run({
+        db.prepare('UPDATE users SET event_time=@alertStatus WHERE discord_id=@discordId').run({
           discordId: interaction.user.id,
           alertStatus: alertStatus,
         });
@@ -54,6 +58,7 @@ module.exports = {
           ephemeral: true 
         });
         break;
+
       default:
         await interaction.reply({
           content: ERR_COMMAND,

@@ -80,9 +80,9 @@ module.exports = {
     .setName('schedule')
     .setDescription('Event Schedule Times'),
   
-  async execute(interaction, commandParams) {
+  async execute(interaction, discordClient) {
     const schedule = JSON.parse(fs.readFileSync('./schedule.json'));
-    const scheduleEmbed = createScheduleEmbed(schedule, commandParams.client);
+    const scheduleEmbed = createScheduleEmbed(schedule, discordClient.client);
     await interaction.reply({ embeds: [scheduleEmbed] });
   }    
 };

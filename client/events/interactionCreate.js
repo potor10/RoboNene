@@ -1,32 +1,38 @@
-const { BOT_ADMIN_IDS, NO_ACCESS_ADMIN, NO_ACCESS_LINK } = require('../constants.json');
+const { BOT_ADMIN_IDS } = require('../../constants.json');
+
+const INTERACTION_CONST = {
+  "NO_ACCESS_ADMIN": "You can not access this command.",
+  "NO_ACCESS_LINK": "You can not access this command until you link your Discord to a Project Sekai account. Use /link to begin."
+}
 
 module.exports = {
   name: 'interactionCreate',
-  async execute(interaction, interactionParams) {
+  async execute(interaction, discordClient) {
     if (!interaction.isCommand()) return;
 
-    interactionParams.logger.log({
+    discordClient.logger.log({
       level: 'info',
       discord_id: interaction.user.id,
       discord_name: `${interaction.user.username}#${interaction.user.discriminator}`,
       guild_id: interaction.guildId,
       guild_name: interaction.member.guild.name,
-      time: Date.now(),
       command: interaction.commandName,
       subcommand: interaction.options._subcommand,
       inputs: interaction.options._hoistedOptions,
       timestamp: Date.now()
     });
 
-    const interactionIdx = interactionParams.commands
+    const interactionIdx = discordClient.commands
       .map(c => c.data.name)
       .indexOf(interaction.commandName);
     
     if (interactionIdx != -1) {
-      if (interactionParams.commands[interactionIdx].adminOnly) {
+      const command = discordClient.commands[interactionIdx]
+
+      if (command.adminOnly) {
         if (!(BOT_ADMIN_IDS.includes(interaction.user.id))) {
           await interaction.reply({
-            content: NO_ACCESS_ADMIN,
+            content: INTERACTION_CONST.NO_ACCESS_ADMIN,
             ephemeral: true 
           });
 
@@ -34,26 +40,22 @@ module.exports = {
         }
       }
       
-      if (interactionParams.commands[interactionIdx].requiresLink) {
-        const request = interactionParams.db.prepare('SELECT * FROM users ' +
+      if (command.requiresLink) {
+        const request = discordClient.db.prepare('SELECT * FROM users ' +
           'WHERE discord_id=@discordId').all({
           discordId: interaction.user.id
         });
         if (request.length === 0) {
           await interaction.reply({
-            content: NO_ACCESS_LINK,
+            content: INTERACTION_CONST.NO_ACCESS_LINK,
             ephemeral: true 
           });
 
           return;
         }
       }
-      await interactionParams.commands[interactionIdx].execute(interaction, {
-        client: interactionParams.client,
-        logger: interactionParams.logger, 
-        db: interactionParams.db,
-        api: interactionParams.api
-      });
+      
+      await command.execute(interaction, discordClient);
     }
 
     //console.log(interaction);

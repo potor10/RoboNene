@@ -1,27 +1,23 @@
+// Import 
+const DiscordClient = require('./client/client')
+// const getSchedule = require('./scripts/getSchedule');
+const trackRankingData = require('./scripts/trackRankingData');
 
-const { SekaiClient } = require('sekapi');
-
-// Full Imports
-
-
-
-// Import Scripts
-const getSchedule = require('./scripts/getSchedule');
-const getRankingData = require('./scripts/getRankingData');
-
-
-// Sekai Api Init
-const api = new SekaiClient();
-
-// Wait for API to finish before continuing
 (async () => {
-  await api.login()
+  const client = new DiscordClient()
+  client.loadCommands()
+  client.loadEvents()
+  client.loadDb()
+  client.loadLogger()
+  client.loadDb()
+  await client.loadSekaiClient()
+  await client.runSekaiRequests()
+  await client.login()
 
   // Begin the scripts
-  getRankingData(logger, client, api, db)
-  getSchedule(logger, client, db);
+  trackRankingData(client)
+  // getSchedule(logger, client, db);
 })();
-
 
 
 // Initialize script to begin scraping data from the event

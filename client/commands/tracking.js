@@ -21,7 +21,9 @@ module.exports = {
         .setDescription('Enable or disable the tracking alerts')
         .setRequired(true)),
   
-  async execute(interaction, commandParams) {
+  async execute(interaction, discordClient) {
+    const db = discordClient.db
+
     console.log(interaction);
     console.log(JSON.stringify(interaction.options))
 
@@ -36,10 +38,10 @@ module.exports = {
     }
 
     if (interaction.options._hoistedOptions[2].value) {
-      commandParams.db.prepare('INSERT INTO tracking (guild_id, channel_id, tracking_type) ' + 
-        'VALUES (@guildId, @channelId, @trackingType)').run({
-        guildId: channelData.channel.guildId,
+      db.prepare('REPLACE INTO tracking (channel_id, guild_id, tracking_type) ' + 
+        'VALUES (@channelId, @guildId, @trackingType)').run({
         channelId: channelData.value,
+        guildId: channelData.channel.guildId,
         trackingType: interaction.options._hoistedOptions[1].value
       });
       await interaction.reply({
@@ -49,7 +51,7 @@ module.exports = {
         ephemeral: true 
       });
     } else {
-      const query = commandParams.db.prepare('DELETE FROM tracking WHERE ' + 
+      const query = db.prepare('DELETE FROM tracking WHERE ' + 
         'guild_id=@guildId AND channel_id=@channelId AND tracking_type=@trackingType').run({
           guildId: channelData.channel.guildId,
           channelId: channelData.value,

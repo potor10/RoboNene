@@ -3,18 +3,18 @@ const { NENE_COLOR, FOOTER } = require('../constants.json');
 const https = require('https');
 const fs = require('fs');
 
-const sendAlert = async (alertParams) => {
+const sendAlert = async (event, discordClient) => {
   const banner = 'https://sekai-res.dnaroma.eu/file/sekai-en-assets/event/' +
-    `${alertParams.event.assetbundleName}/logo_rip/logo.webp`
+    `${event.assetbundleName}/logo_rip/logo.webp`
 
   const eventAlert = new MessageEmbed()
     .setColor(NENE_COLOR)
-    .setTitle(`${alertParams.event.name}`)
+    .setTitle(`${event.name}`)
     .setDescription(`<t:${alertParams.eventTime}> - <t:${alertParams.eventTime}:R>`)
     .addField(alertParams.title, alertParams.text)
     .setThumbnail(banner)
     .setTimestamp()
-    .setFooter(FOOTER, alertParams.client.user.displayAvatarURL());
+    .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
 
   const alertedUsers = await alertParams.db.prepare('SELECT * FROM users WHERE event_time=1').all()
   alertedUsers.forEach((target) => {
@@ -25,7 +25,7 @@ const sendAlert = async (alertParams) => {
 
 }
 
-const getNextAlert = (client, db) => {
+const getNextAlert = (discordClient) => {
   const currentTime = Date.now()
   const schedule = JSON.parse(fs.readFileSync('./schedule.json'));
 
@@ -47,11 +47,6 @@ const getNextAlert = (client, db) => {
     }
   }
 
-  let alertParams = {
-    client: client,
-    db: db
-  }
-
   const curEventRankingEnd30MinEarly = new Date(schedule[currentEventIdx].aggregateAt);
   curEventRankingEnd30MinEarly.setMinutes(curEventRankingEnd30MinEarly.getMinutes() - 30)
   if (currentTime < curEventRankingEnd30MinEarly) {
@@ -63,7 +58,7 @@ const getNextAlert = (client, db) => {
     alertParams.title = `Ranking will end soon soon`
     alertParams.text = `30 Minutes before the event Ranking Ends`
 
-    setTimeout(() => {sendAlert(alertParams)}, eta_ms);
+    setTimeout(() => {sendAlert(discordClient)}, eta_ms);
     return eta_ms
   }
 
@@ -77,7 +72,7 @@ const getNextAlert = (client, db) => {
     alertParams.title = `Ranking Has Ended`
     alertParams.text = `Ranking Has Ended, Hope You Did Well!`
 
-    setTimeout(() => {sendAlert(alertParams)}, eta_ms);
+    setTimeout(() => {sendAlert(discordClient)}, eta_ms);
     return eta_ms
   }
 
@@ -92,7 +87,7 @@ const getNextAlert = (client, db) => {
     alertParams.title = `Next event is beginning soon`
     alertParams.text = `30 Minutes before the next event starts`
 
-    setTimeout(() => {sendAlert(alertParams)}, eta_ms);
+    setTimeout(() => {sendAlert(discordClient)}, eta_ms);
     return eta_ms
   }
 
@@ -106,12 +101,14 @@ const getNextAlert = (client, db) => {
     alertParams.title = `Next event has started`
     alertParams.text = `Good luck tiering!`
 
-    setTimeout(() => {sendAlert(alertParams)}, eta_ms);
+    setTimeout(() => {sendAlert(discordClient)}, eta_ms);
     return eta_ms
   }
 };
 
-const getSchedule = (logger, client, db) => {
+const getSchedule = (discordClient) => {
+  const logger = discordClient.logger
+
   const options = {
     host: 'raw.githubusercontent.com',
     path: '/Sekai-World/sekai-master-db-en-diff/main/events.json',
@@ -154,10 +151,10 @@ const getSchedule = (logger, client, db) => {
   });
 
   // Run the next alerts
-  const eta_ms = getNextAlert(client, db)
+  const eta_ms = getNextAlert(discordClient)
 
-  // wait a bit longer before grabbing the next schedule
-  setTimeout(() => {getSchedule(logger, client, db)}, eta_ms + 10000);
+  // wait a bit longer before grabbing the next schedule (to prevent time misalignment)
+  setTimeout(() => {getSchedule(discordClient)}, eta_ms + 10000);
 };
 
 module.exports = getSchedule;

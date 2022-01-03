@@ -15,7 +15,7 @@ module.exports = {
             .setDescription('Discord user')
             .setRequired(false))),
   
-  async execute(interaction, commandParams) {
+  async execute(interaction, discordClient) {
     return;
   }
 };

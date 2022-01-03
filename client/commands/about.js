@@ -7,12 +7,14 @@ module.exports = {
     .setName('about')
     .setDescription('About Robo Nene'),
   
-  async execute(interaction, commandParams) {
+  async execute(interaction, discordClient) {
+    const botAvatarURL = discordClient.client.user.displayAvatarURL()
+
     const aboutEmbed = new MessageEmbed()
       .setColor(NENE_COLOR)
       .setTitle(`About ${BOT_NAME}`)
       .setDescription('Contributions and Credits')
-      .setThumbnail(commandParams.client.user.displayAvatarURL())
+      .setThumbnail(botAvatarURL)
       .addFields(
         { name: '**Programming**', value: 'Potor10#3237\nUlt#0001\nRedside#1337\nYuu#6883', inline: true},
         { name: '**Design**', value: 'Potor10#3237\nReinhäla#4444', inline: true},
@@ -30,7 +32,7 @@ module.exports = {
         { name: '**License**', value: 'MIT' },
       )
       .setTimestamp()
-      .setFooter(FOOTER, commandParams.client.user.displayAvatarURL());
+      .setFooter(FOOTER, botAvatarURL);
 
     await interaction.reply({ embeds: [aboutEmbed] });
   }

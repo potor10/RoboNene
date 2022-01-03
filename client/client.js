@@ -1,10 +1,20 @@
-const { token } = require('./config.json');
+const { token } = require('../config.json');
 const { Client, Intents, Guild } = require('discord.js');
+const { SekaiClient } = require('sekapi');
 
 const winston = require('winston');
 const Database = require('better-sqlite3');
 
 const fs = require('fs');
+const path = require('path')
+
+const CLIENT_CONSTANTS = {
+  "CMD_DIR": path.join(__dirname, '/commands'),
+  "EVENT_DIR": path.join(__dirname, '/events'),
+  "LOG_DIR": path.join(__dirname, '../logs'),
+  "DB_DIR": path.join(__dirname, '../databases'),
+  "DB_NAME": "databases.db"
+}
 
 class DiscordClient {
   constructor(tk = token) {
@@ -12,11 +22,16 @@ class DiscordClient {
     this.commands = [];
     this.logger = null;
     this.db = null;
+
+    this.api = null;
+    this.priorityApiQueue = [];
+    this.apiQueue = [];
+
     this.client = new Client({ 
       intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS] });
   }
 
-  loadCommands(dir = "./commands") {
+  loadCommands(dir=CLIENT_CONSTANTS.CMD_DIR) {
     // Parse commands
     const commandFiles = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
 
@@ -27,7 +42,7 @@ class DiscordClient {
     }
   }
 
-  loadEvents(dir = "./events") {
+  loadEvents(dir=CLIENT_CONSTANTS.EVENT_DIR) {
     // Parse events
     const eventFiles = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
 
@@ -36,18 +51,12 @@ class DiscordClient {
       if (event.once) {
         this.client.once(event.name, (...args) => event.execute(...args));
       } else {
-        client.on(event.name, (...args) => event.execute(...args, {
-          client: this.client,
-          commands: this.commands, 
-          db: this.db, 
-          logger: this.logger, 
-          api: this.api
-        }));
+        this.client.on(event.name, (...args) => event.execute(...args, this));
       }
     }
   }
 
-  loadLogger(dir = '../logs') {
+  loadLogger(dir=CLIENT_CONSTANTS.LOG_DIR) {
     // Winston logger initialization
     this.logger = winston.createLogger({
       level: 'info',
@@ -62,8 +71,8 @@ class DiscordClient {
     });
   }
 
-  loadDb(dir = '../databases') {
-    this.db = new Database(src);
+  loadDb(dir = CLIENT_CONSTANTS.DB_DIR) {
+    this.db = new Database(`${dir}/${CLIENT_CONSTANTS.DB_NAME}`);
     this.db.prepare('CREATE TABLE IF NOT EXISTS users ' + 
     '(discord_id TEXT PRIMARY KEY, sekai_id TEXT, ' + 
     'rank_warning INTEGER DEFAULT 0, rank_lost INTEGER DEFAULT 0, ' + 
@@ -76,11 +85,82 @@ class DiscordClient {
 
     // Initialize the tracking database instance
     this.db.prepare('CREATE TABLE IF NOT EXISTS tracking ' + 
-      '(guild_id TEXT, channel_id TEXT, tracking_type INTEGER)').run();
+      '(channel_id TEXT PRIMARY KEY, guild_id TEXT, tracking_type INTEGER)').run();
+  }
+
+  async loadSekaiClient() {
+    // Sekai Api Init
+    this.api = new SekaiClient();
+    await this.api.login()
+  }
+
+  async addSekaiRequest(type, params, callback) {
+    this.apiQueue.unshift({
+      type: type,
+      params: params,
+      callback: callback
+    })
+  }
+
+  async addPrioritySekaiRequest(type, params, callback) {
+    this.priorityApiQueue.unshift({
+      type: type,
+      params: params,
+      callback: callback
+    })
+  }
+
+  async runSekaiRequests(rate=10) {
+    const run = async (request) => {
+      if (request.type === 'profile') {
+        const response = await this.api.userProfile(request.params.userId)
+        request.callback(response)
+      } else if (request.type === 'ranking') {
+        const queryParams = {...request.params}
+        delete queryParams.eventId
+
+        const response = await this.api.eventRanking(request.params.eventId, queryParams)
+        request.callback(response)
+      }
+      this.runSekaiRequests(rate)
+    }
+
+    if (this.priorityApiQueue.length > 0) {
+      run(this.priorityApiQueue.pop())
+    } else if (this.apiQueue.length > 0) {
+      run(this.apiQueue.pop())
+    } else {
+      setTimeout(() => {this.runSekaiRequests(rate)}, rate);
+    }
+  }
+
+  getCurrentEvent() {
+    const schedule = JSON.parse(fs.readFileSync('./schedule.json'));
+    const currentTime = Date.now()
+
+    for (let i = 0; i < schedule.length; i++) {
+      if (schedule[i].startAt <= currentTime && schedule[i].closedAt >= currentTime) {
+        return {
+          id: schedule[i].id,
+          banner: 'https://sekai-res.dnaroma.eu/file/sekai-en-assets/event/' + 
+            `${schedule[i].assetbundleName}/logo_rip/logo.webp`,
+          name: schedule[i].name,
+          startAt: schedule[i].startAt,
+          aggregateAt: schedule[i].aggregateAt,
+          closedAt: schedule[i].closedAt
+        }
+      }
+    }
+
+    return {
+      id: -1,
+      banner: '',
+      name: ''
+    }
   }
 
   async login() {
-    await client.login(this.token);
+    await this.client.login(this.token);
   }
 }
 

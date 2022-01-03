@@ -1,4 +1,71 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { MessageEmbed } = require('discord.js');
+const { NENE_COLOR, FOOTER, REPLY_TIMEOUT, TIMEOUT_ERR } = require('../../constants.json');
+
+const CUTOFF_CONSTANTS = {
+  'NO_EVENT_ERR': 'There is currently no event going on',
+};
+
+const generateCutoffEmbed = (event, timestamp, tier, data, discordClient) => {
+  let score = 'N/A'
+  let scorePerHourAll = 'N/A'
+  let scorePerHour1H = 'N/A'
+  let estimatedScore = 'N/A'
+
+  if (data) {
+    score = data.score.toLocaleString()
+
+    const msTaken = timestamp - event.startAt
+    const msRemain = event.aggregateAt - timestamp
+    
+    const scorePerMs = data.score / msTaken
+    scorePerHourAll = (scorePerMs * 3600000).toLocaleString('en-US', {
+      minimumFractionDigits: 0, 
+      maximumFractionDigits: 2
+    }) + '/h'
+
+    const results = discordClient.db.prepare('SELECT * FROM events WHERE ' + 
+      'event_id=@eventId AND ' +
+      'rank=@rank AND ' + 
+      'timestamp>@timestamp ' + 
+      'ORDER BY timestamp ASC').all({
+      eventId: event.id,
+      rank: tier,
+      timestamp: timestamp-3600000
+    });
+
+    if (results.length > 0) {
+      const closestScore1H = results[0]
+      const msDifference = timestamp - closestScore1H.timestamp
+      const score1HPerMs = (data.score - closestScore1H.score) / msDifference
+
+      scorePerHour1H = (score1HPerMs * 3600000).toLocaleString('en-US', {
+        minimumFractionDigits: 0, 
+        maximumFractionDigits: 2
+      }) + '/h'
+    }
+
+    estimatedScore = (msRemain * scorePerMs + data.score).toLocaleString('en-US', {
+      minimumFractionDigits: 0, 
+      maximumFractionDigits: 2
+    })
+  }
+
+  const timestampSeconds = Math.floor(timestamp/1000)
+  const cutoffEmbed = new MessageEmbed()
+    .setColor(NENE_COLOR)
+    .setTitle(`${event.name} T${tier}`)
+    .setDescription(`<t:${timestampSeconds}> - <t:${timestampSeconds}:R>`)
+    .addField(`Score`, `\`${score}\``)
+    .addField(`Score/h`, `\`${scorePerHourAll}\``)
+    .addField(`Score/h (Last Hour)`, `\`${scorePerHour1H}\``)
+    .addField(`Estimated Score`, `\`${estimatedScore}\``)
+    .addField(`Estimated Score (Smoothing)`, `\`${'N/A'}\``)
+    .setTimestamp()
+    .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
+
+  return cutoffEmbed;
+};
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -32,7 +99,60 @@ module.exports = {
         .addChoice('t5000', 5000)
         .addChoice('t10000', 10000)),
   
-  async execute(interaction, commandParams) {
-    return;
+  async execute(interaction, discordClient) {
+    const event = discordClient.getCurrentEvent()
+    if (event.id === -1) {
+      await interaction.reply({
+        content: CUTOFF_CONSTANTS.NO_EVENT_ERR,
+        ephemeral: true 
+      });
+      return
+    }
+
+    let replied = false
+    discordClient.addSekaiRequest('ranking', {
+      eventId: event.id,
+      targetRank: interaction.options._hoistedOptions[0].value,
+      lowerLimit: 0
+    }, async (response) => {
+      const timestamp = Date.now()
+
+      if (interaction.replied) {
+        return
+      }
+
+      let tier = interaction.options._hoistedOptions[0].value
+      const cutoffEmbed = generateCutoffEmbed(event, timestamp, tier,
+        response.rankings[0], discordClient)
+
+      await interaction.reply({
+        embeds: [cutoffEmbed]
+      });
+
+      // Save the data to the db
+      response.rankings.forEach((user) => {
+        discordClient.db.prepare('INSERT INTO events ' + 
+          '(event_id, sekai_id, name, rank, score, timestamp) ' + 
+          'VALUES(@eventId,	@sekaiId, @name, @rank, @score, @timestamp)').run({
+          eventId: event.id,
+          sekaiId: user.userId.toString(),
+          name: user.name,
+          rank: user.rank,
+          score: user.score,
+          timestamp: timestamp
+        });
+      });
+
+      replied = true
+    })
+
+    setTimeout(async () => {
+      if (!replied) {
+        await interaction.reply({
+          content: TIMEOUT_ERR,
+          ephemeral: true 
+        });
+      }
+    }, REPLY_TIMEOUT)
   }
 };
