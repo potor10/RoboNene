@@ -17,7 +17,7 @@ Fill `token: ""` with your own discord bot token, obtainable from [Discord Devel
 ## Note
 Due to the sensitive nature of the game API, the script to pull data from the game is not included in this code.  
 
-## Support
+## Contact
 If you have any issues with the bot or would like to contribute, please contact Potor10#3237 on discord.
 
 ## Credits
