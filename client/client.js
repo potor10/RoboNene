@@ -13,7 +13,9 @@ const CLIENT_CONSTANTS = {
   "EVENT_DIR": path.join(__dirname, '/events'),
   "LOG_DIR": path.join(__dirname, '../logs'),
   "DB_DIR": path.join(__dirname, '../databases'),
-  "DB_NAME": "databases.db"
+  "DB_NAME": "databases.db",
+
+  "PREFS_DIR": path.join(__dirname, '../prefs')
 }
 
 class DiscordClient {
@@ -23,7 +25,7 @@ class DiscordClient {
     this.logger = null;
     this.db = null;
 
-    this.api = null;
+    this.api = [];
     this.priorityApiQueue = [];
     this.apiQueue = [];
 
@@ -88,10 +90,18 @@ class DiscordClient {
       '(channel_id TEXT PRIMARY KEY, guild_id TEXT, tracking_type INTEGER)').run();
   }
 
-  async loadSekaiClient() {
-    // Sekai Api Init
-    this.api = new SekaiClient();
-    await this.api.login()
+  async loadSekaiClient(dir=CLIENT_CONSTANTS.PREFS_DIR) {
+    // Parse clients
+    const apiPrefs = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
+
+    for (const file of apiPrefs) {
+      const playerPrefs = require(`${dir}/${file}`);
+      console.log(`Loaded client ${playerPrefs.account_user_id} from ${file}`);
+      // Sekai Api Init
+      const apiClient = new SekaiClient(playerPrefs)
+      await apiClient.login()
+      this.api.push(apiClient)
+    }
   }
 
   async addSekaiRequest(type, params, callback) {
@@ -111,27 +121,34 @@ class DiscordClient {
   }
 
   async runSekaiRequests(rate=10) {
-    const run = async (request) => {
+    const runRequest = async (apiClient, request) => {
       if (request.type === 'profile') {
-        const response = await this.api.userProfile(request.params.userId)
+        const response = await apiClient.userProfile(request.params.userId)
         request.callback(response)
       } else if (request.type === 'ranking') {
         const queryParams = {...request.params}
         delete queryParams.eventId
 
-        const response = await this.api.eventRanking(request.params.eventId, queryParams)
+        const response = await apiClient.eventRanking(request.params.eventId, queryParams)
         request.callback(response)
       }
-      this.runSekaiRequests(rate)
+      runClient(apiClient, rate)
     }
 
-    if (this.priorityApiQueue.length > 0) {
-      run(this.priorityApiQueue.pop())
-    } else if (this.apiQueue.length > 0) {
-      run(this.apiQueue.pop())
-    } else {
-      setTimeout(() => {this.runSekaiRequests(rate)}, rate);
+    const runClient = async (apiClient, rate) => {
+      // console.log(`prioq: ${this.priorityApiQueue.length}, q: ${this.apiQueue.length}`)
+      if (this.priorityApiQueue.length > 0) {
+        runRequest(apiClient, this.priorityApiQueue.pop())
+      } else if (this.apiQueue.length > 0) {
+        runRequest(apiClient, this.apiQueue.pop())
+      } else {
+        setTimeout(() => {runClient(apiClient, rate)}, rate)
+      }
     }
+
+    this.api.forEach((apiClient) => {
+      runClient(apiClient, rate)
+    })
   }
 
   getCurrentEvent() {

@@ -85,33 +85,10 @@ const requestRanking = async (data, event, discordClient, idx) => {
   const retrieveResult = (response) => {
     const timestamp = Date.now()
 
-      if (idx === 0) {
-        sendTrackingEmbed(response.rankings, event, timestamp, discordClient)
-      }
-
-      response.rankings.forEach((user) => {
-        user.timestamp = timestamp
-      })
-
-      data.push.apply(data, response.rankings)
-      requestRanking(data, event, discordClient, idx+1)
-  }
-
-  if (idx < RANKING_RANGE.length) {
-    if (idx < 5) {
-      // Make Ranks 1-500 Priority Requests (We Need These On Time)
-      discordClient.addPrioritySekaiRequest('ranking', {
-        eventId: event.id,
-        ...RANKING_RANGE[idx]
-      }, retrieveResult)
-    } else {
-      // Make Cutoffs 1000+ Non Priority
-      discordClient.addSekaiRequest('ranking', {
-        eventId: event.id,
-        ...RANKING_RANGE[idx]
-      }, retrieveResult)
+    if (idx === 0) {
+      sendTrackingEmbed(response.rankings, event, timestamp, discordClient)
     }
-  } else {
+
     data.forEach((user) => {
       discordClient.db.prepare('INSERT INTO events ' + 
         '(event_id, sekai_id, name, rank, score, timestamp) ' + 
@@ -121,9 +98,29 @@ const requestRanking = async (data, event, discordClient, idx) => {
         name: user.name,
         rank: user.rank,
         score: user.score,
-        timestamp: user.timestamp
+        timestamp: timestamp
       });
     });
+
+    data.push.apply(data, response.rankings)
+  }
+
+  if (idx < RANKING_RANGE.length) {
+    if (idx < 5) {
+      // Make Ranks 1-500 Priority Requests (We Need These On Time)
+      discordClient.addPrioritySekaiRequest('ranking', {
+        eventId: event.id,
+        ...RANKING_RANGE[idx]
+      }, retrieveResult)
+      requestRanking(data, event, discordClient, idx+1)
+    } else {
+      // Make Cutoffs 1000+ Non Priority
+      discordClient.addSekaiRequest('ranking', {
+        eventId: event.id,
+        ...RANKING_RANGE[idx]
+      }, retrieveResult)
+      requestRanking(data, event, discordClient, idx+1)
+    }
   }
 }
 

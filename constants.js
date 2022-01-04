@@ -19,6 +19,6 @@ module.exports = {
   "NO_EVENT_ERR": "There is currently no event going on",
 
   // Time before replies which rely on Sekai API Timeout
-  "REPLY_TIMEOUT": 2000,
+  "REPLY_TIMEOUT": 1000,
   "TIMEOUT_ERR": "Error! Your request has timed out"
 }

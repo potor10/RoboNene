@@ -11,7 +11,7 @@ const LEADERBOARD_CONSTANTS = {
   'RIGHT': '➡️'
 };
 
-const createLeaderboard = async (interaction, leaderboardParams) => {
+const createLeaderboard = async (deferredResponse, interaction, leaderboardParams) => {
   const generateLeaderboardEmbed = ({client, event, page, rankingData, target}) => {
     const start = page * RESULTS_PER_PAGE;
     const end = start + RESULTS_PER_PAGE;
@@ -29,7 +29,8 @@ const createLeaderboard = async (interaction, leaderboardParams) => {
     return leaderboardEmbed;
   };
   
-  const message = await interaction.reply({ 
+  const message = await deferredResponse.edit({ 
+    content: '',
     embeds: [generateLeaderboardEmbed(leaderboardParams)], fetchReply: true  
   });
 
@@ -90,7 +91,11 @@ module.exports = {
       return
     }
 
-    let replied = false
+    const deferredResponse = await interaction.reply({
+      content: TIMEOUT_ERR,
+      fetchReply: true
+    });
+
     discordClient.addSekaiRequest('ranking', {
       eventId: event.id,
       targetRank: 1,
@@ -98,10 +103,6 @@ module.exports = {
     }, async (response) => {
       const rankingData = response.rankings
       const timestamp = Date.now()
-
-      if (interaction.replied) {
-        return
-      }
 
       if (interaction.options._hoistedOptions.length > 0) {
         // User has selected a specific rank to jump to
@@ -115,7 +116,7 @@ module.exports = {
             const target = interaction.options._hoistedOptions[0].value;
             const page = Math.floor((target - 1) / RESULTS_PER_PAGE);
             
-            createLeaderboard(interaction, {
+            createLeaderboard(deferredResponse, interaction, {
               client: discordClient.client,
               event: event,
               rankingData: rankingData, 
@@ -125,7 +126,7 @@ module.exports = {
           }
       } else {
         // User has not selected a specific rank to jump to
-        createLeaderboard(interaction, {
+        createLeaderboard(deferredResponse, interaction, {
           client: discordClient.client,
           event: event,
           rankingData: rankingData, 
@@ -147,17 +148,6 @@ module.exports = {
           timestamp: timestamp
         });
       });
-
-      replied = true
     })
-
-    setTimeout(async () => {
-      if (!replied) {
-        await interaction.reply({
-          content: TIMEOUT_ERR,
-          ephemeral: true 
-        });
-      }
-    }, REPLY_TIMEOUT)
   }
 };
