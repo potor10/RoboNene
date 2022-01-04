@@ -1,6 +1,6 @@
 // Import 
 const DiscordClient = require('./client/client')
-// const getSchedule = require('./scripts/getSchedule');
+const trackGameData = require('./scripts/trackGameData');
 const trackRankingData = require('./scripts/trackRankingData');
 
 (async () => {
@@ -15,8 +15,8 @@ const trackRankingData = require('./scripts/trackRankingData');
   await client.login()
 
   // Begin the scripts
+  trackGameData(client)
   trackRankingData(client)
-  // getSchedule(logger, client, db);
 })();
 
 

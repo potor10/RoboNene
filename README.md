@@ -22,13 +22,13 @@ If you have any issues with the bot or would like to contribute, please contact 
 
 ## Credits
 __**Code**__
-* Potor10 #3237
+* Potor10#3237
 * Ult#0001
 * Redside#1337
 * Yuu#6883
 
 __**Design**__
-* Potor10 #3237
+* Potor10#3237
 * Reinhäla#4444
 
 __**Testing**__

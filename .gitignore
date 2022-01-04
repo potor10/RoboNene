@@ -9,10 +9,11 @@
 # config
 config.json
 
-# logs and databses
+# logs, databses, and game data
 /logs
 /databases
 /prefs
+/sekai_master
 
 # local env files
 .env.local

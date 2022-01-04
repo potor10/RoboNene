@@ -1,6 +1,6 @@
 const { MessageEmbed } = require('discord.js');
 const { RESULTS_PER_PAGE, NENE_COLOR, FOOTER } = require('../constants');
-const RANKING_RANGE = require('./rankingRange.json')
+const RANKING_RANGE = require('./trackRankingRange.json')
 const fs = require('fs');
 const generateRankingText = require('../client/methods/generateRankingText')
 
@@ -131,7 +131,13 @@ const requestRanking = async (data, event, discordClient, idx) => {
  * @returns {Object} the ranking event information
  */
 const getRankingEvent = () => {
-  const schedule = JSON.parse(fs.readFileSync('./schedule.json'));
+  let schedule = {}
+  try {
+    schedule = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
+  } catch (err) {
+    return { id: -1, banner: '', name: '' }
+  }
+
   const currentTime = Date.now()
   for (let i = 0; i < schedule.length; i++) {
     if (schedule[i].startAt <= currentTime && schedule[i].aggregateAt >= currentTime) {
@@ -143,11 +149,7 @@ const getRankingEvent = () => {
       }
     }
   }
-  return {
-    id: -1,
-    banner: '',
-    name: ''
-  }
+  return { id: -1, banner: '', name: '' }
 }
 
 /**

@@ -152,7 +152,7 @@ class DiscordClient {
   }
 
   getCurrentEvent() {
-    const schedule = JSON.parse(fs.readFileSync('./schedule.json'));
+    const schedule = JSON.parse(fs.readFileSync('./sekai_master/schedule.json'));
     const currentTime = Date.now()
 
     for (let i = 0; i < schedule.length; i++) {

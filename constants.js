@@ -18,7 +18,10 @@ module.exports = {
 
   "NO_EVENT_ERR": "There is currently no event going on",
 
-  // Time before replies which rely on Sekai API Timeout
+  // Source of game data
+  "DIR_DATA": "./sekai_master",
+
+  // Time before replies which rely on Sekai API Timeout TODO: Remove in favor of deferred responses
   "REPLY_TIMEOUT": 1000,
-  "TIMEOUT_ERR": "Error! Your request has timed out"
+  "TIMEOUT_ERR": "Error! Your request has timed out",
 }
