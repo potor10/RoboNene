@@ -14,7 +14,7 @@ module.exports = {
   "FOOTER": "Robo Nene",
 
   // Results per page on leaderboard embeds (1-20)
-  "RESULTS_PER_PAGE": 10,
+  "RESULTS_PER_PAGE": 20,
 
   "NO_EVENT_ERR": "There is currently no event going on",
 
