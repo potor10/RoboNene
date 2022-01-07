@@ -78,7 +78,8 @@ class DiscordClient {
     this.db.prepare('CREATE TABLE IF NOT EXISTS users ' + 
     '(discord_id TEXT PRIMARY KEY, sekai_id TEXT, ' + 
     'rank_warning INTEGER DEFAULT 0, rank_lost INTEGER DEFAULT 0, ' + 
-    'event_time INTEGER DEFAULT 0)').run();
+    'event_time INTEGER DEFAULT 0, ' + 
+    'quiz_correct INTEGER DEFAULT 0, quiz_question INTEGER DEFAULT 0)').run();
 
     // Initialize the event database instance
     this.db.prepare('CREATE TABLE IF NOT EXISTS events ' + 
@@ -152,7 +153,7 @@ class DiscordClient {
   }
 
   getCurrentEvent() {
-    const schedule = JSON.parse(fs.readFileSync('./sekai_master/schedule.json'));
+    const schedule = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
     const currentTime = Date.now()
 
     for (let i = 0; i < schedule.length; i++) {

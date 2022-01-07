@@ -70,7 +70,7 @@ const getNextAlert = (discordClient) => {
     {
       name: "Current Ranking End",
       event: schedule[currentEventIdx],
-      time: currentEventEnd,
+      time: currentEventEnd.getTime(),
       title: `Ranking Has Ended`,
       text: `Ranking Has Ended, Hope You Did Well!`
     },
@@ -86,16 +86,17 @@ const getNextAlert = (discordClient) => {
     {
       name: "Next Event Start",
       event: schedule[nextEventIdx],
-      time: nextEventStart,
+      time: nextEventStart.getTime(),
       title: `Next event has started`,
       text: `Good luck tiering!`
     }
   ]
 
-  for(updateTime in eventTimes) {
-    if (currentTime < updateTime.time) {
-      const eta_ms = updateTime.time.getTime() - Date.now()
-      setTimeout(() => {sendAlert(updateTime, discordClient)}, eta_ms);
+  for(const updateIdx in eventTimes) {
+    if (currentTime < eventTimes[updateIdx].time) {
+      const eta_ms = eventTimes[updateIdx].time - Date.now()
+      console.log(`Next Update: ${eventTimes[updateIdx].name}`)
+      setTimeout(() => {sendAlert(eventTimes[updateIdx], discordClient)}, eta_ms);
       return eta_ms
     }
   }

@@ -165,12 +165,14 @@ const trackRankingData = async (discordClient) => {
   if (event.id === -1) {
     let eta_ms = getNextCheck()
     console.log(`No Current Ranking Event Active, Pausing For ${eta_ms} ms`);
-    setTimeout(() => {trackRankingData(discordClient)}, eta_ms);
+    // 1 extra second to make sure event is on
+    setTimeout(() => {trackRankingData(discordClient)}, eta_ms + 1000);
   } else {
     requestRanking([], event, discordClient, 0)
     let eta_ms = getNextCheck()
     console.log(`Event Scores Retrieved, Pausing For ${eta_ms} ms`);
-    setTimeout(() => {trackRankingData(discordClient)}, eta_ms);
+    // 1 extra second to make sure event is on
+    setTimeout(() => {trackRankingData(discordClient)}, eta_ms + 1000);
   }
 };
 

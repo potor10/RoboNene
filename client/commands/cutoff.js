@@ -128,20 +128,6 @@ module.exports = {
         embeds: [cutoffEmbed]
       });
 
-      // Save the data to the db
-      response.rankings.forEach((user) => {
-        discordClient.db.prepare('INSERT INTO events ' + 
-          '(event_id, sekai_id, name, rank, score, timestamp) ' + 
-          'VALUES(@eventId,	@sekaiId, @name, @rank, @score, @timestamp)').run({
-          eventId: event.id,
-          sekaiId: user.userId.toString(),
-          name: user.name,
-          rank: user.rank,
-          score: user.score,
-          timestamp: timestamp
-        });
-      });
-
       replied = true
     })
 

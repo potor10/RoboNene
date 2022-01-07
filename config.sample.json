@@ -8,6 +8,7 @@
     "characterProfiles",
     "areaItems",
     "areaItemLevels",
-    "events"
+    "events",
+    "cards"
   ]
 }
