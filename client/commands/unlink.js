@@ -40,7 +40,7 @@ module.exports = {
 
     switch(interaction.options._subcommand) {
       case 'request':
-        const accountId = interaction.options._hoistedOptions[0].value;
+        const accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g,'')
         const sekaiCheck = db.prepare('SELECT * FROM users WHERE sekai_id=@sekaiId').all({
           sekaiId: accountId
         });

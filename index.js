@@ -9,7 +9,7 @@ const trackRankingData = require('./scripts/trackRankingData');
   client.loadEvents()
   client.loadDb()
   client.loadLogger()
-  client.loadDb()
+
   await client.loadSekaiClient()
   await client.runSekaiRequests()
   await client.login()

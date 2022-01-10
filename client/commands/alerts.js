@@ -24,9 +24,9 @@ module.exports = {
     let alertStatus = (interaction.options._hoistedOptions[1].value) ? 1 : 0;
     switch (interaction.options._hoistedOptions[0].value) {
       case 'rank_warning':
-        db.prepare('UPDATE users SET rank_warning=@alertStatus WHERE discord_id=@discordId').run({
-          discordId: interaction.user.id,
-          alertStatus: alertStatus
+        db.prepare('UPDATE users SET rank_warning=$alertStatus WHERE discord_id=$discordId').run({
+          $discordId: interaction.user.id,
+          $alertStatus: alertStatus
         });
         await interaction.reply({
           content: `Success! Alerts ${(alertStatus) ? 'enabled' : 'disabled'} ` + 
@@ -36,9 +36,9 @@ module.exports = {
         break;
 
       case 'rank_lost':
-        db.prepare('UPDATE users SET rank_lost=@alertStatus WHERE discord_id=@discordId').run({
-          discordId: interaction.user.id,
-          alertStatus: alertStatus
+        db.prepare('UPDATE users SET rank_lost=$alertStatus WHERE discord_id=$discordId').run({
+          $discordId: interaction.user.id,
+          $alertStatus: alertStatus
         });
         await interaction.reply({
           content: `Success! Alerts ${(alertStatus) ? 'enabled' : 'disabled'} ` + 
@@ -48,9 +48,9 @@ module.exports = {
         break;
 
       case 'event_time':
-        db.prepare('UPDATE users SET event_time=@alertStatus WHERE discord_id=@discordId').run({
-          discordId: interaction.user.id,
-          alertStatus: alertStatus,
+        db.prepare('UPDATE users SET event_time=$alertStatus WHERE discord_id=$discordId').run({
+          $discordId: interaction.user.id,
+          $alertStatus: alertStatus,
         });
         await interaction.reply({
           content: `Success! Alerts ${(alertStatus) ? 'enabled' : 'disabled'} ` + 

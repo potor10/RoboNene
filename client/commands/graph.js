@@ -156,6 +156,8 @@ module.exports = {
     switch(interaction.options._subcommand) {
       case 'cutoff':
         const tier = interaction.options._hoistedOptions[0].value
+
+        // Fix this, ugh
         const rankData = discordClient.db.prepare('SELECT * FROM events WHERE ' +
          'event_id=@eventId AND rank=@rank ORDER BY timestamp ASC').all({
             eventId: event.id,

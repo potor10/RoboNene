@@ -37,7 +37,12 @@ module.exports = {
 
     switch(interaction.options._subcommand) {
       case 'request':
-        const accountId = interaction.options._hoistedOptions[0].value;
+        const accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g,'');
+
+        if (!accountId) {
+          // Do something because there is an empty account id input
+        }
+
         const userCheck = db.prepare('SELECT * FROM users WHERE discord_id=@discordId OR sekai_id=@sekaiId').all({
           discordId: interaction.user.id, 
           sekaiId: accountId

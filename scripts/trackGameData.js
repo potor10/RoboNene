@@ -45,13 +45,18 @@ const getNextAlert = (discordClient) => {
       currentEventIdx = i;
     }
     if (Math.floor(schedule[i].startAt / 1000) > Math.floor(currentTime / 1000)) {
-      if (nextEventIdx == -1) {
+      if (nextEventIdx === -1) {
         nextEventIdx = i;
       } else if (Math.floor(schedule[i].startAt / 1000) < 
         Math.floor(schedule[nextEventIdx].startAt / 1000)) {
         nextEventIdx = i;
       }
     }
+  }
+
+  if (nextEventIdx === -1) {
+    console.log(`Idk next start`)
+    return 120000
   }
 
   const currentEventEnd = new Date(schedule[currentEventIdx].aggregateAt)

@@ -37,21 +37,22 @@ const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
   }
 
   if (data.length > 0) {
-    const tracking = await discordClient.db.prepare('SELECT * FROM tracking').all()
     const trackingEmbed = generateTrackingEmbed()
 
-    tracking.forEach(async (target) => {
-      if (target.tracking_type == 2) {
-        send(target, trackingEmbed)
-      } else {
-        const nearestHour = new Date(timestamp)
-        nearestHour.setHours(nearestHour.getHours() + Math.round(nearestHour.getMinutes()/60));
-        nearestHour.setMinutes(0, 0, 0)
-    
-        if (Math.abs(Math.floor(nearestHour.getTime()/1000) - currentTimestamp) <= 60) {
+    discordClient.db.all('SELECT * FROM tracking', (err, rows) => {
+      rows.forEach(async (target) => {
+        if (target.tracking_type == 2) {
           send(target, trackingEmbed)
+        } else {
+          const nearestHour = new Date(timestamp)
+          nearestHour.setHours(nearestHour.getHours() + Math.round(nearestHour.getMinutes()/60));
+          nearestHour.setMinutes(0, 0, 0)
+      
+          if (Math.abs(Math.floor(nearestHour.getTime()/1000) - currentTimestamp) <= 60) {
+            send(target, trackingEmbed)
+          }
         }
-      }
+      })
     })
   }
 }
@@ -92,13 +93,13 @@ const requestRanking = async (data, event, discordClient, idx) => {
     data.forEach((user) => {
       discordClient.db.prepare('INSERT INTO events ' + 
         '(event_id, sekai_id, name, rank, score, timestamp) ' + 
-        'VALUES(@eventId,	@sekaiId, @name, @rank, @score, @timestamp)').run({
-        eventId: event.id,
-        sekaiId: user.userId.toString(),
-        name: user.name,
-        rank: user.rank,
-        score: user.score,
-        timestamp: timestamp
+        'VALUES($eventId,	$sekaiId, $name, $rank, $score, $timestamp)').run({
+        $eventId: event.id,
+        $sekaiId: user.userId.toString(),
+        $name: user.name,
+        $rank: user.rank,
+        $score: user.score,
+        $timestamp: timestamp
       });
     });
 
