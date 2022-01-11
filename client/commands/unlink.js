@@ -1,28 +1,60 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ERR_COMMAND } = require('../../constants');
 
+const COMMAND_NAME = 'unlink'
+
+const generateDeferredResponse = require('../methods/generateDeferredResponse') 
+const generateEmbed = require('../methods/generateEmbed') 
+
 const UNLINK_CONSTANTS = {
-  'DISCORD_LINKED_ERR': 'Error! Your Discord account is already linked to a Project Sekai account.',
-  'SEKAI_LINKED_ERR': 'Error! That Project Sekai account is already linked to another Discord account.',
+  'EXPIRED_CODE_ERR': {
+    type: 'Error',
+    message: 'Your link code has expired'
+  },
 
-  'EXPIRED_CODE_ERR': 'Error! Your link code has expired',
-  'GEN_ERR': 'Error! Invalid code on Project Sekai profile',
-  'NO_CODE_ERR': 'Error! Please request a link code first.',
+  'BAD_CODE_ERR': {
+    type: 'Error',
+    message: 'Invalid code on Project Sekai profile. ' + 
+      'Did you remember to press back on your profile to save the changes?'
+  },
 
-  'NO_SEKAI_ERR': 'Error! This Project Sekai account is not linked to any Discord account.',
-  'NO_DISCORD_LINK': 'Error! This Discord account is not linked to any Project Sekai account.',
+  'NO_CODE_ERR': {
+    type: 'Error',
+    message: 'Please request a link code first.'
+  },
 
-  'WRONG_ACC_ERR': 'Error! There was an issue in finding this account. Please request a new link code.' + 
-    'Make sure all the digits are typed correctly.',
+  'NO_SEKAI_ERR': {
+    type: 'Error',
+    message: 'This Project Sekai account is not linked to any Discord account.'
+  },
 
-  'UNLINK_SUCC': 'Success! Your account is now unlinked.'
+  'NO_DISCORD_LINK': {
+    type: 'Error',
+    message: 'This Discord account is not linked to any Project Sekai account.'
+  },
+
+  'BAD_ID_ERR': {
+    type: 'Error', 
+    message: 'You have provided an invalid ID.'
+  },
+
+  'BAD_ACC_ERR': {
+    type: 'Error',
+    message: 'There was an issue in finding this account. Please request a new link code.' + 
+      'Make sure all the digits are typed correctly.'
+  },
+
+  'UNLINK_SUCC': {
+    type: 'Success',
+    message: 'Your account is now unlinked.'
+  }
 };
 
 const generatedCodes = {};
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('unlink')
+    .setName(COMMAND_NAME)
     .setDescription('Unlink a Discord account from your Project Sekai account')
     .addSubcommand(sc =>
       sc.setName('request')
@@ -38,97 +70,116 @@ module.exports = {
   async execute(interaction, discordClient) {
     const db = discordClient.db
 
-    switch(interaction.options._subcommand) {
-      case 'request':
-        const accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g,'')
-        const sekaiCheck = db.prepare('SELECT * FROM users WHERE sekai_id=@sekaiId').all({
-          sekaiId: accountId
-        });
+    const deferredResponse = await interaction.reply({
+      embeds: [generateDeferredResponse(COMMAND_NAME, discordClient)],
+      fetchReply: true
+    })
 
-        if (sekaiCheck.length > 0) {
-          generatedCodes[interaction.user.id] = {
-            code: Math.random().toString(36).slice(-5),
-            accountId: accountId,
-            expiry: Math.floor(Date.now()/1000) + 300
-          };
-          await interaction.reply({
-            content: `**Unlink Code:** \`${generatedCodes[interaction.user.id].code}\`\n` + 
-              `**Account ID:** \`${generatedCodes[interaction.user.id].accountId}\`\n` + 
-              `**Expires:** <t:${generatedCodes[interaction.user.id].expiry}>`, 
-            ephemeral: true 
-          });
-        } else {
-          await interaction.reply({
-            content: UNLINK_CONSTANTS.NO_SEKAI_ERR,
-            ephemeral: true 
-          });
-        }
-        break;
-      case 'authenticate':
-        const discordCheck = db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
-          discordId: interaction.user.id, 
-        });
+    if (interaction.options._subcommand === 'request') {
+      const accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g,'')
 
-        if (discordCheck.length === 0) {
-          await interaction.reply({
-            content: UNLINK_CONSTANTS.NO_DISCORD_LINK,
-            ephemeral: true 
-          });
+      if (!accountId) {
+        // Do something because there is an empty account id input
+        await deferredResponse.edit({
+          embeds: [generateEmbed(COMMAND_NAME, UNLINK_CONSTANTS.BAD_ID_ERR, discordClient)]
+        })
+        return
+      }
 
-          return;
-        }
+      const sekaiCheck = db.prepare('SELECT * FROM users WHERE sekai_id=@sekaiId').all({
+        sekaiId: accountId
+      });
 
-        if (interaction.user.id in generatedCodes) {
-          if (generatedCodes[interaction.user.id].expiry < Math.floor(Date.now()/1000)) {
-            await interaction.reply({
-              content: UNLINK_CONSTANTS.EXPIRED_CODE_ERR,
-              ephemeral: true 
+      if (sekaiCheck.length > 0) {
+        discordClient.addSekaiRequest('profile', {
+          userId: accountId
+        }, async (response) => {
+          // If the response does not exist
+          if (response.httpStatus) {
+            await deferredResponse.edit({
+              embeds: [generateEmbed(COMMAND_NAME, UNLINK_CONSTANTS.BAD_ID_ERR, discordClient)]
+            })
+          } else {
+            // Generate a new code for the user
+            generatedCodes[interaction.user.id] = {
+              code: Math.random().toString(36).slice(-5),
+              accountId: accountId,
+              expiry: Date.now() + 300000
+            };
+
+            const content = {
+              type: 'Success',
+              message: `Link Code: \`${generatedCodes[interaction.user.id].code}\`\n` + 
+                `Account ID: \`${generatedCodes[interaction.user.id].accountId}\`\n` + 
+                `Expires: <t:${Math.floor(generatedCodes[interaction.user.id].expiry/1000)}>`
+            }
+
+            await deferredResponse.edit({
+              embeds: [generateEmbed(COMMAND_NAME, content, discordClient)]
             });
-            return;
-          } 
-
-          discordClient.addSekaiRequest('profile', {
-            userId: generatedCodes[interaction.user.id].accountId
-          }, async (response) => {
-            if (response.httpStatus) {
-              await interaction.reply({
-                content: LINK_CONSTANTS.WRONG_ACC_ERR,
-                ephemeral: true 
-              });
-  
-              delete generatedCodes[interaction.user.id]
-              return
-            }
-  
-            if (response.userProfile.word === generatedCodes[interaction.user.id].code) {
-              // Check through the client if the code is set in the description
-              db.prepare('DELETE FROM users WHERE sekai_id=@sekaiId').run({
-                sekaiId: generatedCodes[interaction.user.id].accountId
-              });
-              
-              await interaction.reply({
-                content: UNLINK_CONSTANTS.UNLINK_SUCC,
-                ephemeral: true 
-              });
-            } else {
-              await interaction.reply({
-                content: UNLINK_CONSTANTS.GEN_ERR,
-                ephemeral: true 
-              });
-            }
-          })
-        } else {
-          await interaction.reply({
-            content: UNLINK_CONSTANTS.NO_CODE_ERR,
-            ephemeral: true 
-          });
-        }
-        break;
-      default:
-        await interaction.reply({
-          content: ERR_COMMAND,
-          ephemeral: true 
+          }
+        })
+      } else {
+        await deferredResponse.edit({
+          embeds: [generateEmbed(COMMAND_NAME, UNLINK_CONSTANTS.NO_SEKAI_ERR, discordClient)]
         });
+      }
+    } else if (interaction.options._subcommand === 'authenticate') {
+      const discordCheck = db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
+        discordId: interaction.user.id, 
+      });
+
+      if (discordCheck.length === 0) {
+        await deferredResponse.edit({
+          embeds: [generateEmbed(COMMAND_NAME, UNLINK_CONSTANTS.NO_DISCORD_LINK, discordClient)]
+        });
+        return;
+      }
+
+      if (interaction.user.id in generatedCodes) {
+        if (generatedCodes[interaction.user.id].expiry < Date.now()) {
+          await deferredResponse.edit({
+            embeds: [generateEmbed(COMMAND_NAME, UNLINK_CONSTANTS.EXPIRED_CODE_ERR, discordClient)]
+          });
+          return;
+        } 
+
+        discordClient.addSekaiRequest('profile', {
+          userId: generatedCodes[interaction.user.id].accountId
+        }, async (response) => {
+          if (response.httpStatus) {
+            await deferredResponse.edit({
+              embeds: [generateEmbed(COMMAND_NAME, UNLINK_CONSTANTS.BAD_ACC_ERR, discordClient)]
+            });
+
+            delete generatedCodes[interaction.user.id]
+            return
+          }
+
+          if (response.userProfile.word === generatedCodes[interaction.user.id].code) {
+            // Check through the client if the code is set in the description
+            db.prepare('DELETE FROM users WHERE sekai_id=@sekaiId').run({
+              sekaiId: generatedCodes[interaction.user.id].accountId
+            });
+            
+            await deferredResponse.edit({
+              embeds: [generateEmbed(COMMAND_NAME, UNLINK_CONSTANTS.UNLINK_SUCC, discordClient)]
+            });
+          } else {
+            await deferredResponse.edit({
+              embeds: [generateEmbed(COMMAND_NAME, UNLINK_CONSTANTS.BAD_CODE_ERR, discordClient)]
+            });
+          }
+        })
+      } else {
+        await deferredResponse.edit({
+          embeds: [generateEmbed(COMMAND_NAME, UNLINK_CONSTANTS.NO_CODE_ERR, discordClient)]
+        });
+      }
+    } else {
+      await deferredResponse.edit({
+        embeds: [generateEmbed(COMMAND_NAME, ERR_COMMAND, discordClient)]
+      });
     }
   }
 };

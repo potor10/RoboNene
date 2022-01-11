@@ -7,7 +7,10 @@ module.exports = {
   ],
 
   // Default Response When Command Errors
-  "ERR_COMMAND": "Could not understand your command, please try again!",
+  "ERR_COMMAND": {
+    type: 'Error',
+    message: "Could not understand your command, please try again!"
+  },
 
   // Rich Embed Information
   "NENE_COLOR": "#34DD9A",

@@ -1,6 +1,9 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ERR_COMMAND } = require('../../constants');
 
+// TODO 
+// Update reply to be embed
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('alerts')

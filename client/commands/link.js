@@ -1,27 +1,60 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ERR_COMMAND } = require('../../constants');
 
+const COMMAND_NAME = 'link'
+
 const generateDeferredResponse = require('../methods/generateDeferredResponse') 
+const generateEmbed = require('../methods/generateEmbed') 
 
 const LINK_CONSTANTS = {
-  'DISCORD_LINKED_ERR': 'Error! Your Discord account is already linked to a Project Sekai account.',
-  'SEKAI_LINKED_ERR': 'Error! That Project Sekai account is already linked to another Discord account.',
+  'DISCORD_LINKED_ERR': {
+    type: 'Error',
+    message: 'Your Discord account is already linked to a Project Sekai account.'
+  },
 
-  'LINK_SUCC': 'Success! Your account is now linked.',
+  'SEKAI_LINKED_ERR': {
+    type: 'Error',
+    message: 'That Project Sekai account is already linked to another Discord account.'
+  },
 
-  'WRONG_ACC_ERR': 'Error! There was an issue in finding this account. Please request a new link code.' + 
-    'Make sure all the digits are typed correctly.',
+  'LINK_SUCC': {
+    type: 'Success',
+    message: 'Your account is now linked.'
+  },
 
-  'EXPIRED_CODE_ERR': 'Error! Your link code has expired',
-  'GEN_ERR': 'Error! Invalid code on Project Sekai profile',
-  'NO_CODE_ERR': 'Error! Please request a link code first.',
+  'BAD_ID_ERR': {
+    type: 'Error', 
+    message: 'You have provided an invalid ID.'
+  },
+
+  'BAD_ACC_ERR': {
+    type: 'Error',
+    message: 'There was an issue in finding this account. Please request a new link code.' + 
+      'Make sure all the digits are typed correctly.'
+  },
+
+  'EXPIRED_CODE_ERR': {
+    type: 'Error',
+    message: 'Your link code has expired.'
+  },
+
+  'BAD_CODE_ERR': {
+    type: 'Error', 
+    message: 'Invalid code on Project Sekai profile. ' + 
+      'Did you remember to press back on your profile to save the changes?'
+  },
+
+  'NO_CODE_ERR': {
+    type: 'Error', 
+    message: 'Please request a link code first.'
+  },
 };
 
 const generatedCodes = {};
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('link')
+    .setName(COMMAND_NAME)
     .setDescription('Link your Discord account to Project Sekai')
     .addSubcommand(sc =>
       sc.setName('request')
@@ -38,7 +71,7 @@ module.exports = {
     const db = discordClient.db
 
     const deferredResponse = await interaction.reply({
-      embeds: [generateDeferredResponse('link', discordClient)],
+      embeds: [generateDeferredResponse(COMMAND_NAME, discordClient)],
       fetchReply: true
     })
 
@@ -48,9 +81,8 @@ module.exports = {
       if (!accountId) {
         // Do something because there is an empty account id input
         await deferredResponse.edit({
-          content: "WTF IT IS TRASH"
+          embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.BAD_ID_ERR, discordClient)]
         })
-
         return
       }
 
@@ -64,34 +96,50 @@ module.exports = {
         // User is already linked
         if (users[0].discord_id === interaction.user.id) {
           await deferredResponse.edit({
-            content: LINK_CONSTANTS.DISCORD_LINKED_ERR
+            embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.DISCORD_LINKED_ERR, discordClient)]
           });
         } 
         // Sekai id is already linked
         else if (users[0].sekai_id === accountId) {
           await deferredResponse.edit({
-            content: LINK_CONSTANTS.SEKAI_LINKED_ERR
+            embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.SEKAI_LINKED_ERR, discordClient)]
           });
         } 
         // General Error
         else {
           await deferredResponse.edit({
-            content: ERR_COMMAND
+            embeds: [generateEmbed(COMMAND_NAME, ERR_COMMAND, discordClient)]
           });
         }
       } else {
-        // Generate a new code for the user
-        generatedCodes[interaction.user.id] = {
-          code: Math.random().toString(36).slice(-5),
-          accountId: accountId,
-          expiry: Date.now() + 300000
-        };
+        discordClient.addSekaiRequest('profile', {
+          userId: accountId
+        }, async (response) => {
+          // If the response does not exist
+          if (response.httpStatus) {
+            await deferredResponse.edit({
+              embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.BAD_ID_ERR, discordClient)]
+            })
+          } else {
+            // Generate a new code for the user
+            generatedCodes[interaction.user.id] = {
+              code: Math.random().toString(36).slice(-5),
+              accountId: accountId,
+              expiry: Date.now() + 300000
+            };
 
-        await deferredResponse.edit({
-          content: `**Link Code:** \`${generatedCodes[interaction.user.id].code}\`\n` + 
-            `**Account ID:** \`${generatedCodes[interaction.user.id].accountId}\`\n` + 
-            `**Expires:** <t:${Math.floor(generatedCodes[interaction.user.id].expiry/1000)}>`
-        });
+            const content = {
+              type: 'Success',
+              message: `Link Code: \`${generatedCodes[interaction.user.id].code}\`\n` + 
+                `Account ID: \`${generatedCodes[interaction.user.id].accountId}\`\n` + 
+                `Expires: <t:${Math.floor(generatedCodes[interaction.user.id].expiry/1000)}>`
+            }
+
+            await deferredResponse.edit({
+              embeds: [generateEmbed(COMMAND_NAME, content, discordClient)]
+            });
+          }
+        })
       }
     } else if (interaction.options._subcommand === 'authenticate') {
       const users = db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({ 
@@ -102,7 +150,7 @@ module.exports = {
         // If the account is already linked
         if (users[0].discord_id === interaction.user.id) {
           await deferredResponse.edit({
-            content: LINK_CONSTANTS.DISCORD_LINKED_ERR
+            embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.DISCORD_LINKED_ERR, discordClient)]
           });
 
           return;
@@ -112,7 +160,7 @@ module.exports = {
       if (interaction.user.id in generatedCodes) {
         if (generatedCodes[interaction.user.id].expiry < Date.now()) {
           await deferredResponse.edit({
-            content: LINK_CONSTANTS.EXPIRED_CODE_ERR
+            embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.EXPIRED_CODE_ERR, discordClient)]
           });
           return;
         } 
@@ -123,7 +171,7 @@ module.exports = {
           // If the response does not exist
           if (response.httpStatus) {
             await deferredResponse.edit({
-              content: LINK_CONSTANTS.WRONG_ACC_ERR
+              embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.BAD_ACC_ERR, discordClient)]
             });
 
             delete generatedCodes[interaction.user.id]
@@ -139,23 +187,23 @@ module.exports = {
             })
 
             await deferredResponse.edit({
-              content: LINK_CONSTANTS.LINK_SUCC
+              embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.LINK_SUCC, discordClient)]
             });
 
           } else {
             await deferredResponse.edit({
-              content: LINK_CONSTANTS.GEN_ERR
+              embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.BAD_CODE_ERR, discordClient)]
             });
           }
         })
       } else {
         await deferredResponse.edit({
-          content: LINK_CONSTANTS.NO_CODE_ERR
+          embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.NO_CODE_ERR, discordClient)]
         });
       }
     } else {
       await deferredResponse.edit({
-        content: ERR_COMMAND
+        embeds: [generateEmbed(COMMAND_NAME, ERR_COMMAND, discordClient)]
       });
     }
   }

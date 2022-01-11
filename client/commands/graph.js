@@ -1,6 +1,10 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const https = require('https');
 
+// TODO 
+// Update reply to be embed
+// Obtain data from api.sekai.best for these calculations
+
 const postQuickChart = (message, event, rankData) => {
   data = []
 

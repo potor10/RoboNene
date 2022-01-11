@@ -3,6 +3,10 @@ const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER, REPLY_TIMEOUT, 
   TIMEOUT_ERR, NO_EVENT_ERR } = require('../../constants');
 
+// TODO 
+// Update reply to be embed
+// Obtain data from api.sekai.best for these calculations
+
 const generateCutoffEmbed = (event, timestamp, tier, data, discordClient) => {
   let score = 'N/A'
   let scorePerHourAll = 'N/A'

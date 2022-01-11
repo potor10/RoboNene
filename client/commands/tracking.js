@@ -1,10 +1,14 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ERR_COMMAND } = require('../../constants');
 
+const COMMAND_NAME = 'tracking'
+
+const generateEmbed = require('../methods/generateEmbed') 
+
 module.exports = {
   adminOnly: true,
   data: new SlashCommandBuilder()
-    .setName('tracking')
+    .setName(COMMAND_NAME)
     .setDescription('Add a tracking post to a server')
     .addChannelOption(op => 
       op.setName('channel')
@@ -24,14 +28,18 @@ module.exports = {
   async execute(interaction, discordClient) {
     const db = discordClient.db
 
-    console.log(interaction);
-    console.log(JSON.stringify(interaction.options))
-
     const channelData = interaction.options._hoistedOptions[0]
+    console.log(channelData)
+
     if (channelData.channel.type !== 'GUILD_TEXT') {
+      const content = {
+        type: 'Error',
+        message: 'The channel you have selected is not a valid text channel'
+      }
+
       await interaction.reply({
-        content: 'Error! The channel you have selected is not a valid text channel',
-        ephemeral: true 
+        embeds: [generateEmbed(COMMAND_NAME, content, discordClient)],
+        ephemeral: true
       });
 
       return
@@ -44,10 +52,17 @@ module.exports = {
         guildId: channelData.channel.guildId,
         trackingType: interaction.options._hoistedOptions[1].value
       });
+
+      const content = {
+        type: 'Success',
+        message: `Alert Type: \`\`${interaction.options._hoistedOptions[1].value} min\`\`\n` +
+          `Status: \`\`Enabled\`\`\n` +
+          `Channel: \`\`${channelData.channel.name}\`\`\n` +
+          `Guild: \`\`${channelData.channel.guild.name}\`\``
+      }
+
       await interaction.reply({
-        content: `Success! ${interaction.options._hoistedOptions[1].value} min ` + 
-          'tracking alerts enabled in ' +
-          `channel #${channelData.channel.name}.`,
+        embeds: [generateEmbed(COMMAND_NAME, content, discordClient)],
         ephemeral: true 
       });
     } else {
@@ -59,16 +74,27 @@ module.exports = {
       });
     
       if (query.changes === 1) {
+        const content = {
+          type: 'Success',
+          message: `Alert Type: \`\`${interaction.options._hoistedOptions[1].value} min\`\`\n` +
+            `Status: \`\`Disabled\`\`\n` +
+            `Channel: \`\`${channelData.channel.name}\`\`\n` +
+            `Guild: \`\`${channelData.channel.guild.name}\`\``
+        }
+
         await interaction.reply({
-          content: `Success! ${interaction.options._hoistedOptions[1].value} min ` + 
-            'tracking alerts disabled in ' +
-            `channel #${channelData.channel.name}.`,
+          embeds: [generateEmbed(COMMAND_NAME, content, discordClient)],
           ephemeral: true 
         });
       } else {
+        const content = {
+          type: 'Error',
+          message: 'There are no tracking alerts for these parameters'
+        }
+
         await interaction.reply({
-          content: 'Error! There are no tracking alerts for these parameters',
-          ephemeral: true 
+          embeds: [generateEmbed(COMMAND_NAME, content, discordClient)],
+          ephemeral: true
         });
       }
     }

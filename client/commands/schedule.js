@@ -3,6 +3,9 @@ const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
 
+// TODO 
+// Update reply to be embed
+
 const getNextReset = (currentDate) => {
   const nextReset = new Date();
   nextReset.setUTCHours(12);

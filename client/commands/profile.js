@@ -4,6 +4,9 @@ const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
 const getCard = require('../methods/getCard')
 
+// TODO 
+// Update reply to be embed
+
 const PROF_CONSTANTS = {
   'NO_ACC_ERROR': 'Error! This user does not have an account with the bot',
   "BAD_INPUT_ERROR": "BAD"

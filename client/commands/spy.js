@@ -2,6 +2,9 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ERR_COMMAND } = require('../../constants');
 const getRank = require('../methods/getRank')
 
+// TODO 
+// Update reply to be embed
+
 module.exports = {
   requiresLink: true,
   data: new SlashCommandBuilder()

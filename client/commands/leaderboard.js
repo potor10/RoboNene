@@ -4,6 +4,9 @@ const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE,
   REPLY_TIMEOUT, TIMEOUT_ERR, NO_EVENT_ERR } = require('../../constants');
 const generateRankingText = require('../methods/generateRankingText')
 
+// TODO 
+// Update reply to be embed
+
 const LEADERBOARD_CONSTANTS = {
   'BAD_RANGE_ERR': 'Error! Please choose a rank within the range of 1 to 100',
 

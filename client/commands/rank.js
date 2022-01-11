@@ -1,6 +1,9 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const getRank = require('../methods/getRank')
 
+// TODO 
+// Update reply to be embed
+
 const RANK_CONSTANTS = {
   'NO_ACC_ERROR': 'Error! This user does not have an account with the bot',
 };
