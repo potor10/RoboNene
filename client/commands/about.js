@@ -19,7 +19,8 @@ module.exports = {
         { name: '**Programming**', value: 'Potor10#3237\nUlt#0001\nRedside#1337\nYuu#6883', inline: true},
         { name: '**Design**', value: 'Potor10#3237\nReinhäla#4444', inline: true},
         { name: '**Testing**', value: 'Potor10#3237\nReinhäla#4444', inline: true },
-        { name: '**Schedule Data**', value: '[Sekai World](https://github.com/Sekai-World/sekai-master-db-en-diff/blob/main/events.json)' },
+        { name: '**Game Data**', value: '[Sekai World](https://github.com/Sekai-World/sekai-master-db-en-diff/blob/main/events.json)' },
+        { name: '**Ranking Data**', value: '[Sekai Best](https://api.sekai.best/docs)' },
         { name: '**Discord**', value: 'Robo Nene logs the usage of her commands to prevent abuse. ' + 
           'Outside of the use of her commands, Robo Nene does not collect any user data, chat logs, or server information. ' + 
           'Robo nene’s code is open-source, you can check it out at [github](https://github.com/potor10/RoboNene).' },

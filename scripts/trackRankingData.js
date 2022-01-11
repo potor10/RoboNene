@@ -4,7 +4,6 @@ const RANKING_RANGE = require('./trackRankingRange.json')
 const fs = require('fs');
 const generateRankingText = require('../client/methods/generateRankingText')
 
-
 const trackingChannels = {}
 
 const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
@@ -39,20 +38,20 @@ const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
   if (data.length > 0) {
     const trackingEmbed = generateTrackingEmbed()
 
-    discordClient.db.all('SELECT * FROM tracking', (err, rows) => {
-      rows.forEach(async (target) => {
-        if (target.tracking_type == 2) {
-          send(target, trackingEmbed)
-        } else {
-          const nearestHour = new Date(timestamp)
-          nearestHour.setHours(nearestHour.getHours() + Math.round(nearestHour.getMinutes()/60));
-          nearestHour.setMinutes(0, 0, 0)
-      
-          if (Math.abs(Math.floor(nearestHour.getTime()/1000) - currentTimestamp) <= 60) {
-            send(target, trackingEmbed)
-          }
+    const channels = discordClient.db.prepare('SELECT * FROM tracking').all()
+
+    channels.forEach(async (channel) => {
+      if (channel.tracking_type == 2) {
+        send(channel, trackingEmbed)
+      } else {
+        const nearestHour = new Date(timestamp)
+        nearestHour.setHours(nearestHour.getHours() + Math.round(nearestHour.getMinutes()/60));
+        nearestHour.setMinutes(0, 0, 0)
+    
+        if (Math.abs(Math.floor(nearestHour.getTime()/1000) - currentTimestamp) <= 60) {
+          send(channel, trackingEmbed)
         }
-      })
+      }
     })
   }
 }
@@ -63,7 +62,7 @@ const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
  * 
  * @return {number} the ms to wait before checking again
  */
- const getNextCheck = () => {
+const getNextCheck = () => {
   const nextCheck = new Date();
   nextCheck.setMinutes(nextCheck.getMinutes() + Math.round(nextCheck.getSeconds()/60));
   nextCheck.setSeconds(0, 0)
@@ -82,46 +81,18 @@ const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
  * @param {Object} event our ranking event data
  * @param {DiscordClient} discordClient the client we are using 
  */
-const requestRanking = async (data, event, discordClient, idx) => {
+const requestRanking = async (event, discordClient) => {
   const retrieveResult = (response) => {
     const timestamp = Date.now()
-
-    if (idx === 0) {
-      sendTrackingEmbed(response.rankings, event, timestamp, discordClient)
-    }
-
-    data.forEach((user) => {
-      discordClient.db.prepare('INSERT INTO events ' + 
-        '(event_id, sekai_id, name, rank, score, timestamp) ' + 
-        'VALUES($eventId,	$sekaiId, $name, $rank, $score, $timestamp)').run({
-        $eventId: event.id,
-        $sekaiId: user.userId.toString(),
-        $name: user.name,
-        $rank: user.rank,
-        $score: user.score,
-        $timestamp: timestamp
-      });
-    });
-
-    data.push.apply(data, response.rankings)
+    sendTrackingEmbed(response.rankings, event, timestamp, discordClient)
   }
 
-  if (idx < RANKING_RANGE.length) {
-    if (idx < 5) {
-      // Make Ranks 1-500 Priority Requests (We Need These On Time)
-      discordClient.addPrioritySekaiRequest('ranking', {
-        eventId: event.id,
-        ...RANKING_RANGE[idx]
-      }, retrieveResult)
-      requestRanking(data, event, discordClient, idx+1)
-    } else {
-      // Make Cutoffs 1000+ Non Priority
-      discordClient.addSekaiRequest('ranking', {
-        eventId: event.id,
-        ...RANKING_RANGE[idx]
-      }, retrieveResult)
-      requestRanking(data, event, discordClient, idx+1)
-    }
+  for(const idx in RANKING_RANGE) {
+    // Make Priority Requests (We Need These On Time)
+    discordClient.addPrioritySekaiRequest('ranking', {
+      eventId: event.id,
+      ...RANKING_RANGE[idx]
+    }, retrieveResult)
   }
 }
 
@@ -169,7 +140,7 @@ const trackRankingData = async (discordClient) => {
     // 1 extra second to make sure event is on
     setTimeout(() => {trackRankingData(discordClient)}, eta_ms + 1000);
   } else {
-    requestRanking([], event, discordClient, 0)
+    requestRanking(event, discordClient)
     let eta_ms = getNextCheck()
     console.log(`Event Scores Retrieved, Pausing For ${eta_ms} ms`);
     // 1 extra second to make sure event is on

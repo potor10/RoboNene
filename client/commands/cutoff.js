@@ -24,13 +24,13 @@ const generateCutoffEmbed = (event, timestamp, tier, data, discordClient) => {
 
     // TODO: BIG BAD, Fix
     const results = discordClient.db.prepare('SELECT * FROM events WHERE ' + 
-      'event_id=$eventId AND ' +
-      'rank=$rank AND ' + 
-      'timestamp>=$timestamp ' + 
+      'event_id=@eventId AND ' +
+      'rank=@rank AND ' + 
+      'timestamp>=@timestamp ' + 
       'ORDER BY timestamp ASC').all({
-      $eventId: event.id,
-      $rank: tier,
-      $timestamp: timestamp-3600000
+      eventId: event.id,
+      rank: tier,
+      timestamp: timestamp-3600000
     });
 
     if (results.length > 0) {

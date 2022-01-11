@@ -3,7 +3,7 @@ const { Client, Intents, Guild } = require('discord.js');
 const { SekaiClient } = require('sekapi');
 
 const winston = require('winston');
-const sqlite3 = require('sqlite3').verbose();
+const Database = require('better-sqlite3');
 
 const fs = require('fs');
 const path = require('path')
@@ -74,23 +74,21 @@ class DiscordClient {
   }
 
   loadDb(dir = CLIENT_CONSTANTS.DB_DIR) {
-    this.db = new sqlite3.Database(`${dir}/${CLIENT_CONSTANTS.DB_NAME}`);
-    this.db.serialize(() => {
-      this.db.run('CREATE TABLE IF NOT EXISTS users ' + 
-        '(discord_id TEXT PRIMARY KEY, sekai_id TEXT, ' + 
-        'rank_warning INTEGER DEFAULT 0, rank_lost INTEGER DEFAULT 0, ' + 
-        'event_time INTEGER DEFAULT 0, ' + 
-        'quiz_correct INTEGER DEFAULT 0, quiz_question INTEGER DEFAULT 0)')
+    this.db = new Database(`${dir}/${CLIENT_CONSTANTS.DB_NAME}`);
+    this.db.prepare('CREATE TABLE IF NOT EXISTS users ' + 
+      '(discord_id TEXT PRIMARY KEY, sekai_id TEXT, ' + 
+      'rank_warning INTEGER DEFAULT 0, rank_lost INTEGER DEFAULT 0, ' + 
+      'event_time INTEGER DEFAULT 0, ' + 
+      'quiz_correct INTEGER DEFAULT 0, quiz_question INTEGER DEFAULT 0)').run()
 
-      // Initialize the event database instance
-      this.db.run('CREATE TABLE IF NOT EXISTS events ' + 
-        '(event_id INTEGER, sekai_id TEXT, name TEXT, ' + 
-        'rank INTEGER, score INTEGER, timestamp INTEGER)')
+    // Initialize the event database instance
+    this.db.prepare('CREATE TABLE IF NOT EXISTS events ' + 
+      '(event_id INTEGER, sekai_id TEXT, name TEXT, ' + 
+      'rank INTEGER, score INTEGER, timestamp INTEGER)').run()
 
-      // Initialize the tracking database instance
-      this.db.run('CREATE TABLE IF NOT EXISTS tracking ' + 
-        '(channel_id TEXT PRIMARY KEY, guild_id TEXT, tracking_type INTEGER)')
-    });    
+    // Initialize the tracking database instance
+    this.db.prepare('CREATE TABLE IF NOT EXISTS tracking ' + 
+      '(channel_id TEXT PRIMARY KEY, guild_id TEXT, tracking_type INTEGER)').run()
   }
 
   closeDb() {

@@ -23,5 +23,4 @@ module.exports = {
 
   // Time before replies which rely on Sekai API Timeout TODO: Remove in favor of deferred responses
   "REPLY_TIMEOUT": 1000,
-  "TIMEOUT_ERR": "Error! Your request has timed out",
 }
