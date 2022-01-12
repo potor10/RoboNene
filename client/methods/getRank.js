@@ -1,43 +1,47 @@
 const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER, REPLY_TIMEOUT, 
-  TIMEOUT_ERR, NO_EVENT_ERR, RESULTS_PER_PAGE } = require('../../constants');
+const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
 const generateRankingText = require('../methods/generateRankingText')
+const generateEmbed = require('../methods/generateEmbed') 
 
 const RANK_CONSTANTS = {
-  'BAD_INPUT_ERROR': 'Error! There was an issue with the input',
+  'BAD_INPUT_ERROR': {
+    type: 'Error',
+    message: 'There was an issue with your input parameters. Please try again.'
+  },
+
+  "NO_EVENT_ERR": {
+    type: 'Error',
+    message: "There is currently no event going on",
+  },
 
   'HIGHER_LIMIT': (RESULTS_PER_PAGE%2) ? Math.floor(RESULTS_PER_PAGE/2) : Math.floor(RESULTS_PER_PAGE/2)-1,
   'LOWER_LIMIT':  Math.floor(RESULTS_PER_PAGE/2)
 };
 
-const getRank = async (interaction, discordClient, requestParams) => {
+const getRank = async (commandName, deferredResponse, discordClient, requestParams) => {
   const event = discordClient.getCurrentEvent()
+
   if (event.id === -1) {
-    await interaction.reply({
-      content: NO_EVENT_ERR,
-      ephemeral: true 
+    await deferredResponse.edit({
+      embeds: [generateEmbed(commandName, RANK_CONSTANTS.NO_EVENT_ERR, discordClient)]
     });
     return
   }
 
-  let replied = false
   discordClient.addSekaiRequest('ranking', {
     eventId: event.id,
     ...requestParams
   }, async (response) => {
-    if (interaction.replied) {
-      return
-    } else if (response.rankings.length === 0) {
-      await interaction.reply({
-        content: RANK_CONSTANTS.BAD_INPUT_ERROR,
-        ephemeral: true 
+    if (response.rankings.length === 0) {
+      await deferredResponse.edit({
+        embeds: [generateEmbed(commandName, RANK_CONSTANTS.BAD_INPUT_ERROR, discordClient)]
       });
-      replied = true
       return
     }
 
     let higherLimit = RANK_CONSTANTS.HIGHER_LIMIT
     let lowerLimit = RANK_CONSTANTS.LOWER_LIMIT
+
     if (response.rankings[0].rank < RANK_CONSTANTS.HIGHER_LIMIT + 1) {
       const diff = RANK_CONSTANTS.HIGHER_LIMIT + 1 - response.rankings[0].rank
       higherLimit -= diff
@@ -57,25 +61,16 @@ const getRank = async (interaction, discordClient, requestParams) => {
       const leaderboardEmbed = new MessageEmbed()
         .setColor(NENE_COLOR)
         .setTitle(`${event.name}`)
-        .addField(`<t:${Math.floor(timestamp/1000)}:R>`, 
-          leaderboardText, false)
+        .addField(`**Requested:** <t:${Math.floor(timestamp/1000)}:R>`, leaderboardText, false)
+        .setThumbnail(event.banner)
         .setTimestamp()
         .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
   
-      await interaction.reply({ embeds: [leaderboardEmbed] });
-  
-      replied = true
+      await deferredResponse.edit({ 
+        embeds: [leaderboardEmbed]
+      });
     })
   })
-
-  setTimeout(async () => {
-    if (!replied) {
-      await interaction.reply({
-        content: TIMEOUT_ERR,
-        ephemeral: true 
-      });
-    }
-  }, REPLY_TIMEOUT)
 }
 
 module.exports = getRank

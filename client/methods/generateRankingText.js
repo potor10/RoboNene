@@ -12,9 +12,8 @@ const generateRankingText = (data, page, target) => {
     if (user.name.length > maxNameLength) {
       maxNameLength = user.name.length
     }
-    if (user.score.toString().length > maxScoreLength) {
-      const commaAmt = Math.floor(user.score.toString().length / 3)
-      maxScoreLength = user.score.toString().length + commaAmt
+    if (user.score.toLocaleString().length > maxScoreLength) {
+      maxScoreLength = user.score.toLocaleString().length
     }
   })
 
@@ -25,7 +24,7 @@ const generateRankingText = (data, page, target) => {
     let score = " ".repeat(maxScoreLength - data[i].score.toLocaleString().length) + 
       data[i].score.toLocaleString()
     
-    leaderboardText += `\`\`${rank} ${name}  ${score}\`\``;
+    leaderboardText += `\`\`${rank} ${name} ${score}\`\``;
     if ((page * RESULTS_PER_PAGE) + i + 1 === target) {
       leaderboardText += '⭐';
     } 

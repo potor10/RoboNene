@@ -60,6 +60,9 @@ const createScheduleEmbed = (data, client) => {
       { name: 'Event Started', value: `<t:${startTime}> - <t:${startTime}:R>` },
       { name: 'Ranking Closes', value: `<t:${aggregateTime}> - <t:${aggregateTime}:R>` },
     );
+
+    scheduleEmbed.setThumbnail('https://sekai-res.dnaroma.eu/file/sekai-en-assets/event/' + 
+      `${data[currentEventIdx].assetbundleName}/logo_rip/logo.webp`)
   }
 
   if (nextEventIdx !== -1) {
@@ -84,7 +87,7 @@ module.exports = {
     .setDescription('Event Schedule Times'),
   
   async execute(interaction, discordClient) {
-    const schedule = JSON.parse(fs.readFileSync('./schedule.json'));
+    const schedule = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
     const scheduleEmbed = createScheduleEmbed(schedule, discordClient.client);
     await interaction.reply({ embeds: [scheduleEmbed] });
   }    

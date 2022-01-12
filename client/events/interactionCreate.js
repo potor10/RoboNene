@@ -1,8 +1,17 @@
-const { BOT_ADMIN_IDS } = require('../../constants');
+const { adminIds } = require('../../config.json');
+
+const generateEmbed = require('../methods/generateEmbed') 
 
 const INTERACTION_CONST = {
-  "NO_ACCESS_ADMIN": "You can not access this command.",
-  "NO_ACCESS_LINK": "You can not access this command until you link your Discord to a Project Sekai account. Use /link to begin."
+  "NO_ACCESS_ADMIN": {
+    type: 'Error',
+    message: "You can not access this command."
+  },
+
+  "NO_ACCESS_LINK": {
+    type: 'Error',
+    message: "You can not access this command until you link your Discord to a Project Sekai account. Use /link to begin."
+  }
 }
 
 module.exports = {
@@ -30,9 +39,9 @@ module.exports = {
       const command = discordClient.commands[interactionIdx]
 
       if (command.adminOnly) {
-        if (!(BOT_ADMIN_IDS.includes(interaction.user.id))) {
+        if (!(adminIds.includes(interaction.user.id))) {
           await interaction.reply({
-            content: INTERACTION_CONST.NO_ACCESS_ADMIN,
+            embeds: [generateEmbed(command.data.name, INTERACTION_CONST.NO_ACCESS_ADMIN, discordClient)],
             ephemeral: true 
           });
 
@@ -47,7 +56,7 @@ module.exports = {
         });
         if (request.length === 0) {
           await interaction.reply({
-            content: INTERACTION_CONST.NO_ACCESS_LINK,
+            embeds: [generateEmbed(command.data.name, INTERACTION_CONST.NO_ACCESS_LINK, discordClient)],
             ephemeral: true 
           });
 
@@ -57,7 +66,5 @@ module.exports = {
       
       await command.execute(interaction, discordClient);
     }
-
-    //console.log(interaction);
   }
 };

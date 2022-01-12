@@ -13,8 +13,7 @@ const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
     const leaderboardEmbed = new MessageEmbed()
       .setColor(NENE_COLOR)
       .setTitle(`${event.name}`)
-      .addField(`<t:${Math.floor(timestamp/1000)}:R>`, 
-        leaderboardText, false)
+      .addField(`**Last Updated:** <t:${Math.floor(timestamp/1000)}:R>`, leaderboardText, false)
       .setTimestamp()
       .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
   

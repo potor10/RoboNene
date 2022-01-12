@@ -77,8 +77,6 @@ class DiscordClient {
     this.db = new Database(`${dir}/${CLIENT_CONSTANTS.DB_NAME}`);
     this.db.prepare('CREATE TABLE IF NOT EXISTS users ' + 
       '(discord_id TEXT PRIMARY KEY, sekai_id TEXT, ' + 
-      'rank_warning INTEGER DEFAULT 0, rank_lost INTEGER DEFAULT 0, ' + 
-      'event_time INTEGER DEFAULT 0, ' + 
       'quiz_correct INTEGER DEFAULT 0, quiz_question INTEGER DEFAULT 0)').run()
 
     // Initialize the event database instance

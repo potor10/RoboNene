@@ -1,20 +1,31 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE, 
-  REPLY_TIMEOUT, TIMEOUT_ERR, NO_EVENT_ERR } = require('../../constants');
-const generateRankingText = require('../methods/generateRankingText')
+const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
 
-// TODO 
-// Update reply to be embed
+const COMMAND_NAME = 'leaderboard'
+
+const generateRankingText = require('../methods/generateRankingText')
+const generateDeferredResponse = require('../methods/generateDeferredResponse') 
+const generateEmbed = require('../methods/generateEmbed') 
 
 const LEADERBOARD_CONSTANTS = {
-  'BAD_RANGE_ERR': 'Error! Please choose a rank within the range of 1 to 100',
+  "NO_EVENT_ERR": {
+    type: 'Error',
+    message: "There is currently no event going on",
+  },
+
+  'BAD_RANGE_ERR': {
+    type: 'Error',
+    message: 'Please choose a rank within the range of 1 to 100',
+  },
 
   'LEFT': '⬅️',
   'RIGHT': '➡️'
 };
 
-const createLeaderboard = async (deferredResponse, interaction, leaderboardParams) => {
+const createLeaderboard = async (deferredResponse, userId, leaderboardParams) => {
+  const timestamp = Date.now()
+
   const generateLeaderboardEmbed = ({client, event, page, rankingData, target}) => {
     const start = page * RESULTS_PER_PAGE;
     const end = start + RESULTS_PER_PAGE;
@@ -24,8 +35,9 @@ const createLeaderboard = async (deferredResponse, interaction, leaderboardParam
     const leaderboardEmbed = new MessageEmbed()
       .setColor(NENE_COLOR)
       .setTitle(`${event.name}`)
-      .setDescription('T100 Leaderboard')
+      .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp/1000)}>`)
       .addField(`Page ${page+1}`, leaderboardText, false)
+      .setThumbnail(event.banner)
       .setTimestamp()
       .setFooter(FOOTER, client.user.displayAvatarURL());
   
@@ -40,8 +52,7 @@ const createLeaderboard = async (deferredResponse, interaction, leaderboardParam
     .then(() => message.react(LEADERBOARD_CONSTANTS.RIGHT))
     .catch(err => console.log(err));
 
-
-  const awaitReactions = (interaction, message, leaderboardParams) => {
+  const awaitReactions = (userId, message, leaderboardParams) => {
     let availableReactions = [];
     const filter = (reaction, user) => {
       if (leaderboardParams.page === 0) {
@@ -52,7 +63,7 @@ const createLeaderboard = async (deferredResponse, interaction, leaderboardParam
       } else {
         availableReactions = [LEADERBOARD_CONSTANTS.LEFT, LEADERBOARD_CONSTANTS.RIGHT];
       }
-      return availableReactions.includes(reaction.emoji.name) && user.id === interaction.user.id;
+      return availableReactions.includes(reaction.emoji.name) && user.id === userId;
     };
   
     message.awaitReactions({ filter, max: 1, time: 60000, errors: ['time'] })
@@ -61,22 +72,22 @@ const createLeaderboard = async (deferredResponse, interaction, leaderboardParam
         if (reaction.emoji.name === LEADERBOARD_CONSTANTS.LEFT) {
           leaderboardParams.page -= 1
           await message.edit({ embeds: [generateLeaderboardEmbed(leaderboardParams)] });
-          awaitReactions(interaction, message, leaderboardParams);
+          awaitReactions(userId, message, leaderboardParams);
         } else if (reaction.emoji.name === LEADERBOARD_CONSTANTS.RIGHT) {
           leaderboardParams.page += 1
           await message.edit({ embeds: [generateLeaderboardEmbed(leaderboardParams)] });
-          awaitReactions(interaction, message, leaderboardParams);
+          awaitReactions(userId, message, leaderboardParams);
         }
       })
       .catch(collected => {});
   };
 
-  awaitReactions(interaction, message, leaderboardParams);
+  awaitReactions(userId, message, leaderboardParams);
 };
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('leaderboard')
+    .setName(COMMAND_NAME)
     .setDescription('Top 100 players and their scores')
     .addIntegerOption(op =>
       op.setName('rank')
@@ -84,19 +95,18 @@ module.exports = {
         .setRequired(false)),
 
   async execute(interaction, discordClient) {
+    const deferredResponse = await interaction.reply({
+      embeds: [generateDeferredResponse(COMMAND_NAME, discordClient)],
+      fetchReply: true
+    })
+
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {
-      await interaction.reply({
-        content: NO_EVENT_ERR,
-        ephemeral: true 
+      await deferredResponse.edit({
+        embeds: [generateEmbed(COMMAND_NAME, LEADERBOARD_CONSTANTS.NO_EVENT_ERR, discordClient)]
       });
       return
     }
-
-    const deferredResponse = await interaction.reply({
-      content: TIMEOUT_ERR,
-      fetchReply: true
-    });
 
     discordClient.addSekaiRequest('ranking', {
       eventId: event.id,
@@ -110,15 +120,14 @@ module.exports = {
         // User has selected a specific rank to jump to
           if (interaction.options._hoistedOptions[0].value > 100 || 
             interaction.options._hoistedOptions[0].value < 1) {
-              await interaction.reply({
-                content: LEADERBOARD_CONSTANTS.BAD_RANGE_ERR,
-                ephemeral: true 
-              });
+            await deferredResponse.edit({
+              embeds: [generateEmbed(COMMAND_NAME, LEADERBOARD_CONSTANTS.BAD_RANGE_ERR, discordClient)]
+            });
           } else {
             const target = interaction.options._hoistedOptions[0].value;
             const page = Math.floor((target - 1) / RESULTS_PER_PAGE);
             
-            createLeaderboard(deferredResponse, interaction, {
+            createLeaderboard(deferredResponse, interaction.user.id, {
               client: discordClient.client,
               event: event,
               rankingData: rankingData, 
@@ -128,7 +137,7 @@ module.exports = {
           }
       } else {
         // User has not selected a specific rank to jump to
-        createLeaderboard(deferredResponse, interaction, {
+        createLeaderboard(deferredResponse, interaction.user.id, {
           client: discordClient.client,
           event: event,
           rankingData: rankingData, 
