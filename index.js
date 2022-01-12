@@ -18,15 +18,3 @@ const trackRankingData = require('./scripts/trackRankingData');
   trackGameData(client)
   trackRankingData(client)
 })();
-
-
-// Initialize script to begin scraping data from the event
-/**
-async function test() {
-  
-  console.log(await api.login());
-  console.log(await api.eventRanking(3, {targetUserId: "162307176541507589", higherLimit: 5, lowerLimit: 5}));
-  console.log(await api.userProfile("162307176541507589"))
-}
-test();
-*/
