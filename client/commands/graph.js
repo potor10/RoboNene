@@ -144,14 +144,7 @@ module.exports = {
             .addChoice('t3000', 3000)
             .addChoice('t4000', 4000)
             .addChoice('t5000', 5000)
-            .addChoice('t10000', 10000)))
-    .addSubcommand(sc =>
-      sc.setName('ranking')
-        .setDescription('Create a graph of a player\'s T100 ranking')
-        .addUserOption(op =>
-          op.setName('user')
-            .setDescription('Discord user')
-            .setRequired(false))),
+            .addChoice('t10000', 10000))),
   
   async execute(interaction, discordClient) {
     const message = await interaction.reply({ content: 'done omegalul', fetchReply: true })

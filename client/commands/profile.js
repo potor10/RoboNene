@@ -147,10 +147,10 @@ const generateProfileEmbed = (discordClient, data) => {
       areaTexts[itemInfo.areaId] = ''
     }
 
-    let itemText = (itemLevel.sentence).replace(/\<[\s\S]*?\>/g, "")
+    let itemText = (itemLevel.sentence).replace(/\<[\s\S]*?\>/g, "**")
 
     areaTexts[itemInfo.areaId] += `__${itemInfo.name}__ \`\`Lv. ${item.level}\`\`\n`
-    areaTexts[itemInfo.areaId] += `\`\`${itemText}\`\`\n`
+    areaTexts[itemInfo.areaId] += `${itemText}\n`
   })
 
 
