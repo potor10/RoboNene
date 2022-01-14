@@ -90,7 +90,7 @@ module.exports = {
         sekaiId: accountId
       });
 
-      if (sekaiCheck.length > 0) {
+      if (sekaiCheck.length) {
         discordClient.addSekaiRequest('profile', {
           userId: accountId
         }, async (response) => {
@@ -129,7 +129,7 @@ module.exports = {
         discordId: interaction.user.id, 
       });
 
-      if (discordCheck.length === 0) {
+      if (!discordCheck.length) {
         await deferredResponse.edit({
           embeds: [generateEmbed(COMMAND_NAME, UNLINK_CONSTANTS.NO_DISCORD_LINK, discordClient)]
         });

@@ -37,7 +37,6 @@ const generateProfileEmbed = (discordClient, data) => {
   const areas = JSON.parse(fs.readFileSync('./sekai_master/areas.json'));
   const areaItemLevels = JSON.parse(fs.readFileSync('./sekai_master/areaItemLevels.json'));
   const areaItems = JSON.parse(fs.readFileSync('./sekai_master/areaItems.json'));
-  const characterProfiles = JSON.parse(fs.readFileSync('./sekai_master/characterProfiles.json'));
   const gameCharacters = JSON.parse(fs.readFileSync('./sekai_master/gameCharacters.json'));
   
 
@@ -287,7 +286,7 @@ module.exports = {
         discordId: interaction.user.id
       })
 
-      if (user.length === 0) {
+      if (!user.length) {
         await deferredResponse.edit({
           embeds: [generateEmbed(COMMAND_NAME, PROF_CONSTANTS.NO_ACC_ERROR, discordClient)]
         });

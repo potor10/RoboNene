@@ -37,7 +37,7 @@ const generateCutoffEmbed = (event, timestamp, tier, score,
     .addField(`**Requested:** <t:${Math.floor(timestamp/1000)}:R>`, '\u200b')
     .addField(`Score`, `\`${score.toLocaleString()}\``)
     .addField(`Avg. Speed (Per Hour)`, `\`${scorePH.toLocaleString()}/h\``)
-    .addField(`Avg. Speed From <t:${lastHourPtTime}:R> to <t:${Math.floor(timestamp/1000)}:R> (Per Hour)`, 
+    .addField(`Avg. Speed [<t:${lastHourPtTime}:R> to <t:${Math.floor(timestamp/1000)}:R>] (Per Hour)`, 
       `\`${lastHourPtSpeed.toLocaleString()}/h\``)
     .addField(`Estimated Score`, `\`${estimateNoSmoothing}\``)
     .addField(`Estimated Score (Smoothing)`, `\`${estimateSmoothing}\``)

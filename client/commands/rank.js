@@ -37,7 +37,7 @@ module.exports = {
       discordId: target
     })
 
-    if (user.length === 0) {
+    if (!user.length) {
       await deferredResponse.edit({
         embeds: [generateEmbed(COMMAND_NAME, RANK_CONSTANTS.NO_ACC_ERROR, discordClient)]
       });

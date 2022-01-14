@@ -3,8 +3,9 @@ const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
 
-// TODO 
-// Update reply to be embed
+const COMMAND_NAME = 'schedule'
+
+const generateDeferredResponse = require('../methods/generateDeferredResponse') 
 
 const getNextReset = (currentDate) => {
   const nextReset = new Date();
@@ -83,12 +84,17 @@ const createScheduleEmbed = (data, client) => {
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('schedule')
+    .setName(COMMAND_NAME)
     .setDescription('Event Schedule Times'),
   
   async execute(interaction, discordClient) {
+    const deferredResponse = await interaction.reply({
+      embeds: [generateDeferredResponse(COMMAND_NAME, discordClient)],
+      fetchReply: true
+    })
+
     const schedule = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
     const scheduleEmbed = createScheduleEmbed(schedule, discordClient.client);
-    await interaction.reply({ embeds: [scheduleEmbed] });
+    await deferredResponse.edit({ embeds: [scheduleEmbed] });
   }    
 };

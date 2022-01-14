@@ -92,7 +92,7 @@ module.exports = {
         sekaiId: accountId
       })
 
-      if (users.length > 0) {
+      if (users.length) {
         // User is already linked
         if (users[0].discord_id === interaction.user.id) {
           await deferredResponse.edit({
@@ -146,7 +146,7 @@ module.exports = {
         discordId: interaction.user.id, 
       })
       
-      if (users.length > 0) {
+      if (users.length) {
         // If the account is already linked
         if (users[0].discord_id === interaction.user.id) {
           await deferredResponse.edit({

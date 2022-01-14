@@ -24,9 +24,7 @@ const LEADERBOARD_CONSTANTS = {
 };
 
 const createLeaderboard = async (deferredResponse, userId, leaderboardParams) => {
-  const timestamp = Date.now()
-
-  const generateLeaderboardEmbed = ({client, event, page, rankingData, target}) => {
+  const generateLeaderboardEmbed = ({timestamp, client, event, page, rankingData, target}) => {
     const start = page * RESULTS_PER_PAGE;
     const end = start + RESULTS_PER_PAGE;
 
@@ -116,7 +114,7 @@ module.exports = {
       const rankingData = response.rankings
       const timestamp = Date.now()
 
-      if (interaction.options._hoistedOptions.length > 0) {
+      if (interaction.options._hoistedOptions.length) {
         // User has selected a specific rank to jump to
           if (interaction.options._hoistedOptions[0].value > 100 || 
             interaction.options._hoistedOptions[0].value < 1) {
@@ -128,6 +126,7 @@ module.exports = {
             const page = Math.floor((target - 1) / RESULTS_PER_PAGE);
             
             createLeaderboard(deferredResponse, interaction.user.id, {
+              timestamp: timestamp,
               client: discordClient.client,
               event: event,
               rankingData: rankingData, 
@@ -138,6 +137,7 @@ module.exports = {
       } else {
         // User has not selected a specific rank to jump to
         createLeaderboard(deferredResponse, interaction.user.id, {
+          timestamp: timestamp,
           client: discordClient.client,
           event: event,
           rankingData: rankingData, 
