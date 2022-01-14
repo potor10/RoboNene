@@ -48,6 +48,12 @@ const generateCutoffEmbed = (event, timestamp, tier, score,
 };
 
 const generateCutoff = async (deferredResponse, event, timestamp, tier, score, rankData, discordClient) => {
+  if (!rankData.length) {
+    await deferredResponse.edit({
+      embeds: [generateEmbed(COMMAND_NAME, CUTOFF_CONSTANTS.NO_DATA_ERR, discordClient)]
+    });
+  }
+
   const msTaken = timestamp - event.startAt
   const duration = event.aggregateAt - event.startAt
 
@@ -137,10 +143,6 @@ module.exports = {
         .addChoice('t30', 30)
         .addChoice('t40', 40)
         .addChoice('t50', 50)
-        .addChoice('t60', 60)
-        .addChoice('t70', 70)
-        .addChoice('t80', 80)
-        .addChoice('t90', 90)
         .addChoice('t100', 100)
         .addChoice('t200', 200)
         .addChoice('t300', 300)
@@ -151,7 +153,11 @@ module.exports = {
         .addChoice('t3000', 3000)
         .addChoice('t4000', 4000)
         .addChoice('t5000', 5000)
-        .addChoice('t10000', 10000)),
+        .addChoice('t10000', 10000)
+        .addChoice('t20000', 20000)
+        .addChoice('t30000', 30000)
+        .addChoice('t40000', 40000)
+        .addChoice('t50000', 50000)),
   
   async execute(interaction, discordClient) {
     const deferredResponse = await interaction.reply({

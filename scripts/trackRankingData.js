@@ -47,7 +47,7 @@ const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
         nearestHour.setHours(nearestHour.getHours() + Math.round(nearestHour.getMinutes()/60));
         nearestHour.setMinutes(0, 0, 0)
     
-        if (nearestHour.getTime() - timestamp <= 60000) {
+        if (Math.abs(nearestHour.getTime() - timestamp) <= 60000) {
           send(channel, trackingEmbed)
         }
       }

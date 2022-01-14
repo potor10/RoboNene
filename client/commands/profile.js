@@ -39,6 +39,7 @@ const generateProfileEmbed = (discordClient, data) => {
   const areaItems = JSON.parse(fs.readFileSync('./sekai_master/areaItems.json'));
   const gameCharacters = JSON.parse(fs.readFileSync('./sekai_master/gameCharacters.json'));
   
+  let showDetailed = false;
 
   const leaderCardId = data.userDecks[0].leader
   let leader = {}
@@ -81,7 +82,10 @@ const generateProfileEmbed = (discordClient, data) => {
           teamText += `__${cardInfo.prefix} ${charInfo.givenName} ${charInfo.firstName}__\n`
           teamText += `Rarity: ${'⭐'.repeat(cardInfo.rarity)}\n`
           teamText += `Type: ${PROF_CONSTANTS[cardInfo.attr]}\n`
-          teamText += `Level: \`\`${card.level}\`\`\n`
+
+          if (showDetailed) {
+            teamText += `Level: \`\`${card.level}\`\`\n`
+          }
           teamText += `Master Rank: \`\`${card.masterRank}\`\`\n`
 
           if (cardInfo.rarity > 2) {
@@ -202,9 +206,6 @@ const generateProfileEmbed = (discordClient, data) => {
     challengeRankText += `\`\`${charName}  ${rankText}\`\`\n`
   })
 
-  const lastChar = data.userChallengeLiveSoloStages[data.userChallengeLiveSoloStages.length-1]
-  const charInfo = gameCharacters[lastChar.characterId-1]
-
   // userChallengeLiveSoloStages challenge rank
   const profileEmbed = new MessageEmbed()
     .setColor(NENE_COLOR)
@@ -229,16 +230,18 @@ const generateProfileEmbed = (discordClient, data) => {
     .setTimestamp()
     .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
 
-  Object.keys(areaTexts).forEach((areaId) => {
-    let areaInfo = { name: 'N/A' }
-    for(const idx in areas) {
-      if (areas[idx].id == areaId) {
-        areaInfo = areas[idx]
+  if (showDetailed) {
+    Object.keys(areaTexts).forEach((areaId) => {
+      let areaInfo = { name: 'N/A' }
+      for(const idx in areas) {
+        if (areas[idx].id == areaId) {
+          areaInfo = areas[idx]
+        }
       }
-    }
 
-    profileEmbed.addField(areaInfo.name, areaTexts[areaId])
-  })
+      profileEmbed.addField(areaInfo.name, areaTexts[areaId])
+    })
+  }
 
   return profileEmbed 
 }
