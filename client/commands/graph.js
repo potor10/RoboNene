@@ -36,7 +36,7 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
 }
 
 const postQuickChart = async (deferredResponse, tier, rankData, discordClient) => {
-  if (!rankData.length) {
+  if (!rankData.data.eventRankings) {
     await deferredResponse.edit({
       embeds: [generateEmbed(COMMAND_NAME, GRAPH_CONSTANTS.NO_DATA_ERR, discordClient)]
     });

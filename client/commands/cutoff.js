@@ -52,6 +52,7 @@ const generateCutoff = async (deferredResponse, event, timestamp, tier, score, r
     await deferredResponse.edit({
       embeds: [generateEmbed(COMMAND_NAME, CUTOFF_CONSTANTS.NO_DATA_ERR, discordClient)]
     });
+    return
   }
 
   const msTaken = timestamp - event.startAt
