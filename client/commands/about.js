@@ -20,6 +20,8 @@ module.exports = {
         { name: '**Design**', value: 'Potor10#3237\nReinhäla#4444', inline: true},
         { name: '**Testing**', value: 'Potor10#3237\nReinhäla#4444', inline: true },
         { name: '**Game Data**', value: '[Sekai World](https://github.com/Sekai-World/sekai-master-db-en-diff/blob/main/events.json)' },
+        { name: '**Calculating Estimation**', value: '[Bandori Estimation](https://docs.google.com/document/d/1137qbA0_qWOHJGhaYfxpgftqhsJvW4qo3QBTcSqnZo8/edit#heading=h.pkcfws4d84gx)\n' + 
+          'Note: We use standard linear regression \`y = a + bx\` as we don\'t have the resources to use a custom rate constant.'},
         { name: '**Ranking Data**', value: '[Sekai Best](https://api.sekai.best/docs)' },
         { name: '**Discord**', value: 'Robo Nene logs the usage of her commands to prevent abuse. ' + 
           'Outside of the use of her commands, Robo Nene does not collect any user data, chat logs, or server information. ' + 
@@ -29,7 +31,8 @@ module.exports = {
           'Linking accounts exists solely to prevent misuse of certain commands and provide ease of integration between a user and their Project Sekai account.' },
         { name: '**Contribute**', value: 'You can contribute to Robo Nene by opening a pull request at [github](https://github.com/potor10/RoboNene/pulls).' },
         { name: '**Tech Stack**', value: 'Robo Nene utilizes discord.js to serve her content. ' + 
-          'Robo Nene saves tiering history and linked account information through use of sqlite3 databases.' },
+          'Robo Nene saves tiering history and linked account information through use of sqlite3 databases. ' +
+          'Robo Nene uses regression-js to fit data into a linear model and provide estimates.' },
         { name: '**License**', value: 'MIT' },
       )
       .setTimestamp()

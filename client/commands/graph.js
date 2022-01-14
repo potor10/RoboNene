@@ -1,59 +1,60 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { MessageEmbed } = require('discord.js');
+const { NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
 
-// TODO 
-// Update reply to be embed
-// Obtain data from api.sekai.best for these calculations
+const COMMAND_NAME = 'graph'
 
-const postQuickChart = (message, event, rankData) => {
-  data = []
+const generateDeferredResponse = require('../methods/generateDeferredResponse') 
+const generateEmbed = require('../methods/generateEmbed') 
 
-  let startTime = new Date(event.startAt)
-  const endTime = new Date(event.aggregateAt)
+const GRAPH_CONSTANTS = {
+  "NO_EVENT_ERR": {
+    type: 'Error',
+    message: "There is currently no event going on",
+  },
 
-  let lastValidIdx = 0
+  'NO_DATA_ERR': {
+    type: 'Error',
+    message: 'Please cloose a different cutoff tier',
+  },
 
-  while (startTime < endTime) {
-    let smallestDifference = -1
-    let changed = false
-    for (let i = lastValidIdx; i < rankData.length; i++) {
-      if (rankData[i].timestamp > startTime.getTime() + 120000) {
-        break
-      } else {
-        if (Math.abs(rankData[i].timestamp - startTime.getTime()) < 120000) {
-          if (smallestDifference === -1 || Math.abs(rankData.timestamp - startTime.getTime()) < smallestDifference) {
-            smallestDifference = Math.abs(rankData.timestamp - startTime.getTime())
-            lastValidIdx = i
-            changed = true
-          }
-        }
-      }
-    }
+  "SEKAI_BEST_HOST": "api.sekai.best",
+};
 
-    if (changed) {
-      data.push({
-        x: new Date(rankData[lastValidIdx].timestamp),
-        y: rankData[lastValidIdx].score
-      })
-    }
-    startTime.setHours(startTime.getHours() + 1)
-  }
+const generateGraphEmbed = (graphUrl, tier, discordClient) => {
+  const graphEmbed = new MessageEmbed()
+    .setColor(NENE_COLOR)
+    .setTitle(`T${tier} Cutoff Graph`)
+    .setDescription(`**Requested:** <t:${Math.floor(Date.now()/1000)}:R>`)
+    .setThumbnail(discordClient.client.user.displayAvatarURL())
+    .setImage(graphUrl)
+    .setTimestamp()
+    .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
 
-  MAX_CHART_DATA = 216
-  // Grab points closest to each hour
+  return graphEmbed
+}
 
-  console.log(data)
+const postQuickChart = (deferredResponse, tier, rankData, discordClient) => {
+  graphData = []
+
+  rankData.data.eventRankings.forEach(point => {
+    graphData.push({
+      x: point.timestamp,
+      y: point.score
+    })
+  });
 
   postData = JSON.stringify({
-    "backgroundColor": "transparent",
+    "backgroundColor": "#FFFFFF",
     "format": "png",
     'chart': {
       'type': 'line', 
       'data': {
         'datasets': [{
-          'label': 'Tidk cutoff', 
+          'label': `T${tier} cutoff`, 
           "fill": false,
-          'data': data
+          'data': graphData
         }]
       },
       "options": {
@@ -95,7 +96,9 @@ const postQuickChart = (message, event, rankData) => {
       if (res.statusCode === 200) {
         try {
           console.log(JSON.stringify(JSON.parse(json)))
-          await message.edit({ content: JSON.parse(json).url })
+          await deferredResponse.edit({ 
+            embeds: [generateGraphEmbed(JSON.parse(json).url, tier, discordClient)]
+          })
         } catch (err) {
           // Error parsing JSON: ${err}`
           console.log(`ERROR 1 ${err}`)
@@ -113,61 +116,75 @@ const postQuickChart = (message, event, rankData) => {
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('graph')
-    .setDescription('Create a visualization')
-    .addSubcommand(sc =>
-      sc.setName('cutoff')
-        .setDescription('Create a graph of the score at a certain cutoff')
-        .addIntegerOption(op =>
-          op.setName('tier')
-            .setDescription('The tier of the cutoff')
-            .setRequired(true)
-            .addChoice('t1', 1)
-            .addChoice('t2', 2)
-            .addChoice('t3', 3)
-            .addChoice('t10', 10)
-            .addChoice('t20', 20)
-            .addChoice('t30', 30)
-            .addChoice('t40', 40)
-            .addChoice('t50', 50)
-            .addChoice('t60', 60)
-            .addChoice('t70', 70)
-            .addChoice('t80', 80)
-            .addChoice('t90', 90)
-            .addChoice('t100', 100)
-            .addChoice('t200', 200)
-            .addChoice('t300', 300)
-            .addChoice('t400', 400)
-            .addChoice('t500', 500)
-            .addChoice('t1000', 1000)
-            .addChoice('t2000', 2000)
-            .addChoice('t3000', 3000)
-            .addChoice('t4000', 4000)
-            .addChoice('t5000', 5000)
-            .addChoice('t10000', 10000))),
+    .setName(COMMAND_NAME)
+    .setDescription('Create a visualization of the score at a certain cutoff')
+    .addIntegerOption(op =>
+      op.setName('tier')
+        .setDescription('The tier of the cutoff')
+        .setRequired(true)
+        .addChoice('t1', 1)
+        .addChoice('t2', 2)
+        .addChoice('t3', 3)
+        .addChoice('t10', 10)
+        .addChoice('t20', 20)
+        .addChoice('t30', 30)
+        .addChoice('t40', 40)
+        .addChoice('t50', 50)
+        .addChoice('t60', 60)
+        .addChoice('t70', 70)
+        .addChoice('t80', 80)
+        .addChoice('t90', 90)
+        .addChoice('t100', 100)
+        .addChoice('t200', 200)
+        .addChoice('t300', 300)
+        .addChoice('t400', 400)
+        .addChoice('t500', 500)
+        .addChoice('t1000', 1000)
+        .addChoice('t2000', 2000)
+        .addChoice('t3000', 3000)
+        .addChoice('t4000', 4000)
+        .addChoice('t5000', 5000)
+        .addChoice('t10000', 10000)),
   
   async execute(interaction, discordClient) {
-    const message = await interaction.reply({ content: 'done omegalul', fetchReply: true })
-    const event = discordClient.getCurrentEvent()
-
-    switch(interaction.options._subcommand) {
-      case 'cutoff':
-        const tier = interaction.options._hoistedOptions[0].value
-
-        // Fix this, ugh
-        const rankData = discordClient.db.prepare('SELECT * FROM events WHERE ' +
-         'event_id=@eventId AND rank=@rank ORDER BY timestamp ASC').all({
-            eventId: event.id,
-            rank: tier
-          })
-        postQuickChart(message, event, rankData)
-        break
-      case 'ranking':
-
-        break
-      default:
-
-    }
+    const deferredResponse = await interaction.reply({
+      embeds: [generateDeferredResponse(COMMAND_NAME, discordClient)],
+      fetchReply: true
+    })
     
+    const event = discordClient.getCurrentEvent()
+    if (event.id === -1) {
+      await deferredResponse.edit({
+        embeds: [generateEmbed(COMMAND_NAME, GRAPH_CONSTANTS.NO_EVENT_ERR, discordClient)]
+      });
+      return
+    }
+
+    const tier = interaction.options._hoistedOptions[0].value
+
+    const options = {
+      host: GRAPH_CONSTANTS.SEKAI_BEST_HOST,
+      path: `/event/${event.id}/rankings/graph?rank=${tier}&region=en`,
+      headers: {'User-Agent': 'request'}
+    };
+  
+    https.get(options, (res) => {
+      let json = '';
+      res.on('data', (chunk) => {
+        json += chunk;
+      });
+      res.on('end', async () => {
+        if (res.statusCode === 200) {
+          try {
+            const rankData = JSON.parse(json)
+            postQuickChart(deferredResponse, tier, rankData, discordClient)
+          } catch (err) {
+            // Error parsing JSON: ${err}`
+          }
+        } else {
+          // Error retrieving via HTTPS. Status: ${res.statusCode}
+        }
+      });
+    }).on('error', (err) => {});
   }
 };

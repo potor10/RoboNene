@@ -1,79 +1,129 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER, REPLY_TIMEOUT, 
-  TIMEOUT_ERR, NO_EVENT_ERR } = require('../../constants');
+const { NENE_COLOR, FOOTER } = require('../../constants');
+const https = require('https');
+const regression = require('regression');
 
-// TODO 
-// Update reply to be embed
-// Obtain data from api.sekai.best for these calculations
+const COMMAND_NAME = 'cutoff'
 
-const generateCutoffEmbed = (event, timestamp, tier, data, discordClient) => {
-  let score = 'N/A'
-  let scorePerHourAll = 'N/A'
-  let timestamp1H = Date.now()
-  let scorePerHour1H = 'N/A'
-  let estimatedScore = 'N/A'
+const generateDeferredResponse = require('../methods/generateDeferredResponse') 
+const generateEmbed = require('../methods/generateEmbed') 
 
-  if (data) {
-    score = data.score.toLocaleString()
+const CUTOFF_CONSTANTS = {
+  "NO_EVENT_ERR": {
+    type: 'Error',
+    message: "There is currently no event going on",
+  },
 
-    const msTaken = timestamp - event.startAt
-    const msRemain = event.aggregateAt - timestamp
-    
-    const scorePerMs = data.score / msTaken
-    scorePerHourAll = (scorePerMs * 3600000).toLocaleString('en-US', {
-      minimumFractionDigits: 0, 
-      maximumFractionDigits: 2
-    }) + '/h'
+  'NO_DATA_ERR': {
+    type: 'Error',
+    message: 'Please cloose a different cutoff tier',
+  },
 
-    // TODO: BIG BAD, Fix
-    const results = discordClient.db.prepare('SELECT * FROM events WHERE ' + 
-      'event_id=@eventId AND ' +
-      'rank=@rank AND ' + 
-      'timestamp>=@timestamp ' + 
-      'ORDER BY timestamp ASC').all({
-      eventId: event.id,
-      rank: tier,
-      timestamp: timestamp-3600000
-    });
+  "SEKAI_BEST_HOST": "api.sekai.best"
+};
 
-    if (results.length > 0) {
-      const closestScore1H = results[0]
-      timestamp1H = closestScore1H.timestamp
-      const msDifference = timestamp - closestScore1H.timestamp
-      const score1HPerMs = (data.score - closestScore1H.score) / msDifference
+const generateCutoffEmbed = (event, timestamp, tier, score, 
+  scorePH, estimateNoSmoothing, estimateSmoothing, lastHourPt, discordClient) => {
+  const lastHourPtTimeMs = new Date(lastHourPt.timestamp).getTime()
+  const lastHourPtTime = Math.floor(lastHourPtTimeMs / 1000)
+  const lastHourPtSpeed = Math.round((score - lastHourPt.score) * 3600000 / (timestamp - lastHourPtTimeMs))
 
-      scorePerHour1H = (score1HPerMs * 3600000).toLocaleString('en-US', {
-        minimumFractionDigits: 0, 
-        maximumFractionDigits: 2
-      }) + '/h'
-    }
-
-    estimatedScore = (msRemain * scorePerMs + data.score).toLocaleString('en-US', {
-      minimumFractionDigits: 0, 
-      maximumFractionDigits: 2
-    })
-  }
-
-  const timestampSeconds = Math.floor(timestamp/1000)
   const cutoffEmbed = new MessageEmbed()
     .setColor(NENE_COLOR)
-    .setTitle(`${event.name} T${tier}`)
-    .setDescription(`<t:${timestampSeconds}> - <t:${timestampSeconds}:R>`)
-    .addField(`Score`, `\`${score}\``)
-    .addField(`Score/h`, `\`${scorePerHourAll}\``)
-    .addField(`Score/h From <t:${Math.floor(timestamp1H/1000)}:R>`, `\`${scorePerHour1H}\``)
-    .addField(`Estimated Score`, `\`${estimatedScore}\``)
-    .addField(`Estimated Score (Smoothing)`, `\`${'N/A'}\``)
+    .setTitle(`T${tier} Cutoff`)
+    .setDescription(`${event.name}`)
+    .setThumbnail(event.banner)
+    .addField(`**Requested:** <t:${Math.floor(timestamp/1000)}:R>`, '\u200b')
+    .addField(`Score`, `\`${score.toLocaleString()}\``)
+    .addField(`Avg. Speed (Per Hour)`, `\`${scorePH.toLocaleString()}/h\``)
+    .addField(`Avg. Speed From <t:${lastHourPtTime}:R> to <t:${Math.floor(timestamp/1000)}:R> (Per Hour)`, 
+      `\`${lastHourPtSpeed.toLocaleString()}/h\``)
+    .addField(`Estimated Score`, `\`${estimateNoSmoothing}\``)
+    .addField(`Estimated Score (Smoothing)`, `\`${estimateSmoothing}\``)
     .setTimestamp()
     .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
 
   return cutoffEmbed;
 };
 
+const generateCutoff = async (deferredResponse, event, timestamp, tier, score, rankData, discordClient) => {
+  const msTaken = timestamp - event.startAt
+  const duration = event.aggregateAt - event.startAt
+
+  const scorePH = Math.round(score * 3600000 / msTaken)
+
+  let lastHourPt = (rankData) ? rankData[0] : {
+    timestamp: (new Date(timestamp)).toISOString(),
+    score: score
+  }
+
+  if (rankData.length > 61) {
+    lastHourPt = rankData[rankData.length-61]
+  }
+
+  let estimateNoSmoothing = 'N/A'
+  let estimateSmoothing = 'N/A'
+
+  let oneDayIdx = -1
+  let halfDayIdx = -1
+
+  // 24 hours have passed into the event
+  for(let i = 0; i < rankData.length; i++) {
+    const currentEventTime = (new Date(rankData[i].timestamp)).getTime()
+    if (halfDayIdx === -1 && currentEventTime > event.startAt + 43200000) {
+      halfDayIdx = i
+    }
+    if (currentEventTime > event.startAt + 86400000) {
+      oneDayIdx = i
+      break
+    }
+  }
+
+  if (oneDayIdx !== -1) {
+    const points = []
+
+    // Only get data points past 12 hours
+    rankData.slice(halfDayIdx).forEach((point) => {
+      points.push([(new Date(point.timestamp)).getTime(), point.score])
+    })
+
+    const model = regression.linear(points, {precision: 100});
+    estimateNoSmoothing = Math.round(model.predict(event.aggregateAt)[1]).toLocaleString()
+
+    let totalWeight = 0
+    let totalTime = 0
+    // Grab 1 Estimate Every 60 Minutes For Smoothing
+    for(let i = oneDayIdx; i < rankData.length + 60; i += 60) {
+      const smoothingPoints = []
+      const dataSlice = rankData.slice(halfDayIdx, i)
+      dataSlice.forEach((point) => {
+        smoothingPoints.push([(new Date(point.timestamp)).getTime(), point.score])
+      })
+
+      if (dataSlice.length) {
+        const result = regression.linear(smoothingPoints, {precision: 100});
+        const estimate = result.predict(event.aggregateAt)[1]
+        const amtThrough = ((new Date(dataSlice[dataSlice.length-1].timestamp)).getTime() - event.startAt) / duration
+
+        totalWeight += estimate * Math.pow(amtThrough, 2)
+        totalTime += Math.pow(amtThrough, 2)
+      }
+    }
+
+    estimateSmoothing = Math.round(totalWeight / totalTime).toLocaleString()
+  }
+
+  const cutoffEmbed = generateCutoffEmbed(event, timestamp, tier, 
+    score, scorePH, estimateNoSmoothing, estimateSmoothing, lastHourPt, discordClient)
+  await deferredResponse.edit({
+    embeds: [cutoffEmbed]
+  });
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('cutoff')
+    .setName(COMMAND_NAME)
     .setDescription('Find detailed data about the cutoff data for a certain ranking')
     .addIntegerOption(op =>
       op.setName('tier')
@@ -104,45 +154,53 @@ module.exports = {
         .addChoice('t10000', 10000)),
   
   async execute(interaction, discordClient) {
+    const deferredResponse = await interaction.reply({
+      embeds: [generateDeferredResponse(COMMAND_NAME, discordClient)],
+      fetchReply: true
+    })
+
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {
-      await interaction.reply({
-        content: NO_EVENT_ERR,
-        ephemeral: true 
+      await deferredResponse.edit({
+        embeds: [generateEmbed(COMMAND_NAME, CUTOFF_CONSTANTS.NO_EVENT_ERR, discordClient)]
       });
       return
     }
 
-    let replied = false
+    const tier = interaction.options._hoistedOptions[0].value
+
     discordClient.addSekaiRequest('ranking', {
       eventId: event.id,
-      targetRank: interaction.options._hoistedOptions[0].value,
+      targetRank: tier,
       lowerLimit: 0
     }, async (response) => {
       const timestamp = Date.now()
+      const score = response.rankings[0].score
 
-      if (interaction.replied) {
-        return
-      }
-
-      let tier = interaction.options._hoistedOptions[0].value
-      const cutoffEmbed = generateCutoffEmbed(event, timestamp, tier,
-        response.rankings[0], discordClient)
-
-      await interaction.reply({
-        embeds: [cutoffEmbed]
-      });
-
-      replied = true
-    })
-
-    setTimeout(async () => {
-      if (!replied) {
-        await interaction.reply({
-          content: TIMEOUT_ERR,
-          ephemeral: true 
+      const options = {
+        host: CUTOFF_CONSTANTS.SEKAI_BEST_HOST,
+        path: `/event/${event.id}/rankings?rank=${tier}&limit=100000&region=en`,
+        headers: {'User-Agent': 'request'}
+      };
+    
+      https.get(options, (res) => {
+        let json = '';
+        res.on('data', (chunk) => {
+          json += chunk;
         });
-      }
-    }, REPLY_TIMEOUT)
+        res.on('end', async () => {
+          if (res.statusCode === 200) {
+            try {
+              const rankData = JSON.parse(json)
+              generateCutoff(deferredResponse, event, timestamp, tier, score, rankData.data.eventRankings, discordClient);
+            } catch (err) {
+              // Error parsing JSON: ${err}`
+            }
+          } else {
+            // Error retrieving via HTTPS. Status: ${res.statusCode}
+          }
+        });
+      }).on('error', (err) => {});
+    })
   }
 };
