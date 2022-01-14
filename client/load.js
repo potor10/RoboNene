@@ -25,10 +25,19 @@ const rest = new REST({ version: '9' }).setToken(token);
     commandNames = commands.map(c => c.data.name);
 		console.log(`Started refreshing application (/) commands: ${commandNames}`);
 
+    // Local
+    /*
 		await rest.put(
 			Routes.applicationGuildCommands(clientId, guildId),
 			{ body: commands.map(c => c.data.toJSON()) },
 		);
+    */
+
+    // Global
+    await rest.put(
+      Routes.applicationCommands(clientId),
+      { body: commands.map(c => c.data.toJSON()) },
+    );
 
 		console.log(`Successfully reloaded application (/) commands: ${commandNames}`);
 	} catch (error) {
