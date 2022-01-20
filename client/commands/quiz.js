@@ -1,36 +1,11 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
-const { ERR_COMMAND, NENE_COLOR, FOOTER } = require('../../constants');
+const { ERR_COMMAND } = require('../../constants');
 const fs = require('fs');
 
-const COMMAND_NAME = 'quiz'
+const COMMAND = require('./quiz.json')
 
+const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateDeferredResponse = require('../methods/generateDeferredResponse')
 const generateEmbed = require('../methods/generateEmbed') 
-
-const QUIZ_CONSTANTS = {
-  'NO_RESPONSE': {
-    type: 'Failed',
-    message: 'There was no response within the alotted time. \nThe question was failed!'
-  },
-
-  'QUESTION_RIGHT': {
-    type: 'Correct ✅',
-    message: 'You have answered the question correctly!'
-  },
-
-  'QUESTION_WRONG': {
-    type: 'Incorrect ❌',
-    message: 'You have answered the question incorrectly!'
-  },
-
-  'LINK_MSG': 'Link an account to save your progress',
-
-  "1": '1️⃣',
-  "2": '2️⃣',
-  "3": '3️⃣', 
-  "4": '4️⃣'
-};
 
 /**
  * Shuffles array in place.
@@ -265,7 +240,7 @@ const createQuiz = async (deferredResponse, userId, account, discordClient) => {
   }
 
   for(let idx = 0; idx < answerOrder.length; idx++) {
-    prompt += `${QUIZ_CONSTANTS[idx+1]} \`\`${answerOrder[idx]}\`\`\n`
+    prompt += `${COMMAND.CONSTANTS[idx+1]} \`\`${answerOrder[idx]}\`\`\n`
   }
 
   const content = {
@@ -274,17 +249,17 @@ const createQuiz = async (deferredResponse, userId, account, discordClient) => {
   }
 
   await deferredResponse.edit({ 
-    embeds: [generateEmbed(COMMAND_NAME, content, discordClient)]
+    embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)]
   });
 
-  deferredResponse.react(QUIZ_CONSTANTS[1])
-    .then(() => deferredResponse.react(QUIZ_CONSTANTS[2]))
-    .then(() => deferredResponse.react(QUIZ_CONSTANTS[3]))
-    .then(() => deferredResponse.react(QUIZ_CONSTANTS[4]))
+  deferredResponse.react(COMMAND.CONSTANTS[1])
+    .then(() => deferredResponse.react(COMMAND.CONSTANTS[2]))
+    .then(() => deferredResponse.react(COMMAND.CONSTANTS[3]))
+    .then(() => deferredResponse.react(COMMAND.CONSTANTS[4]))
     .catch(err => console.log(err));
 
   const filter = (reaction, user) => {
-    return [QUIZ_CONSTANTS[1], QUIZ_CONSTANTS[2], QUIZ_CONSTANTS[3], QUIZ_CONSTANTS[4]]
+    return [COMMAND.CONSTANTS[1], COMMAND.CONSTANTS[2], COMMAND.CONSTANTS[3], COMMAND.CONSTANTS[4]]
       .includes(reaction.emoji.name) && user.id === userId;
   };
 
@@ -298,21 +273,21 @@ const createQuiz = async (deferredResponse, userId, account, discordClient) => {
           discordId: userId
         })
       }
-      content = { ...QUIZ_CONSTANTS.QUESTION_RIGHT }
+      content = { ...COMMAND.CONSTANTS.QUESTION_RIGHT }
       correct++
     } else {
-      content = { ...QUIZ_CONSTANTS.QUESTION_WRONG }
+      content = { ...COMMAND.CONSTANTS.QUESTION_WRONG }
     }
 
     if (account) {
-      content.message += `\n\n Correct: \`\`${account.quiz_correct + 1}\`\``
+      content.message += `\n\n Correct: \`\`${correct}\`\``
       content.message += `\n Questions Answered: \`\`${account.quiz_question + 1}\`\``
     } else {
-      content.message += `\n\n ${QUIZ_CONSTANTS.LINK_MSG}`
+      content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`
     }
 
     deferredResponse.edit({
-      embeds: [generateEmbed(COMMAND_NAME, content, discordClient)]
+      embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)]
     })
   }
   
@@ -321,43 +296,41 @@ const createQuiz = async (deferredResponse, userId, account, discordClient) => {
       const reaction = collected.first();
   
       switch(reaction.emoji.name) {
-        case QUIZ_CONSTANTS[1]:
+        case COMMAND.CONSTANTS[1]:
           createResultEmbed(0)
           break
-        case QUIZ_CONSTANTS[2]:
+        case COMMAND.CONSTANTS[2]:
           createResultEmbed(1)
           break
-        case QUIZ_CONSTANTS[3]:
+        case COMMAND.CONSTANTS[3]:
           createResultEmbed(3)
           break
-        case QUIZ_CONSTANTS[4]:
+        case COMMAND.CONSTANTS[4]:
           createResultEmbed(4)
           break
       }
     })
     .catch(collected => {
-      const content = { ... QUIZ_CONSTANTS.NO_RESPONSE }
+      const content = { ... COMMAND.CONSTANTS.NO_RESPONSE }
       if (account) {
         content.message += `\n\n Correct: \`\`${account.quiz_correct}\`\``
         content.message += `\n Questions Answered: \`\`${account.quiz_question + 1}\`\``
       } else {
-        content.message += `\n\n ${QUIZ_CONSTANTS.LINK_MSG}`
+        content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`
       }
 
       deferredResponse.edit({
-        embeds: [generateEmbed(COMMAND_NAME, content, discordClient)]
+        embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)]
       })
     });
 };
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName(COMMAND_NAME)
-    .setDescription('Fun Project Sekai Quiz'),
+  data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
     const deferredResponse = await interaction.reply({
-      embeds: [generateDeferredResponse(COMMAND_NAME, discordClient)],
+      embeds: [generateDeferredResponse(COMMAND.INFO.name, discordClient)],
       fetchReply: true
     })
 

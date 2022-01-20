@@ -1,0 +1,31 @@
+{
+  "INFO": {
+    "name": "quiz",
+    "utilization": "/quiz",
+    "description": "A Fun Project Sekai Quiz!"
+  },
+
+  "CONSTANTS": {
+    "NO_RESPONSE": {
+      "type": "Failed",
+      "message": "There was no response within the alotted time. \nThe question was failed!"
+    },
+  
+    "QUESTION_RIGHT": {
+      "type": "Correct ✅",
+      "message": "You have answered the question correctly!"
+    },
+  
+    "QUESTION_WRONG": {
+      "type": "Incorrect ❌",
+      "message": "You have answered the question incorrectly!"
+    },
+  
+    "LINK_MSG": "Link an account to save your progress",
+  
+    "1": "1️⃣",
+    "2": "2️⃣",
+    "3": "3️⃣", 
+    "4": "4️⃣"
+  }
+}

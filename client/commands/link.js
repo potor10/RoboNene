@@ -1,77 +1,22 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ERR_COMMAND } = require('../../constants');
 
-const COMMAND_NAME = 'link'
+const COMMAND = require('./link.json')
 
+const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateDeferredResponse = require('../methods/generateDeferredResponse') 
 const generateEmbed = require('../methods/generateEmbed') 
-
-const LINK_CONSTANTS = {
-  'DISCORD_LINKED_ERR': {
-    type: 'Error',
-    message: 'Your Discord account is already linked to a Project Sekai account.'
-  },
-
-  'SEKAI_LINKED_ERR': {
-    type: 'Error',
-    message: 'That Project Sekai account is already linked to another Discord account.'
-  },
-
-  'LINK_SUCC': {
-    type: 'Success',
-    message: 'Your account is now linked.'
-  },
-
-  'BAD_ID_ERR': {
-    type: 'Error', 
-    message: 'You have provided an invalid ID.'
-  },
-
-  'BAD_ACC_ERR': {
-    type: 'Error',
-    message: 'There was an issue in finding this account. Please request a new link code.' + 
-      'Make sure all the digits are typed correctly.'
-  },
-
-  'EXPIRED_CODE_ERR': {
-    type: 'Error',
-    message: 'Your link code has expired.'
-  },
-
-  'BAD_CODE_ERR': {
-    type: 'Error', 
-    message: 'Invalid code on Project Sekai profile. ' + 
-      'Did you remember to press back on your profile to save the changes?'
-  },
-
-  'NO_CODE_ERR': {
-    type: 'Error', 
-    message: 'Please request a link code first.'
-  },
-};
 
 const generatedCodes = {};
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName(COMMAND_NAME)
-    .setDescription('Link your Discord account to Project Sekai')
-    .addSubcommand(sc =>
-      sc.setName('request')
-        .setDescription('Request a code to link your Project Sekai user ID to your Discord Account')
-        .addStringOption(op =>
-          op.setName('id')
-            .setDescription('Your Project Sekai user ID')
-            .setRequired(true)))
-    .addSubcommand(sc =>
-      sc.setName('authenticate')
-        .setDescription('Confirm that the code is set to your Project Sekai profile description')),
+  data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
     const db = discordClient.db
 
     const deferredResponse = await interaction.reply({
-      embeds: [generateDeferredResponse(COMMAND_NAME, discordClient)],
+      embeds: [generateDeferredResponse(COMMAND.INFO.name, discordClient)],
       fetchReply: true
     })
 
@@ -81,7 +26,7 @@ module.exports = {
       if (!accountId) {
         // Do something because there is an empty account id input
         await deferredResponse.edit({
-          embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.BAD_ID_ERR, discordClient)]
+          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_ID_ERR, discordClient)]
         })
         return
       }
@@ -96,19 +41,19 @@ module.exports = {
         // User is already linked
         if (users[0].discord_id === interaction.user.id) {
           await deferredResponse.edit({
-            embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.DISCORD_LINKED_ERR, discordClient)]
+            embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.DISCORD_LINKED_ERR, discordClient)]
           });
         } 
         // Sekai id is already linked
         else if (users[0].sekai_id === accountId) {
           await deferredResponse.edit({
-            embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.SEKAI_LINKED_ERR, discordClient)]
+            embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.SEKAI_LINKED_ERR, discordClient)]
           });
         } 
         // General Error
         else {
           await deferredResponse.edit({
-            embeds: [generateEmbed(COMMAND_NAME, ERR_COMMAND, discordClient)]
+            embeds: [generateEmbed(COMMAND.INFO.name, ERR_COMMAND, discordClient)]
           });
         }
       } else {
@@ -118,7 +63,7 @@ module.exports = {
           // If the response does not exist
           if (response.httpStatus) {
             await deferredResponse.edit({
-              embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.BAD_ID_ERR, discordClient)]
+              embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_ID_ERR, discordClient)]
             })
           } else {
             // Generate a new code for the user
@@ -136,7 +81,7 @@ module.exports = {
             }
 
             await deferredResponse.edit({
-              embeds: [generateEmbed(COMMAND_NAME, content, discordClient)]
+              embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)]
             });
           }
         })
@@ -150,7 +95,7 @@ module.exports = {
         // If the account is already linked
         if (users[0].discord_id === interaction.user.id) {
           await deferredResponse.edit({
-            embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.DISCORD_LINKED_ERR, discordClient)]
+            embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.DISCORD_LINKED_ERR, discordClient)]
           });
 
           return;
@@ -160,7 +105,7 @@ module.exports = {
       if (interaction.user.id in generatedCodes) {
         if (generatedCodes[interaction.user.id].expiry < Date.now()) {
           await deferredResponse.edit({
-            embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.EXPIRED_CODE_ERR, discordClient)]
+            embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.EXPIRED_CODE_ERR, discordClient)]
           });
           return;
         } 
@@ -171,7 +116,7 @@ module.exports = {
           // If the response does not exist
           if (response.httpStatus) {
             await deferredResponse.edit({
-              embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.BAD_ACC_ERR, discordClient)]
+              embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_ACC_ERR, discordClient)]
             });
 
             delete generatedCodes[interaction.user.id]
@@ -187,23 +132,23 @@ module.exports = {
             })
 
             await deferredResponse.edit({
-              embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.LINK_SUCC, discordClient)]
+              embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.LINK_SUCC, discordClient)]
             });
 
           } else {
             await deferredResponse.edit({
-              embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.BAD_CODE_ERR, discordClient)]
+              embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_CODE_ERR, discordClient)]
             });
           }
         })
       } else {
         await deferredResponse.edit({
-          embeds: [generateEmbed(COMMAND_NAME, LINK_CONSTANTS.NO_CODE_ERR, discordClient)]
+          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_CODE_ERR, discordClient)]
         });
       }
     } else {
       await deferredResponse.edit({
-        embeds: [generateEmbed(COMMAND_NAME, ERR_COMMAND, discordClient)]
+        embeds: [generateEmbed(COMMAND.INFO.name, ERR_COMMAND, discordClient)]
       });
     }
   }

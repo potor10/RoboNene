@@ -1,11 +1,12 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const { BOT_NAME, NENE_COLOR, FOOTER } = require('../../constants');
 
+const COMMAND = require('./about.json')
+
+const generateSlashCommand = require('../methods/generateSlashCommand')
+
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('about')
-    .setDescription('About Robo Nene'),
+  data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
     const botAvatarURL = discordClient.client.user.displayAvatarURL()

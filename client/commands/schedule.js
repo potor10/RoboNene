@@ -1,10 +1,10 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
 
-const COMMAND_NAME = 'schedule'
+const COMMAND = require('./schedule.json')
 
+const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateDeferredResponse = require('../methods/generateDeferredResponse') 
 
 const getNextReset = (currentDate) => {
@@ -83,13 +83,11 @@ const createScheduleEmbed = (data, client) => {
 };
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName(COMMAND_NAME)
-    .setDescription('Event Schedule Times'),
+  data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
     const deferredResponse = await interaction.reply({
-      embeds: [generateDeferredResponse(COMMAND_NAME, discordClient)],
+      embeds: [generateDeferredResponse(COMMAND.INFO.name, discordClient)],
       fetchReply: true
     })
 

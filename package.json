@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "load": "node ./client/load.js",
+    "loadLocal": "node ./client/loadLocal.js",
+    "unload": "node ./client/unload.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint . --fix"
   },

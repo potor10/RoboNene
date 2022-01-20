@@ -1,27 +1,12 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
 
-const COMMAND_NAME = 'leaderboard'
+const COMMAND = require('./leaderboard.json')
 
+const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateRankingText = require('../methods/generateRankingText')
 const generateDeferredResponse = require('../methods/generateDeferredResponse') 
 const generateEmbed = require('../methods/generateEmbed') 
-
-const LEADERBOARD_CONSTANTS = {
-  "NO_EVENT_ERR": {
-    type: 'Error',
-    message: "There is currently no event going on",
-  },
-
-  'BAD_RANGE_ERR': {
-    type: 'Error',
-    message: 'Please choose a rank within the range of 1 to 100',
-  },
-
-  'LEFT': '⬅️',
-  'RIGHT': '➡️'
-};
 
 const createLeaderboard = async (deferredResponse, userId, leaderboardParams) => {
   const generateLeaderboardEmbed = ({timestamp, client, event, page, rankingData, target}) => {
@@ -46,20 +31,20 @@ const createLeaderboard = async (deferredResponse, userId, leaderboardParams) =>
     embeds: [generateLeaderboardEmbed(leaderboardParams)], fetchReply: true  
   });
 
-  message.react(LEADERBOARD_CONSTANTS.LEFT)
-    .then(() => message.react(LEADERBOARD_CONSTANTS.RIGHT))
+  message.react(COMMAND.CONSTANTS.LEFT)
+    .then(() => message.react(COMMAND.CONSTANTS.RIGHT))
     .catch(err => console.log(err));
 
   const awaitReactions = (userId, message, leaderboardParams) => {
     let availableReactions = [];
     const filter = (reaction, user) => {
       if (leaderboardParams.page === 0) {
-        availableReactions = [LEADERBOARD_CONSTANTS.RIGHT];
+        availableReactions = [COMMAND.CONSTANTS.RIGHT];
       } else if (leaderboardParams.page === 
         Math.floor((leaderboardParams.rankingData.length - 1) / RESULTS_PER_PAGE)) {
-        availableReactions = [LEADERBOARD_CONSTANTS.LEFT];
+        availableReactions = [COMMAND.CONSTANTS.LEFT];
       } else {
-        availableReactions = [LEADERBOARD_CONSTANTS.LEFT, LEADERBOARD_CONSTANTS.RIGHT];
+        availableReactions = [COMMAND.CONSTANTS.LEFT, COMMAND.CONSTANTS.RIGHT];
       }
       return availableReactions.includes(reaction.emoji.name) && user.id === userId;
     };
@@ -67,11 +52,11 @@ const createLeaderboard = async (deferredResponse, userId, leaderboardParams) =>
     message.awaitReactions({ filter, max: 1, time: 60000, errors: ['time'] })
       .then(async (collected) => {
         const reaction = collected.first();
-        if (reaction.emoji.name === LEADERBOARD_CONSTANTS.LEFT) {
+        if (reaction.emoji.name === COMMAND.CONSTANTS.LEFT) {
           leaderboardParams.page -= 1
           await message.edit({ embeds: [generateLeaderboardEmbed(leaderboardParams)] });
           awaitReactions(userId, message, leaderboardParams);
-        } else if (reaction.emoji.name === LEADERBOARD_CONSTANTS.RIGHT) {
+        } else if (reaction.emoji.name === COMMAND.CONSTANTS.RIGHT) {
           leaderboardParams.page += 1
           await message.edit({ embeds: [generateLeaderboardEmbed(leaderboardParams)] });
           awaitReactions(userId, message, leaderboardParams);
@@ -84,24 +69,18 @@ const createLeaderboard = async (deferredResponse, userId, leaderboardParams) =>
 };
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName(COMMAND_NAME)
-    .setDescription('Top 100 players and their scores')
-    .addIntegerOption(op =>
-      op.setName('rank')
-        .setDescription('Jump to rank')
-        .setRequired(false)),
+  data: generateSlashCommand(COMMAND.INFO),
 
   async execute(interaction, discordClient) {
     const deferredResponse = await interaction.reply({
-      embeds: [generateDeferredResponse(COMMAND_NAME, discordClient)],
+      embeds: [generateDeferredResponse(COMMAND.INFO.name, discordClient)],
       fetchReply: true
     })
 
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {
       await deferredResponse.edit({
-        embeds: [generateEmbed(COMMAND_NAME, LEADERBOARD_CONSTANTS.NO_EVENT_ERR, discordClient)]
+        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_EVENT_ERR, discordClient)]
       });
       return
     }
@@ -111,6 +90,19 @@ module.exports = {
       targetRank: 1,
       lowerLimit: 99
     }, async (response) => {
+      // Check if the response is valid
+      if (!response.rankings) {
+        await deferredResponse.edit({
+          embeds: [generateEmbed(commandName, COMMAND.CONSTANTS.NO_RESPONSE_ERR, discordClient)]
+        });
+        return
+      } else if (response.rankings.length === 0) {
+        await deferredResponse.edit({
+          embeds: [generateEmbed(commandName, COMMAND.CONSTANTS.BAD_INPUT_ERROR, discordClient)]
+        });
+        return
+      }
+
       const rankingData = response.rankings
       const timestamp = Date.now()
 
@@ -119,7 +111,7 @@ module.exports = {
           if (interaction.options._hoistedOptions[0].value > 100 || 
             interaction.options._hoistedOptions[0].value < 1) {
             await deferredResponse.edit({
-              embeds: [generateEmbed(COMMAND_NAME, LEADERBOARD_CONSTANTS.BAD_RANGE_ERR, discordClient)]
+              embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_RANGE_ERR, discordClient)]
             });
           } else {
             const target = interaction.options._hoistedOptions[0].value;

@@ -1,26 +1,12 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
 
-const COMMAND_NAME = 'graph'
+const COMMAND = require('./graph.json')
 
+const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateDeferredResponse = require('../methods/generateDeferredResponse') 
 const generateEmbed = require('../methods/generateEmbed') 
-
-const GRAPH_CONSTANTS = {
-  "NO_EVENT_ERR": {
-    type: 'Error',
-    message: "There is currently no event going on",
-  },
-
-  'NO_DATA_ERR': {
-    type: 'Error',
-    message: 'Please cloose a different cutoff tier',
-  },
-
-  "SEKAI_BEST_HOST": "api.sekai.best",
-};
 
 const generateGraphEmbed = (graphUrl, tier, discordClient) => {
   const graphEmbed = new MessageEmbed()
@@ -38,7 +24,7 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
 const postQuickChart = async (deferredResponse, tier, rankData, discordClient) => {
   if (!rankData.data.eventRankings) {
     await deferredResponse.edit({
-      embeds: [generateEmbed(COMMAND_NAME, GRAPH_CONSTANTS.NO_DATA_ERR, discordClient)]
+      embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_DATA_ERR, discordClient)]
     });
     return
   }
@@ -122,36 +108,7 @@ const postQuickChart = async (deferredResponse, tier, rankData, discordClient) =
 }
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName(COMMAND_NAME)
-    .setDescription('Create a visualization of the score at a certain cutoff')
-    .addIntegerOption(op =>
-      op.setName('tier')
-        .setDescription('The tier of the cutoff')
-        .setRequired(true)
-        .addChoice('t1', 1)
-        .addChoice('t2', 2)
-        .addChoice('t3', 3)
-        .addChoice('t10', 10)
-        .addChoice('t20', 20)
-        .addChoice('t30', 30)
-        .addChoice('t40', 40)
-        .addChoice('t50', 50)
-        .addChoice('t100', 100)
-        .addChoice('t200', 200)
-        .addChoice('t300', 300)
-        .addChoice('t400', 400)
-        .addChoice('t500', 500)
-        .addChoice('t1000', 1000)
-        .addChoice('t2000', 2000)
-        .addChoice('t3000', 3000)
-        .addChoice('t4000', 4000)
-        .addChoice('t5000', 5000)
-        .addChoice('t10000', 10000)
-        .addChoice('t20000', 20000)
-        .addChoice('t30000', 30000)
-        .addChoice('t40000', 40000)
-        .addChoice('t50000', 50000)),
+  data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
     const deferredResponse = await interaction.reply({
@@ -162,7 +119,7 @@ module.exports = {
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {
       await deferredResponse.edit({
-        embeds: [generateEmbed(COMMAND_NAME, GRAPH_CONSTANTS.NO_EVENT_ERR, discordClient)]
+        embeds: [generateEmbed(COMMAND_NAME, COMMAND.CONSTANTS.NO_EVENT_ERR, discordClient)]
       });
       return
     }
@@ -170,7 +127,7 @@ module.exports = {
     const tier = interaction.options._hoistedOptions[0].value
 
     const options = {
-      host: GRAPH_CONSTANTS.SEKAI_BEST_HOST,
+      host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
       path: `/event/${event.id}/rankings/graph?rank=${tier}&region=en`,
       headers: {'User-Agent': 'request'}
     };

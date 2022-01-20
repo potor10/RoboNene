@@ -14,6 +14,11 @@ const RANK_CONSTANTS = {
     message: "There is currently no event going on",
   },
 
+  "NO_RESPONSE_ERR": {
+    type: 'Error',
+    message: "There whas no response from the server. Plase try again.",
+  },
+
   'HIGHER_LIMIT': (RESULTS_PER_PAGE%2) ? Math.floor(RESULTS_PER_PAGE/2) : Math.floor(RESULTS_PER_PAGE/2)-1,
   'LOWER_LIMIT':  Math.floor(RESULTS_PER_PAGE/2)
 };
@@ -32,7 +37,14 @@ const getRank = async (commandName, deferredResponse, discordClient, requestPara
     eventId: event.id,
     ...requestParams
   }, async (response) => {
-    if (response.rankings.length === 0) {
+
+    // Check if the response is valid
+    if (!response.rankings) {
+      await deferredResponse.edit({
+        embeds: [generateEmbed(commandName, RANK_CONSTANTS.NO_RESPONSE_ERR, discordClient)]
+      });
+      return
+    } else if (response.rankings.length === 0) {
       await deferredResponse.edit({
         embeds: [generateEmbed(commandName, RANK_CONSTANTS.BAD_INPUT_ERROR, discordClient)]
       });

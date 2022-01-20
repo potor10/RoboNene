@@ -6,6 +6,7 @@ const path = require('path');
 
 // Place your client and guild ids here
 const clientId = '925617020265984071';
+const guildId = '811492424626208798';
 
 const commands = [];
 const commandFiles = fs.readdirSync(path.join(__dirname, '/commands')).filter(file => file.endsWith('.js'));
@@ -24,11 +25,10 @@ const rest = new REST({ version: '9' }).setToken(token);
     commandNames = commands.map(c => c.data.name);
 		console.log(`Started refreshing application (/) commands: ${commandNames}`);
 
-    // Global
-    await rest.put(
-      Routes.applicationCommands(clientId),
-      { body: commands.map(c => c.data.toJSON()) },
-    );
+		await rest.put(
+			Routes.applicationGuildCommands(clientId, guildId),
+			{ body: commands.map(c => c.data.toJSON()) },
+		);
 
 		console.log(`Successfully reloaded application (/) commands: ${commandNames}`);
 	} catch (error) {

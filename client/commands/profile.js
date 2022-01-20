@@ -1,45 +1,19 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
 
-const COMMAND_NAME = 'profile'
+const COMMAND = require('./profile.json')
 
+const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateDeferredResponse = require('../methods/generateDeferredResponse') 
 const generateEmbed = require('../methods/generateEmbed') 
 const getCard = require('../methods/getCard')
-
-const PROF_CONSTANTS = {
-  'NO_ACC_ERR': {
-    type: 'Error',
-    message: 'This user does not have an account with the bot',
-  },
-
-  'BAD_ID_ERR': {
-    type: 'Error', 
-    message: 'You have provided an invalid ID.'
-  },
-
-  'BAD_ACC_ERR': {
-    type: 'Error',
-    message: 'There was an issue in finding this account. Please try again with the correct id'
-  },
-
-  'cool': '<:attCool:930717822756204575>',
-  'cute': '<:attCute:930717822529732659>',
-  'happy': '<:attHappy:930717823066595358>',
-  'mysterious': '<:attMysterious:930717823217582080>',
-  'pure': '<:attPure:930717823414714438>',
-  'BLANK_EMOJI': '<:blank:930716814986588170>'
-};
 
 const generateProfileEmbed = (discordClient, data) => {
   const areas = JSON.parse(fs.readFileSync('./sekai_master/areas.json'));
   const areaItemLevels = JSON.parse(fs.readFileSync('./sekai_master/areaItemLevels.json'));
   const areaItems = JSON.parse(fs.readFileSync('./sekai_master/areaItems.json'));
   const gameCharacters = JSON.parse(fs.readFileSync('./sekai_master/gameCharacters.json'));
-  
-  let showDetailed = false;
 
   const leaderCardId = data.userDecks[0].leader
   let leader = {}
@@ -81,11 +55,8 @@ const generateProfileEmbed = (discordClient, data) => {
           const charInfo = gameCharacters[cardInfo.characterId-1]
           teamText += `__${cardInfo.prefix} ${charInfo.givenName} ${charInfo.firstName}__\n`
           teamText += `Rarity: ${'⭐'.repeat(cardInfo.rarity)}\n`
-          teamText += `Type: ${PROF_CONSTANTS[cardInfo.attr]}\n`
-
-          if (showDetailed) {
-            teamText += `Level: \`\`${card.level}\`\`\n`
-          }
+          teamText += `Type: ${COMMAND.CONSTANTS[cardInfo.attr]}\n`
+          // teamText += `Level: \`\`${card.level}\`\`\n`
           teamText += `Master Rank: \`\`${card.masterRank}\`\`\n`
 
           if (cardInfo.rarity > 2) {
@@ -133,29 +104,6 @@ const generateProfileEmbed = (discordClient, data) => {
 
     characterRankText += `\`\`${charName}  ${rankText}\`\`\n`
   })
-
-  let areaTexts = {}
-  data.userAreaItems.forEach((item) => {
-    const itemInfo = areaItems[item.areaItemId-1]
-    let itemLevel = {}
-    for(const idx in areaItemLevels) {
-      if (areaItemLevels[idx].areaItemId === item.areaItemId &&
-        areaItemLevels[idx].level === item.level) {
-        itemLevel = areaItemLevels[idx]
-        break
-      }
-    }
-
-    if (!(itemInfo.areaId in areaTexts)) {
-      areaTexts[itemInfo.areaId] = ''
-    }
-
-    let itemText = (itemLevel.sentence).replace(/\<[\s\S]*?\>/g, "**")
-
-    areaTexts[itemInfo.areaId] += `__${itemInfo.name}__ \`\`Lv. ${item.level}\`\`\n`
-    areaTexts[itemInfo.areaId] += `${itemText}\n`
-  })
-
 
   // Generate Challenge Rank Text
   let challengeRankInfo = {}
@@ -206,7 +154,6 @@ const generateProfileEmbed = (discordClient, data) => {
     challengeRankText += `\`\`${charName}  ${rankText}\`\`\n`
   })
 
-  // userChallengeLiveSoloStages challenge rank
   const profileEmbed = new MessageEmbed()
     .setColor(NENE_COLOR)
     .setTitle(`${data.user.userGamedata.name}'s Profile`)
@@ -230,18 +177,40 @@ const generateProfileEmbed = (discordClient, data) => {
     .setTimestamp()
     .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
 
-  if (showDetailed) {
-    Object.keys(areaTexts).forEach((areaId) => {
-      let areaInfo = { name: 'N/A' }
-      for(const idx in areas) {
-        if (areas[idx].id == areaId) {
-          areaInfo = areas[idx]
-        }
+  /* Hidden Because Of Sensitive Information
+  let areaTexts = {}
+  data.userAreaItems.forEach((item) => {
+    const itemInfo = areaItems[item.areaItemId-1]
+    let itemLevel = {}
+    for(const idx in areaItemLevels) {
+      if (areaItemLevels[idx].areaItemId === item.areaItemId &&
+        areaItemLevels[idx].level === item.level) {
+        itemLevel = areaItemLevels[idx]
+        break
       }
+    }
 
-      profileEmbed.addField(areaInfo.name, areaTexts[areaId])
-    })
-  }
+    if (!(itemInfo.areaId in areaTexts)) {
+      areaTexts[itemInfo.areaId] = ''
+    }
+
+    let itemText = (itemLevel.sentence).replace(/\<[\s\S]*?\>/g, "**")
+
+    areaTexts[itemInfo.areaId] += `__${itemInfo.name}__ \`\`Lv. ${item.level}\`\`\n`
+    areaTexts[itemInfo.areaId] += `${itemText}\n`
+  })
+
+  Object.keys(areaTexts).forEach((areaId) => {
+    let areaInfo = { name: 'N/A' }
+    for(const idx in areas) {
+      if (areas[idx].id == areaId) {
+        areaInfo = areas[idx]
+      }
+    }
+
+    profileEmbed.addField(areaInfo.name, areaTexts[areaId])
+  })
+  */
 
   return profileEmbed 
 }
@@ -252,7 +221,7 @@ const getProfile = async (deferredResponse, discordClient, userId) => {
   }, async (response) => {
     if (response.httpStatus === 404) {
       await deferredResponse.edit({
-        embeds: [generateEmbed(COMMAND_NAME, PROF_CONSTANTS.BAD_ACC_ERR, discordClient)]
+        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_ACC_ERR, discordClient)]
       });
       return
     }
@@ -265,18 +234,11 @@ const getProfile = async (deferredResponse, discordClient, userId) => {
 }
 
 module.exports = {
-  requiresLink: true,
-  data: new SlashCommandBuilder()
-    .setName('profile')
-    .setDescription('Project Sekai Profile')
-    .addStringOption(op =>
-      op.setName('id')
-        .setDescription('Target Project Sekai user ID')
-        .setRequired(false)),
+  data: generateSlashCommand(COMMAND.INFO),
 
   async execute(interaction, discordClient) {
     const deferredResponse = await interaction.reply({
-      embeds: [generateDeferredResponse(COMMAND_NAME, discordClient)],
+      embeds: [generateDeferredResponse(COMMAND.INFO.name, discordClient)],
       fetchReply: true
     });
 
@@ -291,7 +253,7 @@ module.exports = {
 
       if (!user.length) {
         await deferredResponse.edit({
-          embeds: [generateEmbed(COMMAND_NAME, PROF_CONSTANTS.NO_ACC_ERROR, discordClient)]
+          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_ACC_ERROR, discordClient)]
         });
         return
       }
@@ -301,7 +263,7 @@ module.exports = {
     if (!accountId) {
       // Do something because there is an empty account id input
       await deferredResponse.edit({
-        embeds: [generateEmbed(COMMAND_NAME, PROF_CONSTANTS.BAD_ID_ERR, discordClient)]
+        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_ID_ERR, discordClient)]
       })
       return
     }

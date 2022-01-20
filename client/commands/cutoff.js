@@ -1,27 +1,13 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
 const regression = require('regression');
 
-const COMMAND_NAME = 'cutoff'
+const COMMAND = require('./cutoff.json')
 
+const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateDeferredResponse = require('../methods/generateDeferredResponse') 
 const generateEmbed = require('../methods/generateEmbed') 
-
-const CUTOFF_CONSTANTS = {
-  "NO_EVENT_ERR": {
-    type: 'Error',
-    message: "There is currently no event going on",
-  },
-
-  'NO_DATA_ERR': {
-    type: 'Error',
-    message: 'Please cloose a different cutoff tier',
-  },
-
-  "SEKAI_BEST_HOST": "api.sekai.best"
-};
 
 const generateCutoffEmbed = (event, timestamp, tier, score, 
   scorePH, estimateNoSmoothing, estimateSmoothing, lastHourPt, discordClient) => {
@@ -35,12 +21,12 @@ const generateCutoffEmbed = (event, timestamp, tier, score,
     .setDescription(`${event.name}`)
     .setThumbnail(event.banner)
     .addField(`**Requested:** <t:${Math.floor(timestamp/1000)}:R>`, '\u200b')
-    .addField(`Score`, `\`${score.toLocaleString()}\``)
+    .addField(`Points`, `\`${score.toLocaleString()}\``)
     .addField(`Avg. Speed (Per Hour)`, `\`${scorePH.toLocaleString()}/h\``)
     .addField(`Avg. Speed [<t:${lastHourPtTime}:R> to <t:${Math.floor(timestamp/1000)}:R>] (Per Hour)`, 
       `\`${lastHourPtSpeed.toLocaleString()}/h\``)
-    .addField(`Estimated Score`, `\`${estimateNoSmoothing}\``)
-    .addField(`Estimated Score (Smoothing)`, `\`${estimateSmoothing}\``)
+    .addField(`Estimated Points`, `\`${estimateNoSmoothing}\``)
+    .addField(`Estimated Points (Smoothing)`, `\`${estimateSmoothing}\``)
     .setTimestamp()
     .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
 
@@ -50,7 +36,7 @@ const generateCutoffEmbed = (event, timestamp, tier, score,
 const generateCutoff = async (deferredResponse, event, timestamp, tier, score, rankData, discordClient) => {
   if (!rankData.length) {
     await deferredResponse.edit({
-      embeds: [generateEmbed(COMMAND_NAME, CUTOFF_CONSTANTS.NO_DATA_ERR, discordClient)]
+      embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_DATA_ERR, discordClient)]
     });
     return
   }
@@ -65,8 +51,8 @@ const generateCutoff = async (deferredResponse, event, timestamp, tier, score, r
     score: score
   }
 
-  if (rankData.length > 61) {
-    lastHourPt = rankData[rankData.length-61]
+  if (rankData.length > 60) {
+    lastHourPt = rankData[rankData.length-60]
   }
 
   let estimateNoSmoothing = 'N/A'
@@ -129,47 +115,18 @@ const generateCutoff = async (deferredResponse, event, timestamp, tier, score, r
 }
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName(COMMAND_NAME)
-    .setDescription('Find detailed data about the cutoff data for a certain ranking')
-    .addIntegerOption(op =>
-      op.setName('tier')
-        .setDescription('The tier of the cutoff')
-        .setRequired(true)
-        .addChoice('t1', 1)
-        .addChoice('t2', 2)
-        .addChoice('t3', 3)
-        .addChoice('t10', 10)
-        .addChoice('t20', 20)
-        .addChoice('t30', 30)
-        .addChoice('t40', 40)
-        .addChoice('t50', 50)
-        .addChoice('t100', 100)
-        .addChoice('t200', 200)
-        .addChoice('t300', 300)
-        .addChoice('t400', 400)
-        .addChoice('t500', 500)
-        .addChoice('t1000', 1000)
-        .addChoice('t2000', 2000)
-        .addChoice('t3000', 3000)
-        .addChoice('t4000', 4000)
-        .addChoice('t5000', 5000)
-        .addChoice('t10000', 10000)
-        .addChoice('t20000', 20000)
-        .addChoice('t30000', 30000)
-        .addChoice('t40000', 40000)
-        .addChoice('t50000', 50000)),
+  data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
     const deferredResponse = await interaction.reply({
-      embeds: [generateDeferredResponse(COMMAND_NAME, discordClient)],
+      embeds: [generateDeferredResponse(COMMAND.INFO.name, discordClient)],
       fetchReply: true
     })
 
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {
       await deferredResponse.edit({
-        embeds: [generateEmbed(COMMAND_NAME, CUTOFF_CONSTANTS.NO_EVENT_ERR, discordClient)]
+        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_EVENT_ERR, discordClient)]
       });
       return
     }
@@ -185,7 +142,7 @@ module.exports = {
       const score = response.rankings[0].score
 
       const options = {
-        host: CUTOFF_CONSTANTS.SEKAI_BEST_HOST,
+        host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
         path: `/event/${event.id}/rankings?rank=${tier}&limit=100000&region=en`,
         headers: {'User-Agent': 'request'}
       };

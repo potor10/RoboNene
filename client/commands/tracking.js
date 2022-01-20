@@ -1,29 +1,10 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ERR_COMMAND } = require('../../constants');
+const COMMAND = require('./tracking.json')
 
-const COMMAND_NAME = 'tracking'
-
+const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
 
 module.exports = {
-  adminOnly: true,
-  data: new SlashCommandBuilder()
-    .setName(COMMAND_NAME)
-    .setDescription('Add a tracking post to a server')
-    .addChannelOption(op => 
-      op.setName('channel')
-        .setDescription('The channel you want your tracking updates to go in')
-        .setRequired(true))
-    .addIntegerOption(op =>
-      op.setName('time')
-        .setDescription('How frequently the tracking updates')
-        .setRequired(true)
-        .addChoice('2 minutes', 2)
-        .addChoice('1 hour', 60))
-    .addBooleanOption(op => 
-      op.setName('enable')
-        .setDescription('Enable or disable the tracking alerts')
-        .setRequired(true)),
+  data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
     const db = discordClient.db
@@ -38,7 +19,7 @@ module.exports = {
       }
 
       await interaction.reply({
-        embeds: [generateEmbed(COMMAND_NAME, content, discordClient)],
+        embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
         ephemeral: true
       });
 
@@ -62,7 +43,7 @@ module.exports = {
       }
 
       await interaction.reply({
-        embeds: [generateEmbed(COMMAND_NAME, content, discordClient)],
+        embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
         ephemeral: true 
       });
     } else {
@@ -83,7 +64,7 @@ module.exports = {
         }
 
         await interaction.reply({
-          embeds: [generateEmbed(COMMAND_NAME, content, discordClient)],
+          embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
           ephemeral: true 
         });
       } else {
@@ -93,7 +74,7 @@ module.exports = {
         }
 
         await interaction.reply({
-          embeds: [generateEmbed(COMMAND_NAME, content, discordClient)],
+          embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
           ephemeral: true
         });
       }
