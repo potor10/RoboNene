@@ -21,8 +21,7 @@ module.exports = {
         { name: '**Design**', value: 'Potor10#3237\nReinhäla#4444', inline: true},
         { name: '**Testing**', value: 'Potor10#3237\nReinhäla#4444', inline: true },
         { name: '**Game Data**', value: '[Sekai World](https://github.com/Sekai-World/sekai-master-db-en-diff/blob/main/events.json)' },
-        { name: '**Calculating Estimation**', value: '[Bandori Estimation](https://docs.google.com/document/d/1137qbA0_qWOHJGhaYfxpgftqhsJvW4qo3QBTcSqnZo8/edit#heading=h.pkcfws4d84gx)\n' + 
-          'Note: We use standard linear regression \`y = a + bx\` as we don\'t have the resources to use a custom rate constant.'},
+        { name: '**Calculating Estimation**', value: '[Bandori Estimation](https://docs.google.com/document/d/1137qbA0_qWOHJGhaYfxpgftqhsJvW4qo3QBTcSqnZo8/edit#heading=h.pkcfws4d84gx)'},
         { name: '**Ranking Data**', value: '[Sekai Best](https://api.sekai.best/docs)' },
         { name: '**Discord**', value: 'Robo Nene logs the usage of her commands to prevent abuse. ' + 
           'Outside of the use of her commands, Robo Nene does not collect any user data, chat logs, or server information. ' + 

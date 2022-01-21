@@ -43,12 +43,14 @@ const generateSlashCommand = (commandInfo) => {
 
   generateOptions(slashCommand, commandInfo)
 
-  if (slashCommand.subcommands) {
-    slashCommand.subcommands.forEach(scInfo => {
+  if (commandInfo.subcommands) {
+    commandInfo.subcommands.forEach(scInfo => {
       slashCommand.addSubcommand(sc => {
         sc.setName(scInfo.name)
           .setDescription(scInfo.description)
         generateOptions(sc, scInfo)
+
+        return sc
       })
     })
   }

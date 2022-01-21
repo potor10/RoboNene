@@ -1,5 +1,6 @@
 const fs = require('fs');
 
+// TODO: Binary Search instead
 const getCard = (cardId) => {
   const cards = JSON.parse(fs.readFileSync('./sekai_master/cards.json'));
 
