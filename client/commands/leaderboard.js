@@ -69,6 +69,7 @@ const createLeaderboard = async (deferredResponse, userId, leaderboardParams) =>
 };
 
 module.exports = {
+  ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
 
   async execute(interaction, discordClient) {

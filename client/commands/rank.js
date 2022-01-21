@@ -6,6 +6,7 @@ const generateDeferredResponse = require('../methods/generateDeferredResponse')
 const generateEmbed = require('../methods/generateEmbed') 
 
 module.exports = {
+  ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {

@@ -83,6 +83,7 @@ const createScheduleEmbed = (data, client) => {
 };
 
 module.exports = {
+  ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {

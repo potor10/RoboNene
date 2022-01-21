@@ -7,26 +7,26 @@ const COMMAND = require('./profile.json')
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateDeferredResponse = require('../methods/generateDeferredResponse') 
 const generateEmbed = require('../methods/generateEmbed') 
-const getCard = require('../methods/getCard')
+const binarySearch = require('../methods/binarySearch')
 
 const generateProfileEmbed = (discordClient, data) => {
   const areas = JSON.parse(fs.readFileSync('./sekai_master/areas.json'));
   const areaItemLevels = JSON.parse(fs.readFileSync('./sekai_master/areaItemLevels.json'));
   const areaItems = JSON.parse(fs.readFileSync('./sekai_master/areaItems.json'));
   const gameCharacters = JSON.parse(fs.readFileSync('./sekai_master/gameCharacters.json'));
+  const cards = JSON.parse(fs.readFileSync('./sekai_master/cards.json'));
 
   const leaderCardId = data.userDecks[0].leader
   let leader = {}
   
   for(const idx in data.userCards) {
     if (data.userCards[idx].cardId === leaderCardId) {
-      console.log(idx)
       leader = data.userCards[idx]
       break
     }
   }
 
-  const leaderCard = getCard(leaderCardId)
+  const leaderCard = binarySearch(leaderCardId, 'id', cards);
 
   let leaderThumbURL = 'https://sekai-res.dnaroma.eu/file/sekai-assets/' + 
     `thumbnail/chara_rip/${leaderCard.assetbundleName}`
@@ -51,7 +51,7 @@ const generateProfileEmbed = (discordClient, data) => {
 
       data.userCards.forEach((card) => {
         if (card.cardId === positionId) {
-          const cardInfo = getCard(positionId)
+          const cardInfo = binarySearch(positionId, 'id', cards);
           const charInfo = gameCharacters[cardInfo.characterId-1]
           teamText += `__${cardInfo.prefix} ${charInfo.givenName} ${charInfo.firstName}__\n`
           teamText += `Rarity: ${'⭐'.repeat(cardInfo.rarity)}\n`
@@ -201,12 +201,7 @@ const generateProfileEmbed = (discordClient, data) => {
   })
 
   Object.keys(areaTexts).forEach((areaId) => {
-    let areaInfo = { name: 'N/A' }
-    for(const idx in areas) {
-      if (areas[idx].id == areaId) {
-        areaInfo = areas[idx]
-      }
-    }
+    const areaInfo = binarySearch(areaId, 'id', areas);
 
     profileEmbed.addField(areaInfo.name, areaTexts[areaId])
   })
@@ -234,6 +229,7 @@ const getProfile = async (deferredResponse, discordClient, userId) => {
 }
 
 module.exports = {
+  ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
 
   async execute(interaction, discordClient) {

@@ -108,6 +108,7 @@ const postQuickChart = async (deferredResponse, tier, rankData, discordClient) =
 }
 
 module.exports = {
+  ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {

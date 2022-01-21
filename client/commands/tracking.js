@@ -4,6 +4,7 @@ const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
 
 module.exports = {
+  ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {

@@ -115,6 +115,7 @@ const generateCutoff = async (deferredResponse, event, timestamp, tier, score, r
 }
 
 module.exports = {
+  ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {

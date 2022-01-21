@@ -6,6 +6,7 @@ const COMMAND = require('./about.json')
 const generateSlashCommand = require('../methods/generateSlashCommand')
 
 module.exports = {
+  ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
