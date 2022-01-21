@@ -249,7 +249,7 @@ module.exports = {
 
       if (!user.length) {
         await deferredResponse.edit({
-          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_ACC_ERROR, discordClient)]
+          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_ACC_ERR, discordClient)]
         });
         return
       }
