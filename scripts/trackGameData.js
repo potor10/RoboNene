@@ -1,14 +1,27 @@
-const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER, DIR_DATA } = require('../constants');
-const { sekaiDiffHost, sekaiDiffPath, includeJson } = require('../config.json')
+const { DIR_DATA } = require('../constants');
 const https = require('https');
 const fs = require('fs');
 
+const GAME_CONSTANTS = {
+  "HOST": "raw.githubusercontent.com",
+  "PATH": "/Sekai-World/sekai-master-db-en-diff/main/",
+  "JSON": [
+    "gameCharacters",
+    "characterProfiles",
+    "areas",
+    "areaItems",
+    "areaItemLevels",
+    "events",
+    "eventCards",
+    "cards"
+  ]
+}
+
 const getData = (dir=DIR_DATA) => {
-  includeJson.forEach((filename) => {
+  GAME_CONSTANTS.JSON.forEach((filename) => {
     const options = {
-      host: sekaiDiffHost,
-      path: `${sekaiDiffPath}${filename}.json`,
+      host: GAME_CONSTANTS.HOST,
+      path: `${GAME_CONSTANTS.PATH}${filename}.json`,
       headers: {'User-Agent': 'request'}
     };
   

@@ -1,18 +1,5 @@
 {
   "token" : "",
 
-  "adminIds": [],
-
-  "sekaiDiffHost": "raw.githubusercontent.com",
-  "sekaiDiffPath": "/Sekai-World/sekai-master-db-en-diff/main/",
-  "includeJson": [
-    "gameCharacters",
-    "characterProfiles",
-    "areas",
-    "areaItems",
-    "areaItemLevels",
-    "events",
-    "eventCards",
-    "cards"
-  ]
+  "adminIds": []
 }

@@ -38,6 +38,7 @@ module.exports = {
     if (interactionIdx != -1) {
       const command = discordClient.commands[interactionIdx]
 
+      // TODO: Check for server manager / administrate perms instead of within certain ids
       if (command.adminOnly) {
         if (!(adminIds.includes(interaction.user.id))) {
           await interaction.reply({
