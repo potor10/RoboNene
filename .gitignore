@@ -14,7 +14,6 @@ config.json
 /databases
 /prefs
 /sekai_master
-/rank
 
 # local env files
 .env.local
