@@ -90,7 +90,7 @@ class characterQuestion {
       const character = idxArray.pop()
 
       if (!character[attr]) { 
-        return chooseQuestion(character) 
+        return chooseCharacter() 
       } else {
         while (wrong.length < 3) {
           const incorrectChar = idxArray.pop()
