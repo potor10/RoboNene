@@ -1,6 +1,7 @@
 const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../../constants');
+const { DIR_DATA, NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
+const fs = require('fs');
 const regression = require('regression');
 
 const COMMAND = require('./cutoff.json')
@@ -8,6 +9,7 @@ const COMMAND = require('./cutoff.json')
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateDeferredResponse = require('../methods/generateDeferredResponse') 
 const generateEmbed = require('../methods/generateEmbed') 
+const binarySearch = require('../methods/binarySearch')
 
 const generateCutoffEmbed = (event, timestamp, tier, score, 
   scorePH, estimateNoSmoothing, estimateSmoothing, lastHourPt, discordClient) => {
@@ -60,34 +62,81 @@ const generateCutoff = async (deferredResponse, event, timestamp, tier, score, r
 
   let oneDayIdx = -1
   let halfDayIdx = -1
+  let lastDayIdx = rankData.length
 
   // 24 hours have passed into the event
   for(let i = 0; i < rankData.length; i++) {
     const currentEventTime = (new Date(rankData[i].timestamp)).getTime()
-    if (halfDayIdx === -1 && currentEventTime > event.startAt + 43200000) {
+    if (halfDayIdx === -1 && currentEventTime >= event.startAt + 43200000) {
       halfDayIdx = i
     }
-    if (currentEventTime > event.startAt + 86400000) {
+    if (currentEventTime >= event.startAt + 86400000) {
       oneDayIdx = i
       break
     }
   }
 
+  // less than 24 hours left in the event
+  if (timestamp >= event.aggregateAt - 86400000) {
+    for(let i = 0; i < rankData.length; i++) {
+      const currentEventTime = (new Date(rankData[i].timestamp)).getTime()
+      lastDayIdx = i
+      if (currentEventTime >= event.aggregateAt - 86400000) {
+        break
+      }
+    }
+  }
+
   if (oneDayIdx !== -1) {
+    const rate = JSON.parse(fs.readFileSync('./rank/rate.json'));
+    const eventCards = JSON.parse(fs.readFileSync(`${DIR_DATA}/eventCards.json`));
+    const cards = JSON.parse(fs.readFileSync(`${DIR_DATA}/cards.json`));
+
+    const characterIds = []
+
+    eventCards.forEach(card => {
+      if (card.eventId == event.id) {
+        const cardInfo = binarySearch(card.cardId, 'id', cards);
+        characterIds.push(cardInfo.characterId)
+      }
+    })
+
+    let totalRate = 0;
+    let totalSimilar = 0;
+
+    let avgRate = 0;
+    let rateCount = 0;
+
+    for(const eventId in rate) {
+      const similarity = characterIds.filter(el => { return rate[eventId].characterIds.indexOf(el) >= 0 }).length;
+      if (rate[eventId][tier]) {
+        totalRate += rate[eventId][tier] * similarity
+        totalSimilar += similarity
+
+        avgRate += rate[eventId][tier]
+        rateCount += 1
+      }
+    }
+
+    const finalRate = (totalSimilar) ? (totalRate / totalSimilar) : (avgRate / rateCount)
+    console.log(`The Final Rate is ${finalRate}`)
+
     const points = []
 
-    // Only get data points past 12 hours
-    rankData.slice(halfDayIdx).forEach((point) => {
+    // Only get data points past 12 hours and before last 24 hours
+    rankData.slice(halfDayIdx, lastDayIdx).forEach((point) => {
       points.push([(new Date(point.timestamp)).getTime(), point.score])
     })
 
     const model = regression.linear(points, {precision: 100});
-    estimateNoSmoothing = Math.round(model.predict(event.aggregateAt)[1]).toLocaleString()
+    const predicted = (model.equation[0] * finalRate * event.aggregateAt) + model.equation[1]
+
+    estimateNoSmoothing = Math.round(predicted).toLocaleString()
 
     let totalWeight = 0
     let totalTime = 0
     // Grab 1 Estimate Every 60 Minutes For Smoothing
-    for(let i = oneDayIdx; i < rankData.length + 60; i += 60) {
+    for(let i = oneDayIdx; i < lastDayIdx; i += 60) {
       const smoothingPoints = []
       const dataSlice = rankData.slice(halfDayIdx, i)
       dataSlice.forEach((point) => {
@@ -96,7 +145,7 @@ const generateCutoff = async (deferredResponse, event, timestamp, tier, score, r
 
       if (dataSlice.length) {
         const result = regression.linear(smoothingPoints, {precision: 100});
-        const estimate = result.predict(event.aggregateAt)[1]
+        const estimate = (result.equation[0] * finalRate * event.aggregateAt) + result.equation[1]
         const amtThrough = ((new Date(dataSlice[dataSlice.length-1].timestamp)).getTime() - event.startAt) / duration
 
         totalWeight += estimate * Math.pow(amtThrough, 2)

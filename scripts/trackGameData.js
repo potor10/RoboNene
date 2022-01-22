@@ -50,8 +50,8 @@ const trackGameData = async (discordClient) => {
   // Obtain the game data
   getData();
 
-  console.log('Ranking Data Retrieved, Pausing For 120000 ms')
-  setTimeout(() => {trackGameData(discordClient)}, 120000);
+  console.log('Game Data Requested, Pausing For 30 minutes')
+  setTimeout(() => {trackGameData(discordClient)}, 1800000);
 }
 
 module.exports = trackGameData;
