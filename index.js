@@ -1,10 +1,11 @@
 // Import 
 const DiscordClient = require('./client/client')
+const loadGameData = require('./scripts/loadGameData');
 const trackGameData = require('./scripts/trackGameData');
 const trackRankingData = require('./scripts/trackRankingData');
 const trackRankingRate = require('./scripts/trackRankingRate');
 
-(async () => {
+loadGameData(0, async () => {
   const client = new DiscordClient()
   client.loadCommands()
   client.loadEvents()
@@ -19,4 +20,4 @@ const trackRankingRate = require('./scripts/trackRankingRate');
   trackGameData(client)
   trackRankingData(client)
   trackRankingRate()
-})();
+});

@@ -17,8 +17,12 @@ const GAME_CONSTANTS = {
   ]
 }
 
-const getData = () => {
-  GAME_CONSTANTS.JSON.forEach((filename) => {
+const loadGameData = (idx, callback) => {
+  if (idx >= GAME_CONSTANTS.JSON.length) {
+    callback()
+  } else {
+    const filename = GAME_CONSTANTS.JSON[idx]
+
     const options = {
       host: GAME_CONSTANTS.HOST,
       path: `${GAME_CONSTANTS.PATH}${filename}.json`,
@@ -35,6 +39,7 @@ const getData = () => {
           try {
             fs.writeFileSync(`${DIR_DATA}/${filename}.json`, JSON.stringify(JSON.parse(json)));
             console.log(`${filename}.json Retrieved`)
+            loadGameData(idx+1, callback)
           } catch (err) {
             // Error parsing JSON: ${err}`
           }
@@ -43,15 +48,7 @@ const getData = () => {
         }
       });
     }).on('error', (err) => {});
-  })
+  }
 }
 
-const trackGameData = async (discordClient) => {
-  // Obtain the game data
-  getData();
-
-  console.log('Game Data Requested, Pausing For 30 minutes')
-  setTimeout(() => {trackGameData(discordClient)}, 1800000);
-}
-
-module.exports = trackGameData;
+module.exports = loadGameData;
