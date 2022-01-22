@@ -1,7 +1,17 @@
 module.exports = {
   // Bot Information
   "BOT_NAME": "Robo Nene",
-  "BOT_ACTIVITY": "Dreaming in ",
+  "BOT_ACTIVITY": () => {
+    let activities = [
+      "Beep Boop in ", 
+      "Dreaming in ", 
+      "Hunting Uhh in ", 
+      "Badmouthing ", 
+      "Leaking Tiering Info in ",
+      "Supporting EN Project Sekai in "
+    ];
+    return activities[Math.floor(Math.random() * (activities.length - 1))]
+  },
 
   // Default Error Shared Between Most Commands
   "ERR_COMMAND": {

@@ -9,7 +9,7 @@ const generateDeferredResponse = require('../methods/generateDeferredResponse')
 const generateEmbed = require('../methods/generateEmbed') 
 const binarySearch = require('../methods/binarySearch')
 
-const generateProfileEmbed = (discordClient, data) => {
+const generateProfileEmbed = (discordClient, data, private) => {
   const areas = JSON.parse(fs.readFileSync('./sekai_master/areas.json'));
   const areaItemLevels = JSON.parse(fs.readFileSync('./sekai_master/areaItemLevels.json'));
   const areaItems = JSON.parse(fs.readFileSync('./sekai_master/areaItems.json'));
@@ -56,7 +56,11 @@ const generateProfileEmbed = (discordClient, data) => {
           teamText += `__${cardInfo.prefix} ${charInfo.givenName} ${charInfo.firstName}__\n`
           teamText += `Rarity: ${'⭐'.repeat(cardInfo.rarity)}\n`
           teamText += `Type: ${COMMAND.CONSTANTS[cardInfo.attr]}\n`
-          // teamText += `Level: \`\`${card.level}\`\`\n`
+
+          if (!private) {
+            teamText += `Level: \`\`${card.level}\`\`\n`
+          }
+
           teamText += `Master Rank: \`\`${card.masterRank}\`\`\n`
 
           if (cardInfo.rarity > 2) {
@@ -177,36 +181,37 @@ const generateProfileEmbed = (discordClient, data) => {
     .setTimestamp()
     .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
 
-  /* Hidden Because Of Sensitive Information
-  let areaTexts = {}
-  data.userAreaItems.forEach((item) => {
-    const itemInfo = areaItems[item.areaItemId-1]
-    let itemLevel = {}
-    for(const idx in areaItemLevels) {
-      if (areaItemLevels[idx].areaItemId === item.areaItemId &&
-        areaItemLevels[idx].level === item.level) {
-        itemLevel = areaItemLevels[idx]
-        break
+  // Hidden Because Of Sensitive Information
+  if (!private) {
+    let areaTexts = {}
+    data.userAreaItems.forEach((item) => {
+      const itemInfo = areaItems[item.areaItemId-1]
+      let itemLevel = {}
+      for(const idx in areaItemLevels) {
+        if (areaItemLevels[idx].areaItemId === item.areaItemId &&
+          areaItemLevels[idx].level === item.level) {
+          itemLevel = areaItemLevels[idx]
+          break
+        }
       }
-    }
 
-    if (!(itemInfo.areaId in areaTexts)) {
-      areaTexts[itemInfo.areaId] = ''
-    }
+      if (!(itemInfo.areaId in areaTexts)) {
+        areaTexts[itemInfo.areaId] = ''
+      }
 
-    let itemText = (itemLevel.sentence).replace(/\<[\s\S]*?\>/g, "**")
+      let itemText = (itemLevel.sentence).replace(/\<[\s\S]*?\>/g, "**")
 
-    areaTexts[itemInfo.areaId] += `__${itemInfo.name}__ \`\`Lv. ${item.level}\`\`\n`
-    areaTexts[itemInfo.areaId] += `${itemText}\n`
-  })
+      areaTexts[itemInfo.areaId] += `__${itemInfo.name}__ \`\`Lv. ${item.level}\`\`\n`
+      areaTexts[itemInfo.areaId] += `${itemText}\n`
+    })
 
-  Object.keys(areaTexts).forEach((areaId) => {
-    const areaInfo = binarySearch(areaId, 'id', areas);
+    Object.keys(areaTexts).forEach((areaId) => {
+      const areaInfo = binarySearch(areaId, 'id', areas);
 
-    profileEmbed.addField(areaInfo.name, areaTexts[areaId])
-  })
-  */
-
+      profileEmbed.addField(areaInfo.name, areaTexts[areaId])
+    })
+  }
+  
   return profileEmbed 
 }
 
@@ -221,7 +226,16 @@ const getProfile = async (deferredResponse, discordClient, userId) => {
       return
     }
 
-    const profileEmbed = generateProfileEmbed(discordClient, response)
+    let private = true
+    const user = discordClient.db.prepare('SELECT * FROM users WHERE sekai_id=@sekaiId').all({
+      sekaiId: userId
+    })
+
+    if (user.length && !user[0].private) {
+      private = false
+    }
+
+    const profileEmbed = generateProfileEmbed(discordClient, response, private)
     await deferredResponse.edit({
       embeds: [profileEmbed]
     });

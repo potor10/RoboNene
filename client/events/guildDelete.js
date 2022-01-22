@@ -11,7 +11,7 @@ module.exports = {
     });
 
     const client = discordClient.client
-    client.user.setActivity(BOT_ACTIVITY + 
+    client.user.setActivity(BOT_ACTIVITY() + 
       `${client.guilds.cache.size} ${(client.guilds.cache.size > 1) ? 'servers' : 'server'}`);
   }
 };
