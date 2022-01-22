@@ -113,14 +113,14 @@ module.exports = {
   
   async execute(interaction, discordClient) {
     const deferredResponse = await interaction.reply({
-      embeds: [generateDeferredResponse(COMMAND_NAME, discordClient)],
+      embeds: [generateDeferredResponse(COMMAND.INFO.name, discordClient)],
       fetchReply: true
     })
     
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {
       await deferredResponse.edit({
-        embeds: [generateEmbed(COMMAND_NAME, COMMAND.CONSTANTS.NO_EVENT_ERR, discordClient)]
+        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_EVENT_ERR, discordClient)]
       });
       return
     }

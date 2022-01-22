@@ -92,8 +92,8 @@ module.exports = {
       fetchReply: true
     })
 
-    const schedule = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
-    const scheduleEmbed = createScheduleEmbed(schedule, discordClient.client);
+    const events = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
+    const scheduleEmbed = createScheduleEmbed(events, discordClient.client);
     await deferredResponse.edit({ embeds: [scheduleEmbed] });
   }    
 };

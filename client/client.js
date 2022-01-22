@@ -155,19 +155,19 @@ class DiscordClient {
   }
 
   getCurrentEvent() {
-    const schedule = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
+    const events = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
     const currentTime = Date.now()
 
-    for (let i = 0; i < schedule.length; i++) {
-      if (schedule[i].startAt <= currentTime && schedule[i].closedAt >= currentTime) {
+    for (let i = 0; i < events.length; i++) {
+      if (events[i].startAt <= currentTime && events[i].closedAt >= currentTime) {
         return {
-          id: schedule[i].id,
+          id: events[i].id,
           banner: 'https://sekai-res.dnaroma.eu/file/sekai-en-assets/event/' + 
-            `${schedule[i].assetbundleName}/logo_rip/logo.webp`,
-          name: schedule[i].name,
-          startAt: schedule[i].startAt,
-          aggregateAt: schedule[i].aggregateAt,
-          closedAt: schedule[i].closedAt
+            `${events[i].assetbundleName}/logo_rip/logo.webp`,
+          name: events[i].name,
+          startAt: events[i].startAt,
+          aggregateAt: events[i].aggregateAt,
+          closedAt: events[i].closedAt
         }
       }
     }

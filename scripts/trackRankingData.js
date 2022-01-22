@@ -102,21 +102,21 @@ const requestRanking = async (event, discordClient) => {
  * @returns {Object} the ranking event information
  */
 const getRankingEvent = () => {
-  let schedule = {}
+  let events = {}
   try {
-    schedule = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
+    events = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
   } catch (err) {
     return { id: -1, banner: '', name: '' }
   }
 
   const currentTime = Date.now()
-  for (let i = 0; i < schedule.length; i++) {
-    if (schedule[i].startAt <= currentTime && schedule[i].aggregateAt >= currentTime) {
+  for (let i = 0; i < events.length; i++) {
+    if (events[i].startAt <= currentTime && events[i].aggregateAt >= currentTime) {
       return {
-        id: schedule[i].id,
+        id: events[i].id,
         banner: 'https://sekai-res.dnaroma.eu/file/sekai-en-assets/event/' +
-          `${schedule[i].assetbundleName}/logo_rip/logo.webp`,
-        name: schedule[i].name
+          `${events[i].assetbundleName}/logo_rip/logo.webp`,
+        name: events[i].name
       }
     }
   }

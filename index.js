@@ -2,6 +2,7 @@
 const DiscordClient = require('./client/client')
 const trackGameData = require('./scripts/trackGameData');
 const trackRankingData = require('./scripts/trackRankingData');
+const trackRankingRate = require('./scripts/trackRankingRate');
 
 (async () => {
   const client = new DiscordClient()
@@ -17,4 +18,5 @@ const trackRankingData = require('./scripts/trackRankingData');
   // Begin the scripts
   trackGameData(client)
   trackRankingData(client)
+  trackRankingRate()
 })();
