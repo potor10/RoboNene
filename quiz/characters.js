@@ -6,12 +6,6 @@ module.exports = [
     }
   },
   {
-    'attr': 'breastSize',
-    'prompt': (char) => {
-      return `Which character has a \`\`${char.breastSize}\`\` breast size?`
-    }
-  },
-  {
     'attr': 'characterVoice',
     'prompt': (char) => {
       return `Which character is voiced by \`\`${char.characterVoice}\`\`?`
