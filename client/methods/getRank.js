@@ -16,7 +16,7 @@ const RANK_CONSTANTS = {
 
   "NO_RESPONSE_ERR": {
     type: 'Error',
-    message: "There whas no response from the server. Plase try again.",
+    message: "There was no response from the server. \nPlease wait ~10 minutes after ranking concludes before trying again.",
   },
 
   'HIGHER_LIMIT': (RESULTS_PER_PAGE%2) ? Math.floor(RESULTS_PER_PAGE/2) : Math.floor(RESULTS_PER_PAGE/2)-1,

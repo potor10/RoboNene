@@ -82,6 +82,9 @@ const getNextCheck = () => {
  */
 const requestRanking = async (event, discordClient) => {
   const retrieveResult = (response) => {
+    
+    // TODO: Add a check here if response is not available
+    // EX: { httpStatus: 403, errorCode: 'session_error', errorMessage: '' }
     const timestamp = Date.now()
     sendTrackingEmbed(response.rankings, event, timestamp, discordClient)
   }

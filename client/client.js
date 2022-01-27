@@ -94,6 +94,10 @@ class DiscordClient {
   }
 
   async loadSekaiClient(dir=CLIENT_CONSTANTS.PREFS_DIR) {
+    // TODO: Add a webscraper to google play 
+    // https://play.google.com/store/apps/details?id=com.sega.ColorfulStage.en&hl=en_US&gl=US
+    // With a way to detect Current Version!, update it in all the prefs
+
     // Parse clients
     const apiPrefs = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
 

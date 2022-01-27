@@ -156,6 +156,8 @@ const generateCutoff = async (deferredResponse, event, timestamp, tier, score, r
     estimateSmoothing = Math.round(totalWeight / totalTime).toLocaleString()
   }
 
+  // TODO: If cutoff is < score, we just estimate based on score/h
+
   const cutoffEmbed = generateCutoffEmbed(event, timestamp, tier, 
     score, scorePH, estimateNoSmoothing, estimateSmoothing, lastHourPt, discordClient)
   await deferredResponse.edit({
@@ -188,6 +190,20 @@ module.exports = {
       targetRank: tier,
       lowerLimit: 0
     }, async (response) => {
+
+      // Check if the response is valid
+      if (!response.rankings) {
+        await deferredResponse.edit({
+          embeds: [generateEmbed(commandName, COMMAND.CONSTANTS.NO_RESPONSE_ERR, discordClient)]
+        });
+        return
+      } else if (response.rankings.length === 0) {
+        await deferredResponse.edit({
+          embeds: [generateEmbed(commandName, COMMAND.CONSTANTS.BAD_INPUT_ERROR, discordClient)]
+        });
+        return
+      }
+
       const timestamp = Date.now()
       const score = response.rankings[0].score
 

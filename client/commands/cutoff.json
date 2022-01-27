@@ -48,6 +48,16 @@
       "type": "Error",
       "message": "Please cloose a different cutoff tier"
     },
+
+    "NO_RESPONSE_ERR": {
+      "type": "Error",
+      "message": "There was no response from the server. \nPlease wait ~10 minutes after ranking concludes before trying again."
+    },
+
+    "BAD_INPUT_ERROR": {
+      "type": "Error",
+      "message": "There was an issue with your input parameters. Please try again."
+    },
   
     "SEKAI_BEST_HOST": "api.sekai.best"
   }
