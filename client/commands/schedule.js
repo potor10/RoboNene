@@ -5,7 +5,6 @@ const fs = require('fs');
 const COMMAND = require('./schedule.json')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateDeferredResponse = require('../methods/generateDeferredResponse') 
 
 const getNextReset = (currentDate) => {
   const nextReset = new Date();
@@ -87,13 +86,10 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    const deferredResponse = await interaction.reply({
-      embeds: [generateDeferredResponse(COMMAND.INFO.name, discordClient)],
-      fetchReply: true
-    })
+    await interaction.deferReply()
 
     const events = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
     const scheduleEmbed = createScheduleEmbed(events, discordClient.client);
-    await deferredResponse.edit({ embeds: [scheduleEmbed] });
+    await interaction.editReply({ embeds: [scheduleEmbed] });
   }    
 };

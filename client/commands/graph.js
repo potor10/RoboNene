@@ -5,7 +5,6 @@ const https = require('https');
 const COMMAND = require('./graph.json')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateDeferredResponse = require('../methods/generateDeferredResponse') 
 const generateEmbed = require('../methods/generateEmbed') 
 
 const generateGraphEmbed = (graphUrl, tier, discordClient) => {
@@ -21,9 +20,9 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
   return graphEmbed
 }
 
-const postQuickChart = async (deferredResponse, tier, rankData, discordClient) => {
+const postQuickChart = async (interaction, tier, rankData, discordClient) => {
   if (!rankData.data.eventRankings) {
-    await deferredResponse.edit({
+    await interaction.editReply({
       embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_DATA_ERR, discordClient)]
     });
     return
@@ -89,7 +88,7 @@ const postQuickChart = async (deferredResponse, tier, rankData, discordClient) =
       if (res.statusCode === 200) {
         try {
           console.log(JSON.stringify(JSON.parse(json)))
-          await deferredResponse.edit({ 
+          await interaction.editReply({ 
             embeds: [generateGraphEmbed(JSON.parse(json).url, tier, discordClient)]
           })
         } catch (err) {
@@ -112,14 +111,11 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    const deferredResponse = await interaction.reply({
-      embeds: [generateDeferredResponse(COMMAND.INFO.name, discordClient)],
-      fetchReply: true
-    })
+    await interaction.deferReply()
     
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {
-      await deferredResponse.edit({
+      await interaction.editReply({
         embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_EVENT_ERR, discordClient)]
       });
       return
@@ -142,7 +138,7 @@ module.exports = {
         if (res.statusCode === 200) {
           try {
             const rankData = JSON.parse(json)
-            postQuickChart(deferredResponse, tier, rankData, discordClient)
+            postQuickChart(interaction, tier, rankData, discordClient)
           } catch (err) {
             // Error parsing JSON: ${err}`
           }

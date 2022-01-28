@@ -32,6 +32,6 @@
   },
   "homepage": "https://github.com/potor10/RoboNene#readme",
   "devDependencies": {
-    "eslint": "^8.6.0"
+    "eslint": "^8.7.0"
   }
 }
