@@ -10,12 +10,14 @@ module.exports = {
   async execute(interaction, discordClient) {
     const db = discordClient.db
 
+    await interaction.deferReply()
+
     const user = discordClient.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
       discordId: interaction.user.id
     })
 
     if (!user.length) {
-      await deferredResponse.edit({
+      await interaction.editReply({
         embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_ACC_ERROR, discordClient)]
       });
       return
@@ -31,7 +33,7 @@ module.exports = {
       message: `Private\nStatus: \`\`${(interaction.options._hoistedOptions[0].value) ? 'Enabled' : 'Disabled'}\`\`\n` 
     }
 
-    await interaction.reply({
+    await interaction.editReply({
       embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
       ephemeral: true 
     });

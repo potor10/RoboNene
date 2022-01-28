@@ -1,10 +1,9 @@
-const { ERR_COMMAND } = require('../../constants');
+const { MessageActionRow, MessageSelectMenu } = require('discord.js');
 const fs = require('fs');
 
 const COMMAND = require('./quiz.json')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateDeferredResponse = require('../methods/generateDeferredResponse')
 const generateEmbed = require('../methods/generateEmbed') 
 
 /**
@@ -219,54 +218,55 @@ class areaQuestion {
 }
 
 
-const createQuiz = async (deferredResponse, userId, account, discordClient) => {
+const createQuiz = async (interaction, account, discordClient) => {
   const questions = [new eventQuestion(), new characterQuestion(), new cardQuestion(), new areaQuestion()]
 
   const questionCreator = (questions[Math.floor(Math.random() * questions.length)])
   const question = questionCreator.getQuestion()
 
   const correctIdx = Math.floor(Math.random() * 3)
-  const answerOrder = []
+  const answerOptions = []
+
+  for(let i = 0; i < 4; i++) {
+    let answer = question.right
+    if (i !== correctIdx) {
+      answer = question.wrong.pop()
+    } 
+    answerOptions.push({
+      label: answer,
+      value: answer,
+      emoji: COMMAND.CONSTANTS[i+1]
+    })
+  }
   
-  let prompt = question.prompt + '\n'
-
-  for(let i = 0; i < correctIdx; i++) {
-    answerOrder.push(question.wrong.pop())
-  }
-  answerOrder.push(question.right)
-
-  while(question.wrong.length) {
-    answerOrder.push(question.wrong.pop())
-  }
-
-  for(let idx = 0; idx < answerOrder.length; idx++) {
-    prompt += `${COMMAND.CONSTANTS[idx+1]} \`\`${answerOrder[idx]}\`\`\n`
-  }
+  const questionSelect = new MessageActionRow()
+    .addComponents(
+      new MessageSelectMenu()
+        .setCustomId(`quiz${interaction.id}`)
+        .setPlaceholder('Select Your Answer!')
+        .addOptions(answerOptions))
 
   const content = {
     type: questionCreator.getType(),
-    message: prompt
+    message: question.prompt
   }
 
-  await deferredResponse.edit({ 
-    embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)]
+  await interaction.editReply({ 
+    embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
+    components: [questionSelect]
   });
 
-  deferredResponse.react(COMMAND.CONSTANTS[1])
-    .then(() => deferredResponse.react(COMMAND.CONSTANTS[2]))
-    .then(() => deferredResponse.react(COMMAND.CONSTANTS[3]))
-    .then(() => deferredResponse.react(COMMAND.CONSTANTS[4]))
-    .catch(err => console.log(err));
+  const filter = i => {
+    return i.customId === `quiz${interaction.id}` && i.user.id === interaction.user.id
+  }
 
-  const filter = (reaction, user) => {
-    return [COMMAND.CONSTANTS[1], COMMAND.CONSTANTS[2], COMMAND.CONSTANTS[3], COMMAND.CONSTANTS[4]]
-      .includes(reaction.emoji.name) && user.id === userId;
-  };
+  const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 })
 
-  const createResultEmbed = (idx) => {
-    let content = ERR_COMMAND
+  collector.on('collect', async i => {
+    let content = {}
     let correct = (account) ? account.quiz_correct : 0
-    if (idx === correctIdx) {
+
+    if (i.values[0] === question.right) {
       if (account) {
         discordClient.db.prepare('UPDATE users SET quiz_correct=@quizCorrect WHERE discord_id=@discordId').run({
           quizCorrect: account.quiz_correct + 1,
@@ -279,6 +279,8 @@ const createQuiz = async (deferredResponse, userId, account, discordClient) => {
       content = { ...COMMAND.CONSTANTS.QUESTION_WRONG }
     }
 
+    content.message += `\n\nQuestion: ${question.prompt}\nYou Answered: ${i.values[0]}`
+
     if (account) {
       content.message += `\n\n Correct: \`\`${correct}\`\``
       content.message += `\n Questions Answered: \`\`${account.quiz_question + 1}\`\``
@@ -286,31 +288,17 @@ const createQuiz = async (deferredResponse, userId, account, discordClient) => {
       content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`
     }
 
-    deferredResponse.edit({
-      embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)]
+    interaction.editReply({
+      embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
+      components: []
     })
-  }
-  
-  deferredResponse.awaitReactions({ filter, max: 1, time: 30000, errors: ['time'] })
-    .then(collected => {
-      const reaction = collected.first();
-  
-      switch(reaction.emoji.name) {
-        case COMMAND.CONSTANTS[1]:
-          createResultEmbed(0)
-          break
-        case COMMAND.CONSTANTS[2]:
-          createResultEmbed(1)
-          break
-        case COMMAND.CONSTANTS[3]:
-          createResultEmbed(3)
-          break
-        case COMMAND.CONSTANTS[4]:
-          createResultEmbed(4)
-          break
-      }
-    })
-    .catch(collected => {
+
+  })
+
+  collector.on('end', collected => {
+    if (collected.size === 0) {
+      console.log(`Collected ${collected.size} items`)
+
       const content = { ... COMMAND.CONSTANTS.NO_RESPONSE }
       if (account) {
         content.message += `\n\n Correct: \`\`${account.quiz_correct}\`\``
@@ -319,20 +307,19 @@ const createQuiz = async (deferredResponse, userId, account, discordClient) => {
         content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`
       }
 
-      deferredResponse.edit({
-        embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)]
+      interaction.editReply({
+        embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
+        components: []
       })
-    });
+    }
+  });
 };
 
 module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    const deferredResponse = await interaction.reply({
-      embeds: [generateDeferredResponse(COMMAND.INFO.name, discordClient)],
-      fetchReply: true
-    })
+    await interaction.deferReply()
 
     const user = discordClient.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
       discordId: interaction.user.id
@@ -347,6 +334,6 @@ module.exports = {
       })
     }
 
-    createQuiz(deferredResponse, interaction.user.id, account, discordClient)
+    createQuiz(interaction, account, discordClient)
   }
 }

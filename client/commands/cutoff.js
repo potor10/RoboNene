@@ -7,7 +7,6 @@ const regression = require('regression');
 const COMMAND = require('./cutoff.json')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateDeferredResponse = require('../methods/generateDeferredResponse') 
 const generateEmbed = require('../methods/generateEmbed') 
 const binarySearch = require('../methods/binarySearch')
 
@@ -35,9 +34,9 @@ const generateCutoffEmbed = (event, timestamp, tier, score,
   return cutoffEmbed;
 };
 
-const generateCutoff = async (deferredResponse, event, timestamp, tier, score, rankData, discordClient) => {
+const generateCutoff = async (interaction, event, timestamp, tier, score, rankData, discordClient) => {
   if (!rankData.length) {
-    await deferredResponse.edit({
+    await interaction.editReply({
       embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_DATA_ERR, discordClient)]
     });
     return
@@ -160,7 +159,8 @@ const generateCutoff = async (deferredResponse, event, timestamp, tier, score, r
 
   const cutoffEmbed = generateCutoffEmbed(event, timestamp, tier, 
     score, scorePH, estimateNoSmoothing, estimateSmoothing, lastHourPt, discordClient)
-  await deferredResponse.edit({
+    
+  await interaction.editReply({
     embeds: [cutoffEmbed]
   });
 }
@@ -170,14 +170,11 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    const deferredResponse = await interaction.reply({
-      embeds: [generateDeferredResponse(COMMAND.INFO.name, discordClient)],
-      fetchReply: true
-    })
+    await interaction.deferReply()
 
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {
-      await deferredResponse.edit({
+      await interaction.editReply({
         embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_EVENT_ERR, discordClient)]
       });
       return
@@ -193,12 +190,12 @@ module.exports = {
 
       // Check if the response is valid
       if (!response.rankings) {
-        await deferredResponse.edit({
+        await interaction.editReply({
           embeds: [generateEmbed(commandName, COMMAND.CONSTANTS.NO_RESPONSE_ERR, discordClient)]
         });
         return
       } else if (response.rankings.length === 0) {
-        await deferredResponse.edit({
+        await interaction.editReply({
           embeds: [generateEmbed(commandName, COMMAND.CONSTANTS.BAD_INPUT_ERROR, discordClient)]
         });
         return
@@ -222,7 +219,7 @@ module.exports = {
           if (res.statusCode === 200) {
             try {
               const rankData = JSON.parse(json)
-              generateCutoff(deferredResponse, event, timestamp, tier, score, rankData.data.eventRankings, discordClient);
+              generateCutoff(interaction, event, timestamp, tier, score, rankData.data.eventRankings, discordClient);
             } catch (err) {
               // Error parsing JSON: ${err}`
             }

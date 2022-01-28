@@ -5,7 +5,6 @@ const fs = require('fs');
 const COMMAND = require('./profile.json')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateDeferredResponse = require('../methods/generateDeferredResponse') 
 const generateEmbed = require('../methods/generateEmbed') 
 const binarySearch = require('../methods/binarySearch')
 
@@ -215,12 +214,12 @@ const generateProfileEmbed = (discordClient, data, private) => {
   return profileEmbed 
 }
 
-const getProfile = async (deferredResponse, discordClient, userId) => {
+const getProfile = async (interaction, discordClient, userId) => {
   discordClient.addSekaiRequest('profile', {
     userId: userId
   }, async (response) => {
     if (response.httpStatus === 404) {
-      await deferredResponse.edit({
+      await interaction.editReply({
         embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_ACC_ERR, discordClient)]
       });
       return
@@ -236,7 +235,7 @@ const getProfile = async (deferredResponse, discordClient, userId) => {
     }
 
     const profileEmbed = generateProfileEmbed(discordClient, response, private)
-    await deferredResponse.edit({
+    await interaction.editReply({
       embeds: [profileEmbed]
     });
   })
@@ -247,10 +246,7 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
 
   async execute(interaction, discordClient) {
-    const deferredResponse = await interaction.reply({
-      embeds: [generateDeferredResponse(COMMAND.INFO.name, discordClient)],
-      fetchReply: true
-    });
+    await interaction.deferReply()
 
     let accountId = ''
 
@@ -262,7 +258,7 @@ module.exports = {
       })
 
       if (!user.length) {
-        await deferredResponse.edit({
+        await interaction.editReply({
           embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_ACC_ERR, discordClient)]
         });
         return
@@ -272,12 +268,12 @@ module.exports = {
 
     if (!accountId) {
       // Do something because there is an empty account id input
-      await deferredResponse.edit({
+      await interaction.editReply({
         embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_ID_ERR, discordClient)]
       })
       return
     }
 
-    getProfile(deferredResponse, discordClient, accountId)
+    getProfile(interaction, discordClient, accountId)
   }
 };

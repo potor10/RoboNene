@@ -23,11 +23,11 @@ const RANK_CONSTANTS = {
   'LOWER_LIMIT':  Math.floor(RESULTS_PER_PAGE/2)
 };
 
-const getRank = async (commandName, deferredResponse, discordClient, requestParams) => {
+const getRank = async (commandName, interaction, discordClient, requestParams) => {
   const event = discordClient.getCurrentEvent()
 
   if (event.id === -1) {
-    await deferredResponse.edit({
+    await interaction.editReply({
       embeds: [generateEmbed(commandName, RANK_CONSTANTS.NO_EVENT_ERR, discordClient)]
     });
     return
@@ -40,12 +40,12 @@ const getRank = async (commandName, deferredResponse, discordClient, requestPara
 
     // Check if the response is valid
     if (!response.rankings) {
-      await deferredResponse.edit({
+      await interaction.editReply({
         embeds: [generateEmbed(commandName, RANK_CONSTANTS.NO_RESPONSE_ERR, discordClient)]
       });
       return
     } else if (response.rankings.length === 0) {
-      await deferredResponse.edit({
+      await interaction.editReply({
         embeds: [generateEmbed(commandName, RANK_CONSTANTS.BAD_INPUT_ERROR, discordClient)]
       });
       return
@@ -78,7 +78,7 @@ const getRank = async (commandName, deferredResponse, discordClient, requestPara
         .setTimestamp()
         .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
   
-      await deferredResponse.edit({ 
+      await interaction.editReply({ 
         embeds: [leaderboardEmbed]
       });
     })
