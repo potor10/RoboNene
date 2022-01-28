@@ -1,11 +1,10 @@
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-const { token } = require('../config.json');
+const { token, clientId } = require('../config.json');
 const fs = require('fs');
 const path = require('path'); 
 
-// Place your client and guild ids here
-const clientId = '925617020265984071';
+// Place your guild ids here
 const guildId = '811492424626208798';
 
 const commands = [];
