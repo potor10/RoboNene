@@ -6,6 +6,11 @@
   },
 
   "CONSTANTS": {
+    "WRONG_USER_ERR": {
+      "type": "Error",
+      "message": "You are not the intended user for this interaction.\nPlease use /quiz to start your own quiz."
+    },
+
     "NO_RESPONSE": {
       "type": "Failed",
       "message": "There was no response within the alotted time. \nThe question was **failed**!"

@@ -39,7 +39,7 @@ module.exports = {
       if (command.adminOnly) {
         // Check for server manager / administrate perms
         let permissions = interaction.member.permissions
-        if (!permissions.has('ADMINISTRATOR') && !permissions.has('MANAGE_SERVER')) {
+        if (!permissions.has('ADMINISTRATOR') && !permissions.has('MANAGE_GUILD')) {
           await interaction.reply({
             embeds: [generateEmbed(command.data.name, INTERACTION_CONST.NO_ACCESS_ADMIN, discordClient)],
             ephemeral: true 

@@ -95,12 +95,20 @@ module.exports = {
       });
 
       const filter = (i) => {
-        return (i.customId == `left${interaction.id}` || i.customId == `right${interaction.id}`) && i.user.id == interaction.user.id
+        return (i.customId == `left${interaction.id}` || i.customId == `right${interaction.id}`)
       }
 
       const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 });
       
       collector.on('collect', async i => {
+        if (i.user.id !== interaction.user.id) {
+          await i.reply({
+            embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.WRONG_USER_ERR, discordClient)],
+            ephemeral: true
+          })
+          return
+        }
+
         if (i.customId === `left${interaction.id}`) {
           if (page == 0) {
             page = MAX_PAGE

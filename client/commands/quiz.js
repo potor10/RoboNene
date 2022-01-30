@@ -284,12 +284,20 @@ const createQuiz = async (interaction, account, discordClient) => {
   });
 
   const filter = i => {
-    return i.customId === `quiz${interaction.id}` && i.user.id === interaction.user.id
+    return i.customId === `quiz${interaction.id}`
   }
 
   const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 })
 
   collector.on('collect', async i => {
+    if (i.user.id !== interaction.user.id) {
+      await i.reply({
+        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.WRONG_USER_ERR, discordClient)],
+        ephemeral: true
+      })
+      return
+    }
+
     let content = {
       type: '',
       message: `${question.prompt}\nYour Answer: \`\`${i.values[0]}\`\`\nCorrect Answer: \`\`${question.right}\`\`\n\n`

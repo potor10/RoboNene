@@ -33,6 +33,11 @@
       "type": "Error",
       "message": "Please choose a rank within the range of 1 to 100"
     },
+
+    "WRONG_USER_ERR": {
+      "type": "Error",
+      "message": "You are not the intended user for this interaction.\nPlease try again after using /leaderboard."
+    },
   
     "LEFT": "⬅️",
     "RIGHT": "➡️"
