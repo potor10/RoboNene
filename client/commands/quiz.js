@@ -33,10 +33,10 @@ class eventQuestion {
   }
 
   getQuestion() {
-    const idxArray = shuffle(this.events)
+    const eventShuffle = shuffle(this.events)
 
-    const event = idxArray.pop()
-    const wrong = [idxArray.pop().name, idxArray.pop().name, idxArray.pop().name]
+    const event = eventShuffle.pop()
+    const wrong = [eventShuffle.pop().name, eventShuffle.pop().name, eventShuffle.pop().name]
     const questionIdx = Math.floor(Math.random() * this.prompts.length)
 
     const question = {
@@ -71,7 +71,7 @@ class characterQuestion {
   }
 
   getQuestion() {
-    const idxArray = shuffle(this.characterInfo)
+    const charaShuffle = shuffle(this.characterInfo)
 
     const getName = (character) => {
       let charName = character.givenName
@@ -86,13 +86,13 @@ class characterQuestion {
     const attr = this.prompts[questionIdx].attr
 
     const chooseCharacter = () => {
-      const character = idxArray.pop()
+      const character = charaShuffle.pop()
 
       if (!character[attr]) { 
         return chooseCharacter() 
       } else {
         while (wrong.length < 3) {
-          const incorrectChar = idxArray.pop()
+          const incorrectChar = charaShuffle.pop()
           if (incorrectChar[attr] && incorrectChar[attr] !== character[attr]) {
             wrong.push(getName(incorrectChar))
           }
@@ -133,19 +133,31 @@ class cardQuestion {
   }
 
   getQuestion() {
-    const idxArray = shuffle(this.cardInfo)
+    const cardShuffle = shuffle(this.cardInfo)
 
     const wrong = []
     const questionIdx = Math.floor(Math.random() * this.prompts.length)
     const attr = this.prompts[questionIdx].attr
 
     const chooseCard = () => {
-      const card = idxArray.pop()
+      const card = cardShuffle.pop()
 
       while (wrong.length < 3) {
-        const incorrectCard = idxArray.pop()
+        const incorrectCard = cardShuffle.pop()
         if (incorrectCard[attr] !== card[attr]) {
-          wrong.push(this.prompts[questionIdx].name(incorrectCard))
+          let attrExists = false
+          let attrValue =  this.prompts[questionIdx].name(incorrectCard)
+
+          for (const wrongIdx in wrong) {
+            if (wrong[wrongIdx] === attrValue) {
+              attrExists = true
+              break
+            }
+          }
+
+          if (!attrExists) {
+            wrong.push(attrValue)
+          }
         }
       }
 
@@ -190,19 +202,29 @@ class areaQuestion {
   }
 
   getQuestion() {
-    const idxArray = shuffle(this.areaItemInfo)
+    const areaShuffle = shuffle(this.areaItemInfo)
 
     const wrong = []
     const questionIdx = Math.floor(Math.random() * this.prompts.length)
     const attr = this.prompts[questionIdx].attr
 
     const chooseAreaItem = () => {
-      const areaItem = idxArray.pop()
+      const areaItem = areaShuffle.pop()
 
       while (wrong.length < 3) {
-        const incorrectAreaItem = idxArray.pop()
+        const incorrectAreaItem = areaShuffle.pop()
         if (incorrectAreaItem[attr] !== areaItem[attr]) {
-          wrong.push(incorrectAreaItem[attr])
+          let attrExists = false
+          for (const wrongIdx in wrong) {
+            if (wrong[wrongIdx] === incorrectAreaItem[attr]) {
+              attrExists = true
+              break
+            }
+          }
+
+          if (!attrExists) {
+            wrong.push(incorrectAreaItem[attr])
+          }
         }
       }
 
@@ -223,6 +245,7 @@ const createQuiz = async (interaction, account, discordClient) => {
 
   const questionCreator = (questions[Math.floor(Math.random() * questions.length)])
   const question = questionCreator.getQuestion()
+  let prompt = question.prompt + '\n'
 
   const correctIdx = Math.floor(Math.random() * 3)
   const answerOptions = []
@@ -237,8 +260,12 @@ const createQuiz = async (interaction, account, discordClient) => {
       value: answer,
       emoji: COMMAND.CONSTANTS[i+1]
     })
+
+    prompt += `${COMMAND.CONSTANTS[i+1]} \`\`${answer}\`\`\n`
   }
   
+  console.log(answerOptions)
+
   const questionSelect = new MessageActionRow()
     .addComponents(
       new MessageSelectMenu()
@@ -248,7 +275,7 @@ const createQuiz = async (interaction, account, discordClient) => {
 
   const content = {
     type: questionCreator.getType(),
-    message: question.prompt
+    message: prompt
   }
 
   await interaction.editReply({ 
@@ -263,23 +290,26 @@ const createQuiz = async (interaction, account, discordClient) => {
   const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 })
 
   collector.on('collect', async i => {
-    let content = {}
+    let content = {
+      type: '',
+      message: `${question.prompt}\nYour Answer: \`\`${i.values[0]}\`\`\nCorrect Answer: \`\`${question.right}\`\`\n\n`
+    }
     let correct = (account) ? account.quiz_correct : 0
 
     if (i.values[0] === question.right) {
       if (account) {
         discordClient.db.prepare('UPDATE users SET quiz_correct=@quizCorrect WHERE discord_id=@discordId').run({
           quizCorrect: account.quiz_correct + 1,
-          discordId: userId
+          discordId: interaction.user.id
         })
       }
-      content = { ...COMMAND.CONSTANTS.QUESTION_RIGHT }
+      content.type = COMMAND.CONSTANTS.QUESTION_RIGHT_TYPE
+      content.message += COMMAND.CONSTANTS.QUESTION_RIGHT_MSG
       correct++
     } else {
-      content = { ...COMMAND.CONSTANTS.QUESTION_WRONG }
+      content.type = COMMAND.CONSTANTS.QUESTION_WRONG_TYPE
+      content.message += COMMAND.CONSTANTS.QUESTION_WRONG_MSG
     }
-
-    content.message += `\n\nQuestion: ${question.prompt}\nYou Answered: ${i.values[0]}`
 
     if (account) {
       content.message += `\n\n Correct: \`\`${correct}\`\``
