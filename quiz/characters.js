@@ -20,7 +20,7 @@ module.exports = [
   {
     'attr': 'school',
     'prompt': (char) => {
-      return `Which character goes to \`\`${char.school.toLowerCase()}\`\`?`
+      return `Which character goes to \`\`${char.school}\`\`?`
     }
   },
   {
