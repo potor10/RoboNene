@@ -10,8 +10,8 @@ const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
 const binarySearch = require('../methods/binarySearch')
 
-const generateCutoff = async (interaction, event, 
-  timestamp, tier, score, rankData, discordClient) => {
+const generateCutoff = async ({interaction, event, 
+  timestamp, tier, score, rankData, detailed, discordClient}) => {
   
   // If rank data does not exist then send an error
   if (!rankData.length) {
@@ -166,11 +166,6 @@ const generateCutoff = async (interaction, event,
   const lastHourPtTimeMs = new Date(lastHourPt.timestamp).getTime()
   const lastHourPtTime = Math.floor(lastHourPtTimeMs / 1000)
   const lastHourPtSpeed = Math.round((score - lastHourPt.score) * 3600000 / (timestamp - lastHourPtTimeMs))
-
-  const naiveEstimate = (oneDayIdx === -1) ? 'N/A' : 
-    Math.round(score + (event.aggregateAt - timestamp) * (scorePH / 3600000)).toLocaleString()
-  const naiveLastHrEstimate = (oneDayIdx === -1) ? 'N/A' : 
-    Math.round(score + (event.aggregateAt - timestamp) * (lastHourPtSpeed / 3600000)).toLocaleString()
   
   const cutoffEmbed = new MessageEmbed()
     .setColor(NENE_COLOR)
@@ -191,14 +186,23 @@ const generateCutoff = async (interaction, event,
   }
 
   cutoffEmbed.addField('Point Estimation (Predictions)', `Estimated Points: \`\`${noSmoothingEstimate}\`\`\n` +
-      `*${COMMAND.CONSTANTS.PRED_DESC}*\n\n` +
+      ((detailed) ? `*${COMMAND.CONSTANTS.PRED_DESC}*\n\n`: '') +
       `Estimated Points (Smoothing): \`\`${smoothingEstimate}\`\`\n` + 
-      `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n`)
+      ((detailed) ? `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n` : ''))
   
-  cutoffEmbed.addField(`Naive Estimation (Predictions)`, `Naive Estimate: \`\`${naiveEstimate}\`\`\n` +
-      `*${COMMAND.CONSTANTS.NAIVE_DESC}*\n\n` +
-      `Naive Estimate (Last Hour): \`\`${naiveLastHrEstimate}\`\`\n` +
-      `*${COMMAND.CONSTANTS.NAIVE_LAST_HR_DESC}*\n`)
+
+  // Add a Naive Estimate if the user requests detailed information
+  if (detailed) {
+    const naiveEstimate = (oneDayIdx === -1) ? 'N/A' : 
+      Math.round(score + (event.aggregateAt - timestamp) * (scorePH / 3600000)).toLocaleString()
+    const naiveLastHrEstimate = (oneDayIdx === -1) ? 'N/A' : 
+      Math.round(score + (event.aggregateAt - timestamp) * (lastHourPtSpeed / 3600000)).toLocaleString()
+
+    cutoffEmbed.addField(`Naive Estimation (Predictions)`, `Naive Estimate: \`\`${naiveEstimate}\`\`\n` +
+        `*${COMMAND.CONSTANTS.NAIVE_DESC}*\n\n` +
+        `Naive Estimate (Last Hour): \`\`${naiveLastHrEstimate}\`\`\n` +
+        `*${COMMAND.CONSTANTS.NAIVE_LAST_HR_DESC}*\n`)
+  }
     
   await interaction.editReply({
     embeds: [cutoffEmbed]
@@ -227,7 +231,6 @@ module.exports = {
       targetRank: tier,
       lowerLimit: 0
     }, async (response) => {
-
       // Check if the response is valid
       if (!response.rankings) {
         await interaction.editReply({
@@ -244,6 +247,9 @@ module.exports = {
       const timestamp = Date.now()
       const score = response.rankings[0].score
 
+      let paramCount = interaction.options._hoistedOptions.length
+      let detailed = (paramCount === 1) ? false : interaction.options._hoistedOptions[1].value
+
       const options = {
         host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
         path: `/event/${event.id}/rankings?rank=${tier}&limit=100000&region=en`,
@@ -259,7 +265,16 @@ module.exports = {
           if (res.statusCode === 200) {
             try {
               const rankData = JSON.parse(json)
-              generateCutoff(interaction, event, timestamp, tier, score, rankData.data.eventRankings, discordClient);
+              generateCutoff({
+                interaction: interaction, 
+                event: event, 
+                timestamp: timestamp, 
+                tier: tier, 
+                score: score, 
+                rankData: rankData.data.eventRankings, 
+                detailed: detailed,
+                discordClient: discordClient
+              });
             } catch (err) {
               // Error parsing JSON: ${err}`
             }

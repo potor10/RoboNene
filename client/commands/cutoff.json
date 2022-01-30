@@ -34,6 +34,12 @@
           ["T40000", 40000],
           ["T50000", 50000]
         ]
+      },
+      {
+        "type": "boolean",
+        "name": "detailed",
+        "required": false,
+        "description": "Show extra detailed cutoff information"
       }
     ]
   },
