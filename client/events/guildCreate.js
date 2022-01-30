@@ -3,7 +3,7 @@ const { BOT_ACTIVITY } = require('../../constants');
 module.exports = {
   name: 'guildCreate',
   execute(guild, discordClient) {
-    logger.log({
+    discordClient.logger.log({
       level: 'info',
       guild_id: guild.id,
       guild_name: guild.name,
