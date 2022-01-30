@@ -26,7 +26,7 @@ module.exports = [
   {
     'attr': 'schoolYear',
     'prompt': (char) => {
-      return `Which character is in year \`\`${char.schoolYear.toLowerCase()}\`\`?`
+      return `Which character is in year \`\`${char.schoolYear}\`\`?`
     }
   },
   {
