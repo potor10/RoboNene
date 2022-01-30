@@ -181,7 +181,7 @@ class DiscordClient {
   }
 
   async runSekaiRequests(rate=10) {
-    // Idk do some error handling here to reset the specific client
+    // TODO: Idk do some error handling here to reset the specific client (wrap in try catch?)
     const runRequest = async (apiClient, request) => {
       if (request.type === 'profile') {
         const response = await apiClient.userProfile(request.params.userId)
