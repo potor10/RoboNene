@@ -270,7 +270,7 @@ const createQuiz = async (interaction, account, discordClient) => {
       if (account) {
         discordClient.db.prepare('UPDATE users SET quiz_correct=@quizCorrect WHERE discord_id=@discordId').run({
           quizCorrect: account.quiz_correct + 1,
-          discordId: userId
+          discordId: interaction.user.id
         })
       }
       content = { ...COMMAND.CONSTANTS.QUESTION_RIGHT }
