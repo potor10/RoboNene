@@ -322,6 +322,7 @@ const createQuiz = async (interaction, account, discordClient) => {
     if (account) {
       content.message += `\n\n Correct: \`\`${correct}\`\``
       content.message += `\n Questions Answered: \`\`${account.quiz_question + 1}\`\``
+      content.message += `\nAccuracy: \`\`${+((account.quiz_correct / account.quiz_question) * 100).toFixed(2)}%\`\``
     } else {
       content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`
     }
