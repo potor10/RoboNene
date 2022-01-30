@@ -8,19 +8,15 @@
   "CONSTANTS": {
     "NO_RESPONSE": {
       "type": "Failed",
-      "message": "There was no response within the alotted time. \nThe question was failed!"
+      "message": "There was no response within the alotted time. \nThe question was **failed**!"
     },
   
-    "QUESTION_RIGHT": {
-      "type": "Correct ✅",
-      "message": "You have answered the question correctly!"
-    },
+    "QUESTION_RIGHT_TYPE": "Correct ✅",
+    "QUESTION_RIGHT_MSG": "You have answered the question **correctly**!",
   
-    "QUESTION_WRONG": {
-      "type": "Incorrect ❌",
-      "message": "You have answered the question incorrectly!"
-    },
-  
+    "QUESTION_WRONG_TYPE": "Incorrect ❌",
+    "QUESTION_WRONG_MSG": "You have answered the question **incorrectly**!",
+
     "LINK_MSG": "Link an account to save your progress",
   
     "1": "1️⃣",
