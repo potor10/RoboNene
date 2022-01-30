@@ -74,13 +74,13 @@ const generateRateInfo = (event, rankData) => {
 
   // Only get data points past 12 hours and before last 24 hours
   rankData.slice(halfDayIdx, lastDayIdx).forEach((point) => {
-    points.push([(new Date(point.timestamp)).getTime(), point.score])
+    points.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score])
   })
 
   const model = regression.linear(points, {precision: 100});
 
   const finalScore = rankData[rankData.length-1].score
-  const newSlope = (finalScore - model.equation[1]) / event.aggregateAt
+  const newSlope = (finalScore - model.equation[1]) / (event.aggregateAt - event.startAt)
   const slopeRate = newSlope / model.equation[0]
 
   return slopeRate
