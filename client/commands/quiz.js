@@ -322,7 +322,7 @@ const createQuiz = async (interaction, account, discordClient) => {
     if (account) {
       content.message += `\n\nQuestions Correct: \`\`${correct}\`\``
       content.message += `\nQuestions Answered: \`\`${account.quiz_question + 1}\`\``
-      content.message += `\nAccuracy: \`\`${+((correct / account.quiz_question + 1) * 100).toFixed(2)}%\`\``
+      content.message += `\nAccuracy: \`\`${+((correct / (account.quiz_question + 1)) * 100).toFixed(2)}%\`\``
     } else {
       content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`
     }
@@ -342,7 +342,7 @@ const createQuiz = async (interaction, account, discordClient) => {
       if (account) {
         content.message += `\n\nQuestions Correct: \`\`${account.quiz_correct}\`\``
         content.message += `\nQuestions Answered: \`\`${account.quiz_question + 1}\`\``
-        content.message += `\nAccuracy: \`\`${+((account.quiz_correct / account.quiz_question + 1) * 100).toFixed(2)}%\`\``
+        content.message += `\nAccuracy: \`\`${+((account.quiz_correct / (account.quiz_question + 1)) * 100).toFixed(2)}%\`\``
       } else {
         content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`
       }
