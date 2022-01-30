@@ -59,6 +59,13 @@
       "message": "There was an issue with your input parameters. Please try again."
     },
   
-    "SEKAI_BEST_HOST": "api.sekai.best"
+    "SEKAI_BEST_HOST": "api.sekai.best",
+
+    "PRED_WARNING": "You are trying to view predictions for a tier that is lower than 100. These tiers are highly volatile and thus it is highly not recommended to use the following cutoff predictions!",
+    "PRED_DESC": "Fits data into a least squares regression line to generate a prediction.",
+    "SMOOTH_PRED_DESC": "Uses a weighted average of estimations from previous models. Generally, smoothed estimates are more resilient to sudden changes in point gain.",
+
+    "NAIVE_DESC": "Current Score + (Average Points Per Hour \\* Hours Left)",
+    "NAIVE_LAST_HR_DESC": "Current Score + (Average Points Per Hour [Last Hour] \\* Hours Left)"
   }
 }

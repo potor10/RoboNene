@@ -10,31 +10,10 @@ const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
 const binarySearch = require('../methods/binarySearch')
 
-const generateCutoffEmbed = (event, timestamp, tier, score, 
-  scorePH, estimateNoSmoothing, estimateSmoothing, lastHourPt, discordClient) => {
-  const lastHourPtTimeMs = new Date(lastHourPt.timestamp).getTime()
-  const lastHourPtTime = Math.floor(lastHourPtTimeMs / 1000)
-  const lastHourPtSpeed = Math.round((score - lastHourPt.score) * 3600000 / (timestamp - lastHourPtTimeMs))
-
-  const cutoffEmbed = new MessageEmbed()
-    .setColor(NENE_COLOR)
-    .setTitle(`T${tier} Cutoff`)
-    .setDescription(`${event.name}`)
-    .setThumbnail(event.banner)
-    .addField(`**Requested:** <t:${Math.floor(timestamp/1000)}:R>`, '\u200b')
-    .addField(`Points`, `\`${score.toLocaleString()}\``)
-    .addField(`Avg. Speed (Per Hour)`, `\`${scorePH.toLocaleString()}/h\``)
-    .addField(`Avg. Speed [<t:${lastHourPtTime}:R> to <t:${Math.floor(timestamp/1000)}:R>] (Per Hour)`, 
-      `\`${lastHourPtSpeed.toLocaleString()}/h\``)
-    .addField(`Estimated Points`, `\`${estimateNoSmoothing}\``)
-    .addField(`Estimated Points (Smoothing)`, `\`${estimateSmoothing}\``)
-    .setTimestamp()
-    .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
-
-  return cutoffEmbed;
-};
-
-const generateCutoff = async (interaction, event, timestamp, tier, score, rankData, discordClient) => {
+const generateCutoff = async (interaction, event, 
+  timestamp, tier, score, rankData, discordClient) => {
+  
+  // If rank data does not exist then send an error
   if (!rankData.length) {
     await interaction.editReply({
       embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_DATA_ERR, discordClient)]
@@ -45,6 +24,7 @@ const generateCutoff = async (interaction, event, timestamp, tier, score, rankDa
   const msTaken = timestamp - event.startAt
   const duration = event.aggregateAt - event.startAt
 
+  // Overall score gain per hour
   const scorePH = Math.round(score * 3600000 / msTaken)
 
   let lastHourPt = (rankData) ? rankData[0] : {
@@ -52,18 +32,22 @@ const generateCutoff = async (interaction, event, timestamp, tier, score, rankDa
     score: score
   }
 
+  // Every point is spaced by 1 minute intervals (assuming that there isn't any downtime)
+  // Otherwise there maybe a difference of 1-2 minutes, but that's still generally ok for calculating
   if (rankData.length > 60) {
     lastHourPt = rankData[rankData.length-60]
   }
 
-  let estimateNoSmoothing = 'N/A'
-  let estimateSmoothing = 'N/A'
+  // Estimate texts used in the embed
+  let noSmoothingEstimate = 'N/A'
+  let smoothingEstimate = 'N/A'
 
+  // Saved indices of critical timestamps
   let oneDayIdx = -1
   let halfDayIdx = -1
   let lastDayIdx = rankData.length
 
-  // 24 hours have passed into the event
+  // Find the index where 12 and 24 hours have passed into the event (or the latest timestamp)
   for(let i = 0; i < rankData.length; i++) {
     const currentEventTime = (new Date(rankData[i].timestamp)).getTime()
     if (halfDayIdx === -1 && currentEventTime >= event.startAt + 43200000) {
@@ -75,7 +59,7 @@ const generateCutoff = async (interaction, event, timestamp, tier, score, rankDa
     }
   }
 
-  // less than 24 hours left in the event
+  // Find the index where less than 24 hours left in the event (or the latest timestamp)
   if (timestamp >= event.aggregateAt - 86400000) {
     for(let i = 0; i < rankData.length; i++) {
       const currentEventTime = (new Date(rankData[i].timestamp)).getTime()
@@ -87,12 +71,14 @@ const generateCutoff = async (interaction, event, timestamp, tier, score, rankDa
   }
 
   if (oneDayIdx !== -1) {
+    // Get game information from saved json files
     const rate = JSON.parse(fs.readFileSync('./rank/rate.json'));
     const eventCards = JSON.parse(fs.readFileSync(`${DIR_DATA}/eventCards.json`));
     const cards = JSON.parse(fs.readFileSync(`${DIR_DATA}/cards.json`));
 
     const characterIds = []
 
+    // Find the characters relevant to the event
     eventCards.forEach(card => {
       if (card.eventId == event.id) {
         const cardInfo = binarySearch(card.cardId, 'id', cards);
@@ -106,6 +92,7 @@ const generateCutoff = async (interaction, event, timestamp, tier, score, rankDa
     let avgRate = 0;
     let rateCount = 0;
 
+    // Identify a constant c used in y = (c * m)x + b that can be used via this event
     for(const eventId in rate) {
       const similarity = characterIds.filter(el => { return rate[eventId].characterIds.indexOf(el) >= 0 }).length;
       if (rate[eventId][tier]) {
@@ -117,6 +104,7 @@ const generateCutoff = async (interaction, event, timestamp, tier, score, rankDa
       }
     }
 
+    // Determine the final rate depending on if there was a previous event with similar chara, otherwise use the avg
     const finalRate = (totalSimilar) ? (totalRate / totalSimilar) : (avgRate / rateCount)
     console.log(`The Final Rate is ${finalRate}`)
 
@@ -124,41 +112,93 @@ const generateCutoff = async (interaction, event, timestamp, tier, score, rankDa
 
     // Only get data points past 12 hours and before last 24 hours
     rankData.slice(halfDayIdx, lastDayIdx).forEach((point) => {
-      points.push([(new Date(point.timestamp)).getTime(), point.score])
+      points.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score])
     })
 
+    // Create a linear regression model with our data points
     const model = regression.linear(points, {precision: 100});
-    const predicted = (model.equation[0] * finalRate * event.aggregateAt) + model.equation[1]
+    const predicted = (model.equation[0] * finalRate * duration) + model.equation[1]
+    // console.log(model)
 
-    estimateNoSmoothing = Math.round(predicted).toLocaleString()
+    noSmoothingEstimate = Math.round(predicted).toLocaleString()
 
+    // Calculate smoothed result
     let totalWeight = 0
     let totalTime = 0
     // Grab 1 Estimate Every 60 Minutes For Smoothing
+    const smoothingPoints = []
+
+    rankData.slice(halfDayIdx, oneDayIdx).forEach((point) => {
+      smoothingPoints.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score])
+    })
+
+    let lastIdx = oneDayIdx
+
     for(let i = oneDayIdx; i < lastDayIdx; i += 60) {
-      const smoothingPoints = []
-      const dataSlice = rankData.slice(halfDayIdx, i)
-      dataSlice.forEach((point) => {
-        smoothingPoints.push([(new Date(point.timestamp)).getTime(), point.score])
+      // console.log(`Added ${rankData.slice(lastIdx, i).length} points to the smoothingPts`)
+      rankData.slice(lastIdx, i).forEach((point) => {
+        smoothingPoints.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score])
       })
 
-      if (dataSlice.length) {
-        const result = regression.linear(smoothingPoints, {precision: 100});
-        const estimate = (result.equation[0] * finalRate * event.aggregateAt) + result.equation[1]
-        const amtThrough = ((new Date(dataSlice[dataSlice.length-1].timestamp)).getTime() - event.startAt) / duration
+      lastIdx = i;
+      // TODO: Add error checking if smoothingPoints remains empty after this
 
-        totalWeight += estimate * Math.pow(amtThrough, 2)
-        totalTime += Math.pow(amtThrough, 2)
-      }
+      // Create a linear regression model with the current data points
+      const result = regression.linear(smoothingPoints, {precision: 100});
+      const estimate = (result.equation[0] * finalRate * duration) + result.equation[1]
+
+      // Calculate the % through the event, we will use this as a weight for the estimation
+      const amtThrough = (smoothingPoints[smoothingPoints.length-1][0]) / duration
+
+      // console.log(`last point ts ${smoothingPoints[smoothingPoints.length-1][0]}`)
+
+      // Total score of all of our estimates with account to weight
+      totalWeight += estimate * Math.pow(amtThrough, 2)
+
+      // Total time weights
+      totalTime += Math.pow(amtThrough, 2)
     }
 
-    estimateSmoothing = Math.round(totalWeight / totalTime).toLocaleString()
+    smoothingEstimate = Math.round(totalWeight / totalTime).toLocaleString()
   }
 
-  // TODO: If cutoff is < score, we just estimate based on score/h
+  // Generate the cutoff embed
+  const lastHourPtTimeMs = new Date(lastHourPt.timestamp).getTime()
+  const lastHourPtTime = Math.floor(lastHourPtTimeMs / 1000)
+  const lastHourPtSpeed = Math.round((score - lastHourPt.score) * 3600000 / (timestamp - lastHourPtTimeMs))
 
-  const cutoffEmbed = generateCutoffEmbed(event, timestamp, tier, 
-    score, scorePH, estimateNoSmoothing, estimateSmoothing, lastHourPt, discordClient)
+  const naiveEstimate = (oneDayIdx === -1) ? 'N/A' : 
+    Math.round(score + (event.aggregateAt - timestamp) * (scorePH / 3600000)).toLocaleString()
+  const naiveLastHrEstimate = (oneDayIdx === -1) ? 'N/A' : 
+    Math.round(score + (event.aggregateAt - timestamp) * (lastHourPtSpeed / 3600000)).toLocaleString()
+  
+  const cutoffEmbed = new MessageEmbed()
+    .setColor(NENE_COLOR)
+    .setTitle(`${event.name} T${tier} Cutoff`)
+    .setDescription(`**Requested:** <t:${Math.floor(timestamp/1000)}:R>`)
+    .setThumbnail(event.banner)
+    .addField(`Cutoff Statistics`, `Points: \`\`${score.toLocaleString()}\`\`\n` + 
+      `Avg. Speed (Per Hour): \`\`${scorePH.toLocaleString()}/h\`\`\n` + 
+      `Avg. Speed [<t:${lastHourPtTime}:R> to <t:${Math.floor(timestamp/1000)}:R>] (Per Hour): \`\`${lastHourPtSpeed.toLocaleString()}/h\`\`\n`)
+    .addField(`Event Information`, `Ranking Started: <t:${Math.floor(event.startAt / 1000)}:R>\n` + 
+      `Ranking Ends: <t:${Math.floor(event.aggregateAt / 1000)}:R>\n` + 
+      `Percentage Through Event: \`\`${+((timestamp - event.startAt) * 100 / duration).toFixed(2)}%\`\`\n`)
+    .setTimestamp()
+    .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
+
+  if (tier < 100) {
+    cutoffEmbed.addField('Warning', `*${COMMAND.CONSTANTS.PRED_WARNING}*`)
+  }
+
+  cutoffEmbed.addField('Point Estimation (Predictions)', `Estimated Points: \`\`${noSmoothingEstimate}\`\`\n` +
+      `*${COMMAND.CONSTANTS.PRED_DESC}*\n\n` +
+      `Estimated Points (Smoothing): \`\`${smoothingEstimate}\`\`\n` + 
+      `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n`)
+  
+  cutoffEmbed.addField(`Naive Estimation (Predictions)`, `Naive Estimate: \`\`${naiveEstimate}\`\`\n` +
+      `*${COMMAND.CONSTANTS.NAIVE_DESC}*\n\n` +
+      `Naive Estimate (Last Hour): \`\`${naiveLastHrEstimate}\`\`\n` +
+      `*${COMMAND.CONSTANTS.NAIVE_LAST_HR_DESC}*\n`)
     
   await interaction.editReply({
     embeds: [cutoffEmbed]
