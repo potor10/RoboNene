@@ -4,8 +4,6 @@ const RANKING_RANGE = require('./trackRankingRange.json')
 const fs = require('fs');
 const generateRankingText = require('../client/methods/generateRankingText')
 
-const trackingChannels = {}
-
 const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
   const generateTrackingEmbed = () => {
     let leaderboardText = generateRankingText(data.slice(0, RESULTS_PER_PAGE), 0, 0)
@@ -21,17 +19,8 @@ const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
   };
   
   const send = async (target, embed) => {
-    if (target.channel_id in trackingChannels) {
-      trackingChannels[target.channel_id].edit({ 
-        embeds: [embed] 
-      });
-    } else {
-      const channel = discordClient.client.channels.cache.get(target.channel_id);
-      trackingChannels[target.channel_id] = await channel.send({ 
-        embeds: [embed], 
-        fetchReply: true 
-      });
-    }
+    const channel = discordClient.client.channels.cache.get(target.channel_id);
+    await channel.send({ embeds: [embed] });
   }
 
   if (data.length > 0) {
