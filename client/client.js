@@ -1,12 +1,14 @@
 const { token } = require('../config.json');
 const { Client, Intents, Guild } = require('discord.js');
 const { SekaiClient } = require('sekapi');
+const https = require('https');
 
 const winston = require('winston');
 const Database = require('better-sqlite3');
 
 const fs = require('fs');
-const path = require('path')
+const path = require('path');
+const { resolve } = require('path');
 
 const CLIENT_CONSTANTS = {
   "CMD_DIR": path.join(__dirname, '/commands'),
@@ -93,10 +95,57 @@ class DiscordClient {
     this.db.close()
   }
 
+  async getSekaiVersion() {
+    const options = {
+      host: 'play.google.com',
+      path: `/store/apps/details?id=com.sega.ColorfulStage.en&hl=en_US&gl=US`,
+      headers: {'User-Agent': 'request'}
+    };
+  
+    return new Promise((resolve, reject) => {
+      https.get(options, (res) => {
+        res.setEncoding('utf8');
+
+        let html = '';
+        res.on('data', (chunk) => {
+          html += chunk;
+        });
+
+        res.on('end', async () => {
+          if (res.statusCode === 200) {
+            // Html is grabbed
+            let gameVersionClassIdx = html.indexOf('Current Version')
+            if (gameVersionClassIdx === -1) {
+              console.log('There was an issue with finding the current game version!')
+              return
+            }
+
+            const recursiveSearch = (iter, str) => {
+              if (iter !== 0) {
+                return recursiveSearch(iter-1, str.slice(str.indexOf('>') + 1))
+              } else {
+                return str
+              }
+            }
+
+            let iter = 4
+            let gameVersionStr = recursiveSearch(iter, html.slice(gameVersionClassIdx))
+            let gameVersion = gameVersionStr.slice(0, gameVersionStr.indexOf('<'))
+
+            console.log(`Found current game version of ${gameVersion}`)
+            resolve(gameVersion);
+          } else {
+            // Error retrieving via HTTPS. Status: ${res.statusCode}
+            console.log(`Error retrieving game version via HTTPS. Status: ${res.statusCode}`)
+            reject(res.statusCode)
+          }
+        });
+      }).on('error', (err) => {});
+    })
+  }
+
   async loadSekaiClient(dir=CLIENT_CONSTANTS.PREFS_DIR) {
-    // TODO: Add a webscraper to google play 
-    // https://play.google.com/store/apps/details?id=com.sega.ColorfulStage.en&hl=en_US&gl=US
-    // With a way to detect Current Version!, update it in all the prefs
+    const gameVersion = await this.getSekaiVersion()
 
     // Parse clients
     const apiPrefs = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
@@ -104,6 +153,10 @@ class DiscordClient {
     for (const file of apiPrefs) {
       const playerPrefs = require(`${dir}/${file}`);
       console.log(`Loaded client ${playerPrefs.account_user_id} from ${file}`);
+
+      // Set the new game version
+      playerPrefs.app_version = gameVersion;
+
       // Sekai Api Init
       const apiClient = new SekaiClient(playerPrefs)
       await apiClient.login()
@@ -128,6 +181,7 @@ class DiscordClient {
   }
 
   async runSekaiRequests(rate=10) {
+    // Idk do some error handling here to reset the specific client
     const runRequest = async (apiClient, request) => {
       if (request.type === 'profile') {
         const response = await apiClient.userProfile(request.params.userId)
