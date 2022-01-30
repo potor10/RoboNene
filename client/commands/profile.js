@@ -8,7 +8,7 @@ const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
 const binarySearch = require('../methods/binarySearch')
 
-const generateProfileEmbed = (discordClient, data, private) => {
+const generateProfileEmbed = (discordClient, userId, data, private) => {
   const areas = JSON.parse(fs.readFileSync('./sekai_master/areas.json'));
   const areaItemLevels = JSON.parse(fs.readFileSync('./sekai_master/areaItemLevels.json'));
   const areaItems = JSON.parse(fs.readFileSync('./sekai_master/areaItems.json'));
@@ -162,13 +162,13 @@ const generateProfileEmbed = (discordClient, data, private) => {
     .setTitle(`${data.user.userGamedata.name}'s Profile`)
     .setDescription(`**Requested:** <t:${Math.floor(Date.now()/1000)}:R>`)
     .setAuthor({ 
-      name: `${data.user.userGamedata.userId}`, 
+      name: `${userId}`, 
       iconURL: `${leaderThumbURL}` 
     })
     .setThumbnail(leaderThumbURL)
     .addFields(
       { name: 'Name', value: `${data.user.userGamedata.name}`, inline: false },
-      { name: 'User ID', value: `${data.user.userGamedata.userId}`, inline: false },
+      { name: 'User ID', value: `${userId}`, inline: false },
       { name: 'Rank', value: `${data.user.userGamedata.rank}`, inline: false },
       { name: 'Description', value: `${data.userProfile.word}\u200b` },
       { name: 'Twitter', value: `@${data.userProfile.twitterId}\u200b` },
@@ -234,7 +234,7 @@ const getProfile = async (interaction, discordClient, userId) => {
       private = false
     }
 
-    const profileEmbed = generateProfileEmbed(discordClient, response, private)
+    const profileEmbed = generateProfileEmbed(discordClient, userId, response, private)
     await interaction.editReply({
       embeds: [profileEmbed]
     });
