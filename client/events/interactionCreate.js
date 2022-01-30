@@ -1,16 +1,14 @@
-const { adminIds } = require('../../config.json');
-
 const generateEmbed = require('../methods/generateEmbed') 
 
 const INTERACTION_CONST = {
   "NO_ACCESS_ADMIN": {
     type: 'Error',
-    message: "You can not access this command."
+    message: "You can not access this command. \nPlease make sure you have Administrator or Manage Server permissions."
   },
 
   "NO_ACCESS_LINK": {
     type: 'Error',
-    message: "You can not access this command until you link your Discord to a Project Sekai account. Use /link to begin."
+    message: "You can not access this command until you link your Discord to a Project Sekai account.\nUse /link to begin."
   }
 }
 
@@ -38,15 +36,15 @@ module.exports = {
     if (interactionIdx != -1) {
       const command = discordClient.commands[interactionIdx]
 
-      // TODO: Check for server manager / administrate perms instead of within certain ids
       if (command.adminOnly) {
-        if (!(adminIds.includes(interaction.user.id))) {
+        // Check for server manager / administrate perms
+        let permissions = interaction.member.permissions
+        if (!permissions.has('ADMINISTRATOR') && !permissions.has('MANAGE_SERVER')) {
           await interaction.reply({
             embeds: [generateEmbed(command.data.name, INTERACTION_CONST.NO_ACCESS_ADMIN, discordClient)],
             ephemeral: true 
           });
-
-          return;
+          return
         }
       }
       

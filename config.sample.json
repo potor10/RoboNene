@@ -1,6 +1,4 @@
 {
-  "token" : "",
-  "client_id" : "",
-
-  "adminIds": []
+  "token" : "Replace this with your bot's token",
+  "client_id" : "Replace this with your bot's client ID"
 }
