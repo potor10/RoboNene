@@ -80,12 +80,12 @@ module.exports = {
         .addComponents(
           new MessageButton()
             .setCustomId(`left${interaction.id}`)
-            .setLabel('LEFT')
+            .setLabel('PREV')
             .setStyle('PRIMARY')
             .setEmoji(COMMAND.CONSTANTS.LEFT),
           new MessageButton()
             .setCustomId(`right${interaction.id}`)
-            .setLabel('RIGHT')
+            .setLabel('NEXT')
             .setStyle('PRIMARY')
             .setEmoji(COMMAND.CONSTANTS.RIGHT))
 
