@@ -38,6 +38,8 @@ module.exports = {
       'type': 'Error',
       'message': 'You are not the intended user for this interaction.\nPlease try again after using /leaderboard.'
     },
+
+    'INTERACTION_TIME': 60000,
   
     'LEFT': '⬅️',
     'RIGHT': '➡️'

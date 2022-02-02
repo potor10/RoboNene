@@ -79,28 +79,33 @@ module.exports = {
       const leaderboardButtons = new MessageActionRow()
         .addComponents(
           new MessageButton()
-            .setCustomId(`left${interaction.id}`)
+            .setCustomId(`prev`)
             .setLabel('PREV')
             .setStyle('PRIMARY')
             .setEmoji(COMMAND.CONSTANTS.LEFT),
           new MessageButton()
-            .setCustomId(`right${interaction.id}`)
+            .setCustomId(`next`)
             .setLabel('NEXT')
             .setStyle('PRIMARY')
             .setEmoji(COMMAND.CONSTANTS.RIGHT))
 
-      await interaction.editReply({ 
+      const leaderboardMessage = await interaction.editReply({ 
         embeds: [leaderboardEmbed], 
-        components: [leaderboardButtons]
+        components: [leaderboardButtons],
+        fetchReply: true
       });
 
+      // Create a filter for valid responses
       const filter = (i) => {
-        return (i.customId == `left${interaction.id}` || i.customId == `right${interaction.id}`)
+        return i.customId == `prev` || i.customId == `next`
       }
 
-      const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 });
+      const collector = leaderboardMessage.createMessageComponentCollector({ 
+        filter, 
+        time: COMMAND.CONSTANTS.INTERACTION_TIME 
+      });
       
-      collector.on('collect', async i => {
+      collector.on('collect', async (i) => {
         if (i.user.id !== interaction.user.id) {
           await i.reply({
             embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.WRONG_USER_ERR, discordClient)],
@@ -109,13 +114,13 @@ module.exports = {
           return
         }
 
-        if (i.customId === `left${interaction.id}`) {
+        if (i.customId === `prev`) {
           if (page == 0) {
             page = MAX_PAGE
           } else {
             page -= 1;
           }
-        } else if (i.customId === `right${interaction.id}`) {
+        } else if (i.customId === `next`) {
           if (page == MAX_PAGE) {
             page = 0
           } else {
@@ -130,7 +135,7 @@ module.exports = {
           .setColor(NENE_COLOR)
           .setTitle(`${event.name}`)
           .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp/1000)}>`)
-          .addField(`Page ${page+1}`, leaderboardText, false)
+          .addField(`Page ${page+1} / ${MAX_PAGE+1}`, leaderboardText, false)
           .setThumbnail(event.banner)
           .setTimestamp()
           .setFooter(FOOTER, interaction.user.displayAvatarURL());
@@ -140,6 +145,13 @@ module.exports = {
           components: [leaderboardButtons]
         });
       })
+
+      collector.on('end', async (collected) => {
+        await interaction.editReply({ 
+          embeds: [leaderboardEmbed], 
+          components: []
+        });
+      });
     })
   }
 };

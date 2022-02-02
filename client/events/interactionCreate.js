@@ -3,7 +3,8 @@ const generateEmbed = require('../methods/generateEmbed')
 const INTERACTION_CONST = {
   "NO_ACCESS_ADMIN": {
     type: 'Error',
-    message: "You can not access this command. \nPlease make sure you have Administrator or Manage Server permissions."
+    message: "You can not access this command.\nPlease make sure you have " + 
+      "\`\`Administrator\`\` or \`\`Manage Server\`\` permissions."
   },
 
   "NO_ACCESS_LINK": {

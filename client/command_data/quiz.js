@@ -23,6 +23,8 @@ module.exports = {
     'QUESTION_WRONG_MSG': 'You have answered the question **incorrectly**!',
 
     'LINK_MSG': 'Link an account to save your progress',
+
+    'INTERACTION_TIME': 30000,
   
     '1': '1️⃣',
     '2': '2️⃣',
