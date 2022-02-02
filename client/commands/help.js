@@ -3,6 +3,7 @@ const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 
 const fs = require('fs');
+const path = require('path');
 
 const COMMAND_NAME = 'help'
 
@@ -17,11 +18,11 @@ const HELP_CONSTANTS = {
 
 // Parse commands jsons in current directory
 const commands = {}
-const commandFiles = fs.readdirSync(__dirname).filter(file => file.endsWith('.json'));
+const commandFiles = fs.readdirSync(path.join(__dirname, '../command_data')).filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-  const COMMAND = require(`./${file}`);
-  console.log(`Loaded json ${COMMAND.INFO.name} from ${file}`);
+  const COMMAND = require(`${path.join(__dirname, '../command_data')}/${file}`);
+  console.log(`Loaded command data ${COMMAND.INFO.name} from ${file}`);
   commands[COMMAND.INFO.name] = COMMAND.INFO;
 }
 

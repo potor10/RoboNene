@@ -1,9 +1,10 @@
-const { MessageEmbed } = require('discord.js');
+const { MessageActionRow, MessageButton } = require('discord.js');
 const { BOT_NAME, NENE_COLOR, FOOTER } = require('../../constants');
 
-const COMMAND = require('./about.json')
+const COMMAND = require('../command_data/about')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
+const generateEmbed = require('../methods/generateEmbed') 
 
 module.exports = {
   ...COMMAND.INFO,
@@ -14,35 +15,111 @@ module.exports = {
       ephemeral: true
     })
 
-    const botAvatarURL = discordClient.client.user.displayAvatarURL()
+    const EMBED_TITLE = `About ${BOT_NAME}`
 
-    const aboutEmbed = new MessageEmbed()
-      .setColor(NENE_COLOR)
-      .setTitle(`About ${BOT_NAME}`)
-      .setDescription('Contributions and Credits')
-      .setThumbnail(botAvatarURL)
-      .addFields(
-        { name: '**Programming**', value: 'Potor10#3237\nUlt#0001\nRedside#1337\nYuu#6883', inline: true},
-        { name: '**Design**', value: 'Potor10#3237\nReinhäla#4444', inline: true},
-        { name: '**Testing**', value: 'Potor10#3237\nReinhäla#4444', inline: true },
-        { name: '**Game Data**', value: '[Sekai World](https://github.com/Sekai-World/sekai-master-db-en-diff/blob/main/events.json)' },
-        { name: '**Calculating Estimation**', value: '[Bandori Estimation](https://docs.google.com/document/d/1137qbA0_qWOHJGhaYfxpgftqhsJvW4qo3QBTcSqnZo8/edit#heading=h.pkcfws4d84gx)'},
-        { name: '**Ranking Data**', value: '[Sekai Best](https://api.sekai.best/docs)' },
-        { name: '**Discord**', value: 'Robo Nene logs the usage of her commands to prevent abuse. ' + 
-          'Outside of the use of her commands, Robo Nene does not collect any user data, chat logs, or server information. ' + 
-          'Robo nene’s code is open-source, you can check it out at [github](https://github.com/potor10/RoboNene).' },
-        { name: '**Project Sekai**', value: 'Linking accounts with Robo Nene is non-invasive. ' + 
-          'Robo Nene will never ask for, nor ever need access to your Project Sekai account to function. ' + 
-          'Linking accounts exists solely to prevent misuse of certain commands and provide ease of integration between a user and their Project Sekai account.' },
-        { name: '**Contribute**', value: 'You can contribute to Robo Nene by opening a pull request at [github](https://github.com/potor10/RoboNene/pulls).' },
-        { name: '**Tech Stack**', value: 'Robo Nene utilizes discord.js to serve her content. ' + 
-          'Robo Nene saves tiering history and linked account information through use of sqlite3 databases. ' +
-          'Robo Nene uses regression-js to fit data into a linear model and provide estimates.' },
-        { name: '**License**', value: 'MIT' },
-      )
-      .setTimestamp()
-      .setFooter(FOOTER, botAvatarURL);
+    const aboutPages = [
+      generateEmbed(EMBED_TITLE, {
+        type: '**Programming**',
+        message: COMMAND.CONSTANTS.PROGRAMMERS.join('\n')
+      }, discordClient),
+      generateEmbed(EMBED_TITLE, {
+        type: '**Design**',
+        message: COMMAND.CONSTANTS.DESIGNERS.join('\n')
+      }, discordClient),
+      generateEmbed(EMBED_TITLE, {
+        type: '**Testers**',
+        message: COMMAND.CONSTANTS.TESTERS.join('\n')
+      }, discordClient),
+      generateEmbed(EMBED_TITLE, {
+        type: '**Game Data**',
+        message: `[Sekai World](${COMMAND.CONSTANTS.GAME_DATA_LINK})`
+      }, discordClient),
+      generateEmbed(EMBED_TITLE, {
+        type: '**Calculating Estimation**',
+        message: `[Bandori Estimation](${COMMAND.CONSTANTS.ESTIMATION_LINK})`
+      }, discordClient),
+      generateEmbed(EMBED_TITLE, {
+        type: '**Ranking Data**',
+        message: `[Sekai Best](${COMMAND.CONSTANTS.RANKING_DATA_LINK})`
+      }, discordClient),
+      generateEmbed(EMBED_TITLE, {
+        type: '**Discord**',
+        message: COMMAND.CONSTANTS.ABOUT_DISCORD
+      }, discordClient),
+      generateEmbed(EMBED_TITLE, {
+        type: '**Project Sekai**',
+        message: COMMAND.CONSTANTS.ABOUT_SEKAI
+      }, discordClient),
+      generateEmbed(EMBED_TITLE, {
+        type: '**Contribute**',
+        message: COMMAND.CONSTANTS.ABOUT_CONTRIBUTE
+      }, discordClient),
+      generateEmbed(EMBED_TITLE, {
+        type: '**Tech Stack**',
+        message: COMMAND.CONSTANTS.ABOUT_TECH
+      }, discordClient),
+      generateEmbed(EMBED_TITLE, {
+        type: '**License**',
+        message: COMMAND.CONSTANTS.ABOUT_LICENSE
+      }, discordClient)
+    ]
 
-    await interaction.editReply({ embeds: [aboutEmbed] });
+    const aboutButtons = new MessageActionRow()
+      .addComponents(
+        new MessageButton()
+          .setCustomId(`prev`)
+          .setLabel('PREV')
+          .setStyle('PRIMARY')
+          .setEmoji(COMMAND.CONSTANTS.LEFT),
+        new MessageButton()
+          .setCustomId(`next`)
+          .setLabel('NEXT')
+          .setStyle('PRIMARY')
+          .setEmoji(COMMAND.CONSTANTS.RIGHT))
+
+    let page = 0
+
+    const aboutMessage = await interaction.editReply({ 
+      embeds: [aboutPages[page]],
+      components: [aboutButtons],
+      fetchReply: true
+    });
+
+    const filter = (i) => {
+      return i.customId == `prev` || i.customId == `next`
+    }
+
+    const collector = aboutMessage.createMessageComponentCollector({ 
+      filter, 
+      time: COMMAND.CONSTANTS.INTERACTION_TIME 
+    });
+    
+    collector.on('collect', async (i) => {
+      if (i.customId === `prev`) {
+        if (page == 0) {
+          page = aboutPages.length - 1
+        } else {
+          page -= 1;
+        }
+      } else if (i.customId === `next`) {
+        if (page == aboutPages.length - 1) {
+          page = 0
+        } else {
+          page += 1;
+        }
+      }
+
+      await i.update({ 
+        embeds: [aboutPages[page]], 
+        components: [aboutButtons]
+      });
+    })
+
+    collector.on('end', async (collected) => {
+      await interaction.editReply({ 
+        embeds: [aboutPages[page]], 
+        components: []
+      });
+    });
   }
 };

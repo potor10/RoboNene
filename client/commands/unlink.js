@@ -1,6 +1,6 @@
 const { ERR_COMMAND } = require('../../constants');
 
-const COMMAND = require('./unlink.json')
+const COMMAND = require('../command_data/unlink')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 

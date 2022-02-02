@@ -8,7 +8,6 @@ const Database = require('better-sqlite3');
 
 const fs = require('fs');
 const path = require('path');
-const { resolve } = require('path');
 
 const CLIENT_CONSTANTS = {
   "CMD_DIR": path.join(__dirname, '/commands'),

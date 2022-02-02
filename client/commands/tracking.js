@@ -1,4 +1,4 @@
-const COMMAND = require('./tracking.json')
+const COMMAND = require('../command_data/tracking')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 

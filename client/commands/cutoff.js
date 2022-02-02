@@ -4,7 +4,7 @@ const https = require('https');
 const fs = require('fs');
 const regression = require('regression');
 
-const COMMAND = require('./cutoff.json')
+const COMMAND = require('../command_data/cutoff')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 

@@ -1,7 +1,7 @@
 const { MessageActionRow, MessageSelectMenu } = require('discord.js');
 const fs = require('fs');
 
-const COMMAND = require('./quiz.json')
+const COMMAND = require('../command_data/quiz')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
@@ -239,110 +239,144 @@ class areaQuestion {
   }
 }
 
-
-const createQuiz = async (interaction, account, discordClient) => {
-  const questions = [new eventQuestion(), new characterQuestion(), new cardQuestion(), new areaQuestion()]
-
-  const questionCreator = (questions[Math.floor(Math.random() * questions.length)])
-  const question = questionCreator.getQuestion()
-  let prompt = question.prompt + '\n'
-
-  const correctIdx = Math.floor(Math.random() * 3)
-  const answerOptions = []
-
-  for(let i = 0; i < 4; i++) {
-    let answer = question.right
-    if (i !== correctIdx) {
-      answer = question.wrong.pop()
-    } 
-    answerOptions.push({
-      label: answer,
-      value: answer,
-      emoji: COMMAND.CONSTANTS[i+1]
-    })
-
-    prompt += `${COMMAND.CONSTANTS[i+1]} \`\`${answer}\`\`\n`
-  }
-  
-  console.log(answerOptions)
-
-  const questionSelect = new MessageActionRow()
-    .addComponents(
-      new MessageSelectMenu()
-        .setCustomId(`quiz${interaction.id}`)
-        .setPlaceholder('Select Your Answer!')
-        .addOptions(answerOptions))
-
-  const content = {
-    type: questionCreator.getType(),
-    message: prompt
-  }
-
-  await interaction.editReply({ 
-    embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
-    components: [questionSelect]
-  });
-
-  const filter = i => {
-    return i.customId === `quiz${interaction.id}`
-  }
-
-  const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 })
-
-  collector.on('collect', async i => {
-    if (i.user.id !== interaction.user.id) {
-      await i.reply({
-        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.WRONG_USER_ERR, discordClient)],
-        ephemeral: true
-      })
-      return
-    }
-
-    let content = {
-      type: '',
-      message: `${question.prompt}\nYour Answer: \`\`${i.values[0]}\`\`\nCorrect Answer: \`\`${question.right}\`\`\n\n`
-    }
-    let correct = (account) ? account.quiz_correct : 0
-
-    if (i.values[0] === question.right) {
-      if (account) {
-        discordClient.db.prepare('UPDATE users SET quiz_correct=@quizCorrect WHERE discord_id=@discordId').run({
-          quizCorrect: account.quiz_correct + 1,
-          discordId: interaction.user.id
-        })
-      }
-      content.type = COMMAND.CONSTANTS.QUESTION_RIGHT_TYPE
-      content.message += COMMAND.CONSTANTS.QUESTION_RIGHT_MSG
-      correct++
-    } else {
-      content.type = COMMAND.CONSTANTS.QUESTION_WRONG_TYPE
-      content.message += COMMAND.CONSTANTS.QUESTION_WRONG_MSG
-    }
-
-    if (account) {
-      content.message += `\n\nQuestions Correct: \`\`${correct}\`\``
-      content.message += `\nQuestions Answered: \`\`${account.quiz_question + 1}\`\``
-      content.message += `\nAccuracy: \`\`${+((correct / (account.quiz_question + 1)) * 100).toFixed(2)}%\`\``
-    } else {
-      content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`
-    }
-
-    interaction.editReply({
-      embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
-      components: []
-    })
-
+const getAccount = (userId, discordClient) => {
+  // Obtain our user stats
+  const user = discordClient.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
+    discordId: userId
   })
 
-  collector.on('end', collected => {
-    if (collected.size === 0) {
-      console.log(`Collected ${collected.size} items`)
+  let account = null
+  if (user.length) {
+    account = user[0]
+  }
 
-      const content = { ... COMMAND.CONSTANTS.NO_RESPONSE }
+  return account
+}
+
+module.exports = {
+  data: generateSlashCommand(COMMAND.INFO),
+  
+  async execute(interaction, discordClient) {
+    await interaction.deferReply()
+
+    // Init our question generators
+    const questions = [
+      new eventQuestion(), 
+      new characterQuestion(), 
+      new cardQuestion(), 
+      new areaQuestion()
+    ]
+
+    // Obtain a random question
+    const questionCreator = (questions[Math.floor(Math.random() * questions.length)])
+    const question = questionCreator.getQuestion()
+    let prompt = question.prompt + '\n'
+
+    // Set our correct answer to be a random index (out of 4)
+    const correctIdx = Math.floor(Math.random() * 3)
+    const answerOptions = []
+
+    for(let i = 0; i < 4; i++) {
+      let answer = question.right
+      if (i !== correctIdx) {
+        answer = question.wrong.pop()
+      } 
+      answerOptions.push({
+        label: answer,
+        value: answer,
+        emoji: COMMAND.CONSTANTS[i+1]
+      })
+
+      prompt += `${COMMAND.CONSTANTS[i+1]} \`\`${answer}\`\`\n`
+    }
+  
+    console.log(answerOptions)
+
+    // Initialize our question selection menu
+    const questionSelect = new MessageActionRow()
+      .addComponents(new MessageSelectMenu()
+          .setCustomId(`quiz`)
+          .setPlaceholder('Select Your Answer!')
+          .addOptions(answerOptions))
+
+    const content = {
+      type: questionCreator.getType(),
+      message: prompt
+    }
+
+    const quizMessage = await interaction.editReply({ 
+      embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
+      components: [questionSelect],
+      fetchReply: true
+    });
+
+    const filter = i => { return i.customId === `quiz` }
+
+    const collector = quizMessage.createMessageComponentCollector({ 
+      filter, 
+      time: COMMAND.CONSTANTS.INTERACTION_TIME 
+    })
+
+    let answered = false;
+
+    collector.on('collect', async (i) => {
+      // Determine if we have the correct user
+      if (i.user.id !== interaction.user.id) {
+        await i.reply({
+          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.WRONG_USER_ERR, discordClient)],
+          ephemeral: true
+        })
+        return
+      } else {
+        // Right user has answered the prompt
+        answered = true
+      }
+
+      let content = {
+        type: '',
+        message: `${question.prompt}\nYour Answer: \`\`${i.values[0]}\`\`\nCorrect Answer: \`\`${question.right}\`\`\n\n`
+      }
+  
+      let account = getAccount(interaction.user.id, discordClient)
+
+      // Initialize correct if we have an account
+      let correct = (account) ? account.quiz_correct : 0
+      
+      if (i.values[0] === question.right) {
+        if (account) {
+          // Update our user with the new values
+          discordClient.db.prepare('UPDATE users SET quiz_correct=@quizCorrect, ' + 
+            'quiz_question=@quizQuestion WHERE discord_id=@discordId').run({
+            quizCorrect: account.quiz_correct + 1,
+            quizQuestion: account.quiz_question + 1,
+            discordId: interaction.user.id
+          })
+        }
+
+        // Append message content
+        content.type = COMMAND.CONSTANTS.QUESTION_RIGHT_TYPE
+        content.message += COMMAND.CONSTANTS.QUESTION_RIGHT_MSG
+        correct++
+      } else {
+        if (account) {
+          // Update our user db with the new values
+          discordClient.db.prepare('UPDATE users SET quiz_question=@quizQuestion ' + 
+            'WHERE discord_id=@discordId').run({
+            quizQuestion: account.quiz_question + 1,
+            discordId: interaction.user.id
+          })
+        }
+
+        // Append message content
+        content.type = COMMAND.CONSTANTS.QUESTION_WRONG_TYPE
+        content.message += COMMAND.CONSTANTS.QUESTION_WRONG_MSG
+      }
+
       if (account) {
-        content.message += `\n\nQuestions Correct: \`\`${account.quiz_correct}\`\``
+        // Output our user statistics
+        content.message += `\n\nQuestions Correct: \`\`${correct}\`\``
         content.message += `\nQuestions Answered: \`\`${account.quiz_question + 1}\`\``
-        content.message += `\nAccuracy: \`\`${+((account.quiz_correct / (account.quiz_question + 1)) * 100).toFixed(2)}%\`\``
+        content.message += `\nAccuracy: \`\`${+((correct / (account.quiz_question + 1)) * 100).toFixed(2)}%\`\``
       } else {
         content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`
       }
@@ -351,29 +385,37 @@ const createQuiz = async (interaction, account, discordClient) => {
         embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
         components: []
       })
-    }
-  });
-};
 
-module.exports = {
-  data: generateSlashCommand(COMMAND.INFO),
-  
-  async execute(interaction, discordClient) {
-    await interaction.deferReply()
-
-    const user = discordClient.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
-      discordId: interaction.user.id
     })
 
-    let account = null
-    if (user.length) {
-      account = user[0]
-      discordClient.db.prepare('UPDATE users SET quiz_question=@quizQuestion WHERE discord_id=@discordId').run({
-        quizQuestion: account.quiz_question + 1,
-        discordId: interaction.user.id
-      })
-    }
+    collector.on('end', async (collected) => {
+      if (!answered) {
+        console.log(`Collected ${collected.size} items`)
 
-    createQuiz(interaction, account, discordClient)
+        // If the user has not answered the question yet
+        const content = { ... COMMAND.CONSTANTS.NO_RESPONSE }
+
+        let account = getAccount(interaction.user.id, discordClient)
+
+        if (account) {
+          discordClient.db.prepare('UPDATE users SET quiz_question=@quizQuestion ' + 
+            'WHERE discord_id=@discordId').run({
+            quizQuestion: account.quiz_question + 1,
+            discordId: interaction.user.id
+          })
+
+          content.message += `\n\nQuestions Correct: \`\`${account.quiz_correct}\`\``
+          content.message += `\nQuestions Answered: \`\`${account.quiz_question + 1}\`\``
+          content.message += `\nAccuracy: \`\`${+((account.quiz_correct / (account.quiz_question + 1)) * 100).toFixed(2)}%\`\``
+        } else {
+          content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`
+        }
+
+        await interaction.editReply({
+          embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
+          components: []
+        })
+      }
+    });
   }
 }
