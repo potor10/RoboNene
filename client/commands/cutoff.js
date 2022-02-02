@@ -105,8 +105,12 @@ const generateCutoff = async ({interaction, event,
       
       const similarity = characterIds.filter(el => { return rate[eventId].characterIds.indexOf(el) >= 0 }).length;
       if (rate[eventId][tier]) {
-        totalRate += rate[eventId][tier] * similarity
-        totalSimilar += similarity
+        // Calculate recency factor
+        const eventWeight = parseInt(eventId, 10) / event.id
+
+        // Total Rate = Rate * # of similar characters * recency of event
+        totalRate += rate[eventId][tier] * similarity * eventWeight
+        totalSimilar += similarity * eventWeight
 
         allTotalRate += rate[eventId][tier]
         rateCount += 1
@@ -141,6 +145,7 @@ const generateCutoff = async ({interaction, event,
     // Calculate smoothed result
     let totalWeight = 0
     let totalTime = 0
+
     // Grab 1 Estimate Every 60 Minutes For Smoothing
     const smoothingPoints = []
 
