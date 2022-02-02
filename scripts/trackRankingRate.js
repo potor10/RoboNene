@@ -164,7 +164,7 @@ const trackRankingRate = () => {
 
   let eta_ms = getTimeEventClose()
   console.log(`Requested Ranking Rate Constant, Sleeping for ${eta_ms + 1000} ms`)
-  setTimeout(() => {trackRankingRate(discordClient)}, eta_ms + 1000);
+  setTimeout(() => {trackRankingRate()}, eta_ms + 1000);
 }
 
 module.exports = trackRankingRate
