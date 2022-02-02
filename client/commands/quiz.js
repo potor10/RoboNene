@@ -1,7 +1,7 @@
 const { MessageActionRow, MessageSelectMenu } = require('discord.js');
 const fs = require('fs');
 
-const COMMAND = require('./quiz.json')
+const COMMAND = require('../command_data/quiz')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 

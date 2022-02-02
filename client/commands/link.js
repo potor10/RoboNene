@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ERR_COMMAND } = require('../../constants');
 
-const COMMAND = require('./link.json')
+const COMMAND = require('../command_data/link')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 

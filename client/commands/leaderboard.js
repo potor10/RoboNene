@@ -1,7 +1,7 @@
 const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
 
-const COMMAND = require('./leaderboard.json')
+const COMMAND = require('../command_data/leaderboard')
 
 const MAX_PAGE = Math.ceil(100 / RESULTS_PER_PAGE) -1
 

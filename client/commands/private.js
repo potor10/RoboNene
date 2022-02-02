@@ -1,4 +1,4 @@
-const COMMAND = require('./private.json')
+const COMMAND = require('../command_data/private')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 

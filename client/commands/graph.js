@@ -2,7 +2,7 @@ const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
 
-const COMMAND = require('./graph.json')
+const COMMAND = require('../command_data/graph')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 

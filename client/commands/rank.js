@@ -1,4 +1,4 @@
-const COMMAND = require('./rank.json')
+const COMMAND = require('../command_data/rank')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const getRank = require('../methods/getRank')

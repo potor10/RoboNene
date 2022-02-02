@@ -1,6 +1,6 @@
 const { ERR_COMMAND } = require('../../constants');
 
-const COMMAND = require('./spy.json')
+const COMMAND = require('../command_data/spy')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const getRank = require('../methods/getRank')

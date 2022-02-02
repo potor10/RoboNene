@@ -2,7 +2,7 @@ const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
 
-const COMMAND = require('./schedule.json')
+const COMMAND = require('../command_data/schedule')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
 
