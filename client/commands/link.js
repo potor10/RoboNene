@@ -13,9 +13,11 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    const db = discordClient.db
+    await interaction.deferReply({
+      ephemeral: true
+    })
 
-    await interaction.deferReply()
+    const db = discordClient.db
 
     if (interaction.options._subcommand === 'request') {
       const accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g,'');

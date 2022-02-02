@@ -91,6 +91,7 @@ const trackRankingRate = () => {
   const previousEvents = findPreviousEvents()
 
   const eventCards = JSON.parse(fs.readFileSync(`${DIR_DATA}/eventCards.json`));
+  const events = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
   const cards = JSON.parse(fs.readFileSync(`${DIR_DATA}/cards.json`));
 
   const recursiveHttp = (event, idx, callback) => {
@@ -149,7 +150,8 @@ const trackRankingRate = () => {
       })
 
       rate[previousEvents[idx].id] = {
-        characterIds: characterIds
+        characterIds: characterIds,
+        eventType: events[previousEvents[idx].id - 1].eventType
       }
 
       recursiveHttp(previousEvents[idx], 0, () => {recursiveRequest(idx+1)})

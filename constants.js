@@ -5,10 +5,7 @@ module.exports = {
     let activities = [
       "Beep Boop in ", 
       "Dreaming in ", 
-      "Hunting Uhh in ", 
-      "Badmouthing ", 
-      "Leaking Tiering Info in ",
-      "Supporting EN Project Sekai in "
+      "Badmouthing "
     ];
     return activities[Math.floor(Math.random() * (activities.length - 1))]
   },

@@ -8,6 +8,10 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
+    await interaction.deferReply({
+      ephemeral: true
+    })
+
     const db = discordClient.db
 
     const channelData = interaction.options._hoistedOptions[0]
@@ -19,9 +23,8 @@ module.exports = {
         message: 'The channel you have selected is not a valid text channel'
       }
 
-      await interaction.reply({
+      await interaction.editReply({
         embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
-        ephemeral: true
       });
 
       return
@@ -43,9 +46,8 @@ module.exports = {
           `Guild: \`\`${channelData.channel.guild.name}\`\``
       }
 
-      await interaction.reply({
-        embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
-        ephemeral: true 
+      await interaction.editReply({
+        embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)]
       });
     } else {
       const query = db.prepare('DELETE FROM tracking WHERE ' + 
@@ -64,9 +66,8 @@ module.exports = {
             `Guild: \`\`${channelData.channel.guild.name}\`\``
         }
 
-        await interaction.reply({
+        await interaction.editReply({
           embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
-          ephemeral: true 
         });
       } else {
         const content = {
@@ -74,9 +75,8 @@ module.exports = {
           message: 'There are no tracking alerts for these parameters'
         }
 
-        await interaction.reply({
-          embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
-          ephemeral: true
+        await interaction.editReply({
+          embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)]
         });
       }
     }

@@ -8,9 +8,11 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    const db = discordClient.db
+    await interaction.deferReply({
+      ephemeral: true
+    })
 
-    await interaction.deferReply()
+    const db = discordClient.db
 
     const user = discordClient.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
       discordId: interaction.user.id

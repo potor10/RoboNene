@@ -92,14 +92,18 @@ module.exports = {
   data: slashCommand,
   
   async execute(interaction, discordClient) {
+    await interaction.deferReply({
+      ephemeral: true
+    })
+
     if (!(commands.hasOwnProperty(interaction.options._hoistedOptions[0].value))) {
-      await interaction.reply({
+      await interaction.editReply({
         embeds: [generateEmbed(COMMAND_NAME, HELP_CONSTANTS.BAD_COMMAND, discordClient)]
       })
       return
     }
 
-    await interaction.reply({
+    await interaction.editReply({
       embeds: [generateHelpEmbed(commands[interaction.options._hoistedOptions[0].value], discordClient)]
     });
   }

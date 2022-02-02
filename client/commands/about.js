@@ -10,6 +10,10 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
+    await interaction.deferReply({
+      ephemeral: true
+    })
+
     const botAvatarURL = discordClient.client.user.displayAvatarURL()
 
     const aboutEmbed = new MessageEmbed()
@@ -39,6 +43,6 @@ module.exports = {
       .setTimestamp()
       .setFooter(FOOTER, botAvatarURL);
 
-    await interaction.reply({ embeds: [aboutEmbed] });
+    await interaction.editReply({ embeds: [aboutEmbed] });
   }
 };

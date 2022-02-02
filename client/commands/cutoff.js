@@ -42,6 +42,9 @@ const generateCutoff = async ({interaction, event,
   let noSmoothingEstimate = 'N/A'
   let smoothingEstimate = 'N/A'
 
+  // The string we show that highlights the equation we use in detailed
+  let linEquationStr = ''
+
   // Saved indices of critical timestamps
   let oneDayIdx = -1
   let halfDayIdx = -1
@@ -70,10 +73,12 @@ const generateCutoff = async ({interaction, event,
     }
   }
 
+  // If we are at least 1 day into the event
   if (oneDayIdx !== -1) {
     // Get game information from saved json files
     const rate = JSON.parse(fs.readFileSync('./rank/rate.json'));
     const eventCards = JSON.parse(fs.readFileSync(`${DIR_DATA}/eventCards.json`));
+    const events = JSON.parse(fs.readFileSync(`${DIR_DATA}/events.json`));
     const cards = JSON.parse(fs.readFileSync(`${DIR_DATA}/cards.json`));
 
     const characterIds = []
@@ -89,23 +94,29 @@ const generateCutoff = async ({interaction, event,
     let totalRate = 0;
     let totalSimilar = 0;
 
-    let avgRate = 0;
+    let allTotalRate = 0;
     let rateCount = 0;
 
     // Identify a constant c used in y = (c * m)x + b that can be used via this event
     for(const eventId in rate) {
+      if (rate[eventId].eventType !== events[eventId-1].eventType) {
+        continue
+      }
+      
       const similarity = characterIds.filter(el => { return rate[eventId].characterIds.indexOf(el) >= 0 }).length;
       if (rate[eventId][tier]) {
         totalRate += rate[eventId][tier] * similarity
         totalSimilar += similarity
 
-        avgRate += rate[eventId][tier]
+        allTotalRate += rate[eventId][tier]
         rateCount += 1
       }
     }
 
-    // Determine the final rate depending on if there was a previous event with similar chara, otherwise use the avg
-    const finalRate = (totalSimilar) ? (totalRate / totalSimilar) : (avgRate / rateCount)
+    // Determine the final rate depending on if there was a previous event with similar chara, 
+    // otherwise use the average of all events of same type
+    // If there is no data to go off of, we use 1
+    const finalRate = (totalSimilar) ? (totalRate / totalSimilar) : ((rateCount) ? (allTotalRate / rateCount) : 1)
     console.log(`The Final Rate is ${finalRate}`)
 
     const points = []
@@ -120,7 +131,12 @@ const generateCutoff = async ({interaction, event,
     const predicted = (model.equation[0] * finalRate * duration) + model.equation[1]
     // console.log(model)
 
+    // Final model without smoothing
     noSmoothingEstimate = Math.round(predicted).toLocaleString()
+
+    // Generate the string for the equation
+    linEquationStr = `\n*${+(model.equation[0]).toFixed(5)} \\* ` + 
+      `${+(finalRate).toFixed(2)} \\* ms into event + ${+(model.equation[1]).toFixed(2)}*`
 
     // Calculate smoothed result
     let totalWeight = 0
@@ -164,8 +180,12 @@ const generateCutoff = async ({interaction, event,
 
   // Generate the cutoff embed
   const lastHourPtTimeMs = new Date(lastHourPt.timestamp).getTime()
-  const lastHourPtTime = Math.floor(lastHourPtTimeMs / 1000)
-  const lastHourPtSpeed = Math.round((score - lastHourPt.score) * 3600000 / (timestamp - lastHourPtTimeMs))
+  const lastHourPtTime = (timestamp > event.aggregateAt) ? Math.floor(timestamp / 1000) : 
+    Math.floor(lastHourPtTimeMs / 1000)
+  const lastHourPtSpeed = (timestamp > event.aggregateAt) ? 0 :
+    Math.round((score - lastHourPt.score) * 3600000 / (timestamp - lastHourPtTimeMs))
+
+  const eventPercentage = Math.min((timestamp - event.startAt) * 100 / duration, 100)
   
   const cutoffEmbed = new MessageEmbed()
     .setColor(NENE_COLOR)
@@ -177,7 +197,7 @@ const generateCutoff = async ({interaction, event,
       `Avg. Speed [<t:${lastHourPtTime}:R> to <t:${Math.floor(timestamp/1000)}:R>] (Per Hour): \`\`${lastHourPtSpeed.toLocaleString()}/h\`\`\n`)
     .addField(`Event Information`, `Ranking Started: <t:${Math.floor(event.startAt / 1000)}:R>\n` + 
       `Ranking Ends: <t:${Math.floor(event.aggregateAt / 1000)}:R>\n` + 
-      `Percentage Through Event: \`\`${+((timestamp - event.startAt) * 100 / duration).toFixed(2)}%\`\`\n`)
+      `Percentage Through Event: \`\`${+(eventPercentage).toFixed(2)}%\`\`\n`)
     .setTimestamp()
     .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
 
@@ -186,7 +206,7 @@ const generateCutoff = async ({interaction, event,
   }
 
   cutoffEmbed.addField('Point Estimation (Predictions)', `Estimated Points: \`\`${noSmoothingEstimate}\`\`\n` +
-      ((detailed) ? `*${COMMAND.CONSTANTS.PRED_DESC}*\n\n`: '') +
+      ((detailed) ? `*${COMMAND.CONSTANTS.PRED_DESC}*${linEquationStr}\n\n`: '') +
       `Estimated Points (Smoothing): \`\`${smoothingEstimate}\`\`\n` + 
       ((detailed) ? `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n` : ''))
   
@@ -194,9 +214,9 @@ const generateCutoff = async ({interaction, event,
   // Add a Naive Estimate if the user requests detailed information
   if (detailed) {
     const naiveEstimate = (oneDayIdx === -1) ? 'N/A' : 
-      Math.round(score + (event.aggregateAt - timestamp) * (scorePH / 3600000)).toLocaleString()
+      Math.round(score + Math.max((event.aggregateAt - timestamp), 0) * (scorePH / 3600000)).toLocaleString()
     const naiveLastHrEstimate = (oneDayIdx === -1) ? 'N/A' : 
-      Math.round(score + (event.aggregateAt - timestamp) * (lastHourPtSpeed / 3600000)).toLocaleString()
+      Math.round(score + Math.max((event.aggregateAt - timestamp), 0) * (lastHourPtSpeed / 3600000)).toLocaleString()
 
     cutoffEmbed.addField(`Naive Estimation (Predictions)`, `Naive Estimate: \`\`${naiveEstimate}\`\`\n` +
         `*${COMMAND.CONSTANTS.NAIVE_DESC}*\n\n` +
