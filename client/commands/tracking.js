@@ -15,22 +15,24 @@ module.exports = {
     const db = discordClient.db
 
     const channelData = interaction.options._hoistedOptions[0]
-    console.log(channelData)
 
     if (channelData.channel.type !== 'GUILD_TEXT') {
-      const content = {
-        type: 'Error',
-        message: 'The channel you have selected is not a valid text channel'
-      }
-
       await interaction.editReply({
-        embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
+        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.INVALID_CHANNEL_ERR, discordClient)],
       });
 
       return
     }
 
     if (interaction.options._hoistedOptions[2].value) {
+      const perms = channelData.channel.guild.me.permissionsIn(channelData.channel)
+      if (!perms.has('SEND_MESSAGES') || !perms.has('EMBED_LINKS')) {
+        await interaction.editReply({
+          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_PERMISSIONS_ERR, discordClient)],
+        });
+        return
+      }
+
       db.prepare('REPLACE INTO tracking (channel_id, guild_id, tracking_type) ' + 
         'VALUES (@channelId, @guildId, @trackingType)').run({
         channelId: channelData.value,
@@ -70,13 +72,8 @@ module.exports = {
           embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
         });
       } else {
-        const content = {
-          type: 'Error',
-          message: 'There are no tracking alerts for these parameters'
-        }
-
         await interaction.editReply({
-          embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)]
+          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_TRACKING_ERR, discordClient)]
         });
       }
     }

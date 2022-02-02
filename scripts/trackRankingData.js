@@ -21,15 +21,20 @@ const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
   const send = async (target, embed) => {
     const channel = discordClient.client.channels.cache.get(target.channel_id);
     if (channel) {
-      await channel.send({ embeds: [embed] });
-    } else {
-      // Request deletion of the channel from the database
-      console.log(`Requesting deletion of ${target.channel_id}`)
-      discordClient.db.prepare('DELETE FROM tracking WHERE guild_id=@guildId AND channel_id=@channelId').run({
-        guildId: target.guild_id,
-        channelId: target.channel_id
-      });
+      const guild = discordClient.client.guilds.cache.get(channel.guild.id)
+      const perms = guild.me.permissionsIn(channel)
+      if (perms.has('SEND_MESSAGES') && perms.has('EMBED_LINKS')) {
+        await channel.send({ embeds: [embed] });
+        return
+      }
     }
+
+    // Request deletion of the channel from the database
+    console.log(`Requesting deletion of ${target.channel_id}`)
+    discordClient.db.prepare('DELETE FROM tracking WHERE guild_id=@guildId AND channel_id=@channelId').run({
+      guildId: target.guild_id,
+      channelId: target.channel_id
+    });
   }
 
   if (data.length > 0) {
