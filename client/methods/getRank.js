@@ -62,7 +62,7 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
           generateEmbed({
             name: commandName, 
             content: RANK_CONSTANTS.BAD_INPUT_ERROR, 
-            client: discordClient
+            client: discordClient.client
           })
         ]
       });
