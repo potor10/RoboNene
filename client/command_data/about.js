@@ -19,12 +19,12 @@ module.exports = {
     ],
 
     'DESIGNERS': [
-      'Reinhäla#4444',
+      'Reinhäla',
       'Potor10#3237'
     ],
 
     'TESTERS': [
-      'Reinhäla#4444',
+      'Reinhäla',
       'i like potor and airi',
       'uhh',
       'Sela'

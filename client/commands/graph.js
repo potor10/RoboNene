@@ -23,7 +23,13 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
 const postQuickChart = async (interaction, tier, rankData, discordClient) => {
   if (!rankData.data.eventRankings) {
     await interaction.editReply({
-      embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_DATA_ERR, discordClient)]
+      embeds: [
+        generateEmbed({
+          name: COMMAND.INFO.name, 
+          content: COMMAND.CONSTANTS.NO_DATA_ERR, 
+          client: discordClient.client
+        })
+      ]
     });
     return
   }
@@ -116,7 +122,13 @@ module.exports = {
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {
       await interaction.editReply({
-        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_EVENT_ERR, discordClient)]
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name, 
+            content: COMMAND.CONSTANTS.NO_EVENT_ERR, 
+            client: discordClient.client
+          })
+        ]
       });
       return
     }

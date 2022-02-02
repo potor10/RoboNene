@@ -1,128 +1,221 @@
-const { ERR_COMMAND } = require('../../constants');
+const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
+const { ERR_COMMAND, NENE_COLOR, FOOTER } = require('../../constants');
 
 const COMMAND = require('../command_data/unlink')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
 
-const generatedCodes = {};
+const generateUnlinkEmbed = ({code, accountId, expires, content, client}) => {
+  const imageUrl = 'https://cdn.discordapp.com/attachments/812255511667015691/938557065469788190/IMG_0037.png'
+
+  const unlinkInformation = {
+    type: 'Unlink Information',
+    message: `Unlink Code: \`${code}\`\n` + 
+      `Account ID: \`${accountId}\`\n` + 
+      `Expires: <t:${Math.floor(expires/1000)}>`
+  }
+
+  const unlinkEmbed = new MessageEmbed()
+    .setColor(NENE_COLOR)
+    .setTitle(COMMAND.INFO.name.charAt(0).toUpperCase() + COMMAND.INFO.name.slice(1))
+    .addField(unlinkInformation.type, unlinkInformation.message)
+    .addField(COMMAND.CONSTANTS.UNLINK_INSTRUCTIONS.type, COMMAND.CONSTANTS.UNLINK_INSTRUCTIONS.message)
+    .setImage(imageUrl)
+    .setThumbnail(client.user.displayAvatarURL())
+    .setTimestamp()
+    .setFooter(FOOTER, client.user.displayAvatarURL());
+
+  if (content) {
+    unlinkEmbed.addField(content.type, content.message)
+  }
+
+  return unlinkEmbed
+}
 
 module.exports = {
   ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    await interaction.deferReply({
-      ephemeral: true
-    })
+    // { ephemeral: true }
+    await interaction.deferReply()
 
     const db = discordClient.db
-    
-    if (interaction.options._subcommand === 'request') {
-      const accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g,'')
+    const accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g,'')
 
-      if (!accountId) {
-        // Do something because there is an empty account id input
+    if (!accountId) {
+      // Do something because there is an empty account id input
+      await interaction.editReply({
+        embeds: [
+          generateEmbed({
+            name:COMMAND.INFO.name, 
+            content: COMMAND.CONSTANTS.BAD_ID_ERR, 
+            client: discordClient.client
+          })
+        ]
+      })
+      return
+    }
+
+    const sekaiCheck = db.prepare('SELECT * FROM users WHERE sekai_id=@sekaiId').all({
+      sekaiId: accountId
+    });
+
+    // User exists in the database
+    if (!sekaiCheck.length) { 
+      await interaction.editReply({
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name, 
+            content: COMMAND.CONSTANTS.NO_SEKAI_ERR, 
+            client: discordClient.client
+          })
+        ]
+      });
+      return
+    }
+
+    discordClient.addSekaiRequest('profile', {
+      userId: accountId
+    }, async (response) => {
+      // If the account does not exist
+      if (response.httpStatus) {
         await interaction.editReply({
-          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_ID_ERR, discordClient)]
+          embeds: [
+            generateEmbed({
+              name: COMMAND.INFO.name, 
+              content: COMMAND.CONSTANTS.BAD_ID_ERR, 
+              client: discordClient.client
+            })
+          ]
         })
+
         return
       }
+      // Generate a new code for the user
+      const code = Math.random().toString(36).slice(-5)
+      const expires = Date.now() + COMMAND.CONSTANTS.INTERACTION_TIME
 
-      const sekaiCheck = db.prepare('SELECT * FROM users WHERE sekai_id=@sekaiId').all({
-        sekaiId: accountId
+      const unlinkButton = new MessageActionRow()
+        .addComponents(new MessageButton()
+          .setCustomId(`unlink`)
+          .setLabel('UNLINK')
+          .setStyle('DANGER')
+          .setEmoji(COMMAND.CONSTANTS.UNLINK_EMOJI))
+
+      const unlinkMessage = await interaction.editReply({
+        embeds: [
+          generateUnlinkEmbed({
+            code: code, 
+            accountId: accountId,
+            expires: expires,
+            client: discordClient.client
+          })
+        ],
+        components: [unlinkButton],
+        fetchReply: true
       });
 
-      if (sekaiCheck.length) {
+      let unlinked = false
+
+      const filter = (i) => {
+        return i.customId == `unlink`
+      }
+  
+      const collector = unlinkMessage.createMessageComponentCollector({ 
+        filter, 
+        time: COMMAND.CONSTANTS.INTERACTION_TIME 
+      });
+      
+      collector.on('collect', async (i) => {
+        await i.update({
+          embeds: [
+            generateUnlinkEmbed({
+              code: code, 
+              accountId: accountId,
+              expires: expires,
+              client: discordClient.client
+            })
+          ],
+          components: []
+        });
+  
         discordClient.addSekaiRequest('profile', {
           userId: accountId
         }, async (response) => {
-          // If the response does not exist
+          // Account could not be found
           if (response.httpStatus) {
             await interaction.editReply({
-              embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_ID_ERR, discordClient)]
-            })
-          } else {
-            // Generate a new code for the user
-            generatedCodes[interaction.user.id] = {
-              code: Math.random().toString(36).slice(-5),
-              accountId: accountId,
-              expiry: Date.now() + 300000
-            };
-
-            const content = {
-              type: 'Success',
-              message: `Link Code: \`${generatedCodes[interaction.user.id].code}\`\n` + 
-                `Account ID: \`${generatedCodes[interaction.user.id].accountId}\`\n` + 
-                `Expires: <t:${Math.floor(generatedCodes[interaction.user.id].expiry/1000)}>`
-            }
-
-            await interaction.editReply({
-              embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)]
-            });
-          }
-        })
-      } else {
-        await interaction.editReply({
-          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_SEKAI_ERR, discordClient)]
-        });
-      }
-    } else if (interaction.options._subcommand === 'authenticate') {
-      const discordCheck = db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
-        discordId: interaction.user.id, 
-      });
-
-      if (!discordCheck.length) {
-        await interaction.editReply({
-          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_DISCORD_LINK, discordClient)]
-        });
-        return;
-      }
-
-      if (interaction.user.id in generatedCodes) {
-        if (generatedCodes[interaction.user.id].expiry < Date.now()) {
-          await interaction.editReply({
-            embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.EXPIRED_CODE_ERR, discordClient)]
-          });
-          return;
-        } 
-
-        discordClient.addSekaiRequest('profile', {
-          userId: generatedCodes[interaction.user.id].accountId
-        }, async (response) => {
-          if (response.httpStatus) {
-            await interaction.editReply({
-              embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_ACC_ERR, discordClient)]
+              embeds: [
+                generateUnlinkEmbed({
+                  code: code, 
+                  accountId: accountId,
+                  expires: expires,
+                  content: COMMAND.CONSTANTS.BAD_ACC_ERR,
+                  client: discordClient.client
+                })
+              ],
+              components: []
             });
 
-            delete generatedCodes[interaction.user.id]
             return
           }
-
-          if (response.userProfile.word === generatedCodes[interaction.user.id].code) {
+  
+          if (response.userProfile.word === code) {
             // Check through the client if the code is set in the description
             db.prepare('DELETE FROM users WHERE sekai_id=@sekaiId').run({
-              sekaiId: generatedCodes[interaction.user.id].accountId
+              sekaiId: accountId
             });
-            
+
+            unlinked = true
+
             await interaction.editReply({
-              embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.UNLINK_SUCC, discordClient)]
+              embeds: [
+                generateUnlinkEmbed({
+                  code: code, 
+                  accountId: accountId,
+                  expires: expires,
+                  content: COMMAND.CONSTANTS.UNLINK_SUCC,
+                  client: discordClient.client
+                })
+              ],
+              components: []
             });
           } else {
             await interaction.editReply({
-              embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_CODE_ERR, discordClient)]
+              embeds: [
+                generateUnlinkEmbed({
+                  code: code, 
+                  accountId: accountId,
+                  expires: expires,
+                  content: COMMAND.CONSTANTS.BAD_CODE_ERR(response.userProfile.word),
+                  client: discordClient.client
+                })
+              ],
+              components: [unlinkButton]
             });
           }
         })
-      } else {
-        await interaction.editReply({
-          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_CODE_ERR, discordClient)]
-        });
-      }
-    } else {
-      await interaction.editReply({
-        embeds: [generateEmbed(COMMAND.INFO.name, ERR_COMMAND, discordClient)]
+      })
+
+      collector.on('end', async (collected) => {
+        // No Response
+        if (!unlinked) {
+          await interaction.editReply({ 
+            embeds: [
+              generateUnlinkEmbed({
+                code: code, 
+                accountId: accountId,
+                expires: expires,
+                content: COMMAND.CONSTANTS.EXPIRED_CODE_ERR,
+                client: discordClient.client
+              })
+            ], 
+            components: []
+          });
+        }
       });
-    }
-  }
+    })
+  } 
 };

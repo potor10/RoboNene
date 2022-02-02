@@ -18,7 +18,13 @@ module.exports = {
 
     if (channelData.channel.type !== 'GUILD_TEXT') {
       await interaction.editReply({
-        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.INVALID_CHANNEL_ERR, discordClient)],
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name, 
+            content: COMMAND.CONSTANTS.INVALID_CHANNEL_ERR, 
+            client: discordClient.client
+          })
+        ]
       });
 
       return
@@ -28,7 +34,13 @@ module.exports = {
       const perms = channelData.channel.guild.me.permissionsIn(channelData.channel)
       if (!perms.has('SEND_MESSAGES') || !perms.has('EMBED_LINKS')) {
         await interaction.editReply({
-          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_PERMISSIONS_ERR, discordClient)],
+          embeds: [
+            generateEmbed({
+              name: COMMAND.INFO.name, 
+              content: COMMAND.CONSTANTS.NO_PERMISSIONS_ERR, 
+              client: discordClient.client
+            })
+          ]
         });
         return
       }
@@ -49,7 +61,13 @@ module.exports = {
       }
 
       await interaction.editReply({
-        embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)]
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name, 
+            content: content, 
+            client: discordClient.client
+          })
+        ]
       });
     } else {
       const query = db.prepare('DELETE FROM tracking WHERE ' + 
@@ -69,11 +87,23 @@ module.exports = {
         }
 
         await interaction.editReply({
-          embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
+          embeds: [
+            generateEmbed({
+              name: COMMAND.INFO.name, 
+              content: content, 
+              client: discordClient.client
+            })
+          ]
         });
       } else {
         await interaction.editReply({
-          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_TRACKING_ERR, discordClient)]
+          embeds: [
+            generateEmbed({
+              name: COMMAND.INFO.name, 
+              content: COMMAND.CONSTANTS.NO_TRACKING_ERR, 
+              client: discordClient.client
+            })
+          ]
         });
       }
     }

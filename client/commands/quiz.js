@@ -305,7 +305,13 @@ module.exports = {
     }
 
     const quizMessage = await interaction.editReply({ 
-      embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
+      embeds: [
+        generateEmbed({
+          name: COMMAND.INFO.name, 
+          content: content, 
+          client: discordClient.client
+        })
+      ],
       components: [questionSelect],
       fetchReply: true
     });
@@ -323,7 +329,13 @@ module.exports = {
       // Determine if we have the correct user
       if (i.user.id !== interaction.user.id) {
         await i.reply({
-          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.WRONG_USER_ERR, discordClient)],
+          embeds: [
+            generateEmbed({
+              name: COMMAND.INFO.name, 
+              content: COMMAND.CONSTANTS.WRONG_USER_ERR, 
+              client: discordClient.client
+            })
+          ],
           ephemeral: true
         })
         return
@@ -382,7 +394,13 @@ module.exports = {
       }
 
       interaction.editReply({
-        embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name, 
+            content: content, 
+            client: discordClient.client
+          })
+        ],
         components: []
       })
 
@@ -412,7 +430,13 @@ module.exports = {
         }
 
         await interaction.editReply({
-          embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
+          embeds: [
+            generateEmbed({
+              name: COMMAND.INFO.name, 
+              content: content, 
+              client: discordClient.client
+            })
+          ],
           components: []
         })
       }

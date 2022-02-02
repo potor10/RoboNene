@@ -28,7 +28,13 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
 
   if (event.id === -1) {
     await interaction.editReply({
-      embeds: [generateEmbed(commandName, RANK_CONSTANTS.NO_EVENT_ERR, discordClient)]
+      embeds: [
+        generateEmbed({
+          name: commandName, 
+          content: RANK_CONSTANTS.NO_EVENT_ERR, 
+          client: discordClient.client
+        })
+      ]
     });
     return
   }
@@ -41,12 +47,24 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
     // Check if the response is valid
     if (!response.rankings) {
       await interaction.editReply({
-        embeds: [generateEmbed(commandName, RANK_CONSTANTS.NO_RESPONSE_ERR, discordClient)]
+        embeds: [
+          generateEmbed({
+            name: commandName, 
+            content: RANK_CONSTANTS.NO_RESPONSE_ERR, 
+            client: discordClient.client
+          })
+        ]
       });
       return
     } else if (response.rankings.length === 0) {
       await interaction.editReply({
-        embeds: [generateEmbed(commandName, RANK_CONSTANTS.BAD_INPUT_ERROR, discordClient)]
+        embeds: [
+          generateEmbed({
+            name: commandName, 
+            content: RANK_CONSTANTS.BAD_INPUT_ERROR, 
+            client: discordClient
+          })
+        ]
       });
       return
     }

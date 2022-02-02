@@ -3,35 +3,36 @@ module.exports = {
     'name': 'unlink',
     'utilization': '/unlink',
     'description': 'Unlink a Discord account from your Project Sekai account!',
-    'subcommands': [
+    'params': [
       {
-        'name': 'request',
-        'description': 'Request a code to unlink your Project Sekai user ID from a Discord Account.',
-        'params': [
-          {
-            'type': 'string',
-            'name': 'id',
-            'required': true,
-            'description': 'Your Project Sekai user ID.'
-          }
-        ]
-      },
-      {
-        'name': 'authenticate',
-        'description': 'Confirm that the code is set to your Project Sekai profile description.'
+        'type': 'string',
+        'name': 'id',
+        'required': true,
+        'description': 'Your Project Sekai user ID.'
       }
     ]
   },
 
   'CONSTANTS': {
+    'UNLINK_INSTRUCTIONS': {
+      'type': 'Instructions',
+      'message': '1. Go to your profile in Project Sekai.\n' +
+        '2. Copy and paste the \`\`Unlink Code\`\` into your profile comment.\n' +
+        '3. Press back to save the change to your profile.\n' +
+        '4. Press the red ❌ Unlink button!'
+    },
+
     'EXPIRED_CODE_ERR': {
       'type': 'Error',
       'message': 'Your link code has expired'
     },
   
-    'BAD_CODE_ERR': {
-      'type': 'Error',
-      'message': 'Invalid code on Project Sekai profile. \nDid you remember to press back on your profile to save the changes?'
+    'BAD_CODE_ERR': (code) => {
+      return {
+        'type': 'Error',
+        'message': `Invalid code \`\`${code}\`\` found on Project Sekai profile.\n` + 
+          'Did you remember to press back on your profile to save the changes?'
+      }
     },
   
     'NO_CODE_ERR': {
@@ -62,6 +63,9 @@ module.exports = {
     'UNLINK_SUCC': {
       'type': 'Success',
       'message': 'Your account is now unlinked.'
-    }
+    },
+
+    'INTERACTION_TIME': 30000,
+    'UNLINK_EMOJI': '❌'
   }
 }
