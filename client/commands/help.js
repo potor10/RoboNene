@@ -65,30 +65,6 @@ const generateOptions = (commandInfo, commandName) => {
   return optStr
 }
 
-const generateHelpEmbed = (commandInfo, discordClient) => {
-  const helpEmbed = new MessageEmbed()
-    .setColor(NENE_COLOR)
-    .setTitle(COMMAND_NAME.charAt(0).toUpperCase() + COMMAND_NAME.slice(1))
-    .setThumbnail(discordClient.client.user.displayAvatarURL())
-    .setTimestamp()
-    .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
-  
-  let helpText = ''
-
-  if (commandInfo.subcommands) {
-    helpText += `${commandInfo.description}\n`
-    commandInfo.subcommands.forEach(sc => {
-      helpText += generateOptions(sc, `${commandInfo.name} ${sc.name}`)
-    })
-  } else {
-    helpText += generateOptions(commandInfo, commandInfo.name)
-  }
-
-  helpEmbed.addField(commandInfo.name.charAt(0).toUpperCase() + commandInfo.name.slice(1), helpText)
-
-  return helpEmbed
-}
-
 module.exports = {
   data: slashCommand,
   
@@ -99,13 +75,40 @@ module.exports = {
 
     if (!(commands.hasOwnProperty(interaction.options._hoistedOptions[0].value))) {
       await interaction.editReply({
-        embeds: [generateEmbed(COMMAND_NAME, HELP_CONSTANTS.BAD_COMMAND, discordClient)]
+        embeds: [
+          generateEmbed({
+            name: COMMAND_NAME, 
+            content: HELP_CONSTANTS.BAD_COMMAND, 
+            client: discordClient.client
+          })
+        ]
       })
       return
     }
 
+    const commandInfo = commands[interaction.options._hoistedOptions[0].value]
+    let content = {
+      type: commandInfo.name,
+      message: ''
+    }
+
+    if (commandInfo.subcommands) {
+      content.message += `${commandInfo.description}\n`
+      commandInfo.subcommands.forEach(sc => {
+        content.message += generateOptions(sc, `${commandInfo.name} ${sc.name}`)
+      })
+    } else {
+      content.message += generateOptions(commandInfo, commandInfo.name)
+    }
+
     await interaction.editReply({
-      embeds: [generateHelpEmbed(commands[interaction.options._hoistedOptions[0].value], discordClient)]
+      embeds: [
+        generateEmbed({
+          name: COMMAND_NAME,
+          content: content,
+          client: discordClient.client
+        })
+      ]
     });
   }
 };

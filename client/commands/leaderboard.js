@@ -19,7 +19,13 @@ module.exports = {
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {
       await interaction.editReply({
-        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_EVENT_ERR, discordClient)]
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name, 
+            content: COMMAND.CONSTANTS.NO_EVENT_ERR, 
+            client: discordClient.client
+          })
+        ]
       });
       return
     }
@@ -32,12 +38,24 @@ module.exports = {
       // Check if the response is valid
       if (!response.rankings) {
         await interaction.editReply({
-          embeds: [generateEmbed(commandName, COMMAND.CONSTANTS.NO_RESPONSE_ERR, discordClient)]
+          embeds: [
+            generateEmbed({
+              name: commandName, 
+              content: COMMAND.CONSTANTS.NO_RESPONSE_ERR, 
+              client: discordClient.client
+            })
+          ]
         });
         return
       } else if (response.rankings.length === 0) {
         await interaction.editReply({
-          embeds: [generateEmbed(commandName, COMMAND.CONSTANTS.BAD_INPUT_ERROR, discordClient)]
+          embeds: [
+            generateEmbed({
+              name: commandName, 
+              content: COMMAND.CONSTANTS.BAD_INPUT_ERROR, 
+              client: discordClient.client
+            })
+          ]
         });
         return
       }
@@ -53,7 +71,13 @@ module.exports = {
           if (interaction.options._hoistedOptions[0].value > 100 || 
             interaction.options._hoistedOptions[0].value < 1) {
             await interaction.editReply({
-              embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_RANGE_ERR, discordClient)]
+              embeds: [
+                generateEmbed({
+                  name: COMMAND.INFO.name, 
+                  content: COMMAND.CONSTANTS.BAD_RANGE_ERR,
+                  client: discordClient.client
+                })
+              ]
             });
             return;
           } else {
@@ -81,12 +105,12 @@ module.exports = {
           new MessageButton()
             .setCustomId(`prev`)
             .setLabel('PREV')
-            .setStyle('PRIMARY')
+            .setStyle('SECONDARY')
             .setEmoji(COMMAND.CONSTANTS.LEFT),
           new MessageButton()
             .setCustomId(`next`)
             .setLabel('NEXT')
-            .setStyle('PRIMARY')
+            .setStyle('SECONDARY')
             .setEmoji(COMMAND.CONSTANTS.RIGHT))
 
       const leaderboardMessage = await interaction.editReply({ 
@@ -108,7 +132,13 @@ module.exports = {
       collector.on('collect', async (i) => {
         if (i.user.id !== interaction.user.id) {
           await i.reply({
-            embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.WRONG_USER_ERR, discordClient)],
+            embeds: [
+              generateEmbed({
+                name: COMMAND.INFO.name, 
+                content: COMMAND.CONSTANTS.WRONG_USER_ERR,
+                client: discordClient.client
+              })
+            ],
             ephemeral: true
           })
           return

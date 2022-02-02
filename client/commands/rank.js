@@ -21,7 +21,13 @@ module.exports = {
 
     if (!user.length) {
       await interaction.editReply({
-        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_ACC_ERROR, discordClient)]
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name, 
+            content: COMMAND.CONSTANTS.NO_ACC_ERROR, 
+            client: discordClient.client
+          })
+        ]
       });
       return
     }

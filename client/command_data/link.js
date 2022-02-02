@@ -3,27 +3,25 @@ module.exports = {
     'name': 'link',
     'utilization': '/link',
     'description': 'Link your Project Sekai account to Robo Nene!',
-    'subcommands': [
+    'params': [
       {
-        'name': 'request',
-        'description': 'Request a code to link your Project Sekai user ID to your Discord Account.',
-        'params': [
-          {
-            'type': 'string',
-            'name': 'id',
-            'required': true,
-            'description': 'The ID of the Project Sekai account you are trying to link.'
-          }
-        ]
-      },
-      {
-        'name': 'authenticate',
-        'description': 'Confirm that the token is placed into your Project Sekai profile description.'
+        'type': 'string',
+        'name': 'id',
+        'required': true,
+        'description': 'The ID of the Project Sekai account you are trying to link.'
       }
     ]
   },
 
   'CONSTANTS': {
+    'LINK_INSTRUCTIONS': {
+      'type': 'Instructions',
+      'message': '1. Go to your profile in Project Sekai.\n' +
+        '2. Copy and paste the \`\`Link Code\`\` into your profile comment.\n' +
+        '3. Press back to save the change to your profile.\n' +
+        '4. Press the green ✅ Link button!'
+    },
+
     'DISCORD_LINKED_ERR': {
       'type': 'Error',
       'message': 'Your Discord account is already linked to a Project Sekai account.'
@@ -46,7 +44,8 @@ module.exports = {
   
     'BAD_ACC_ERR': {
       'type': 'Error',
-      'message': 'There was an issue in finding this account. Please request a new link code. \nMake sure all the digits are typed correctly.'
+      'message': 'There was an issue in finding this account. Please request a new link code.\n' +
+        'Make sure all the digits are typed correctly.'
     },
   
     'EXPIRED_CODE_ERR': {
@@ -54,14 +53,20 @@ module.exports = {
       'message': 'Your link code has expired.'
     },
   
-    'BAD_CODE_ERR': {
-      'type': 'Error', 
-      'message': 'Invalid code on Project Sekai profile. \nDid you remember to press back on your profile to save the changes?'
+    'BAD_CODE_ERR': (code) => {
+      return {
+        'type': 'Error',
+        'message': `Invalid code \`\`${code}\`\` found on Project Sekai profile.\n` + 
+          'Did you remember to press back on your profile to save the changes?'
+      }
     },
   
     'NO_CODE_ERR': {
       'type': 'Error', 
       'message': 'Please request a link code first.'
-    }
+    },
+
+    'INTERACTION_TIME': 30000,
+    'LINK_EMOJI': '✅'
   }
 }
