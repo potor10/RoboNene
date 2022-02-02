@@ -26,7 +26,8 @@ module.exports = {
     'TESTERS': [
       'Reinhäla#4444',
       'i like potor and airi',
-      'uhh'
+      'uhh',
+      'Sela'
     ],
 
     'GAME_DATA_LINK': 'https://github.com/Sekai-World/sekai-master-db-en-diff/blob/main/events.json',
