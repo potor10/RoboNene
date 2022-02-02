@@ -16,7 +16,13 @@ const generateCutoff = async ({interaction, event,
   // If rank data does not exist then send an error
   if (!rankData.length) {
     await interaction.editReply({
-      embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_DATA_ERR, discordClient)]
+      embeds: [
+        generateEmbed({
+          name: COMMAND.INFO.name, 
+          content: COMMAND.CONSTANTS.NO_DATA_ERR, 
+          client: discordClient.client
+        })
+      ]
     });
     return
   }
@@ -244,7 +250,13 @@ module.exports = {
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {
       await interaction.editReply({
-        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_EVENT_ERR, discordClient)]
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name, 
+            content: COMMAND.CONSTANTS.NO_EVENT_ERR, 
+            client: discordClient.client
+          })
+        ]
       });
       return
     }
@@ -259,12 +271,24 @@ module.exports = {
       // Check if the response is valid
       if (!response.rankings) {
         await interaction.editReply({
-          embeds: [generateEmbed(commandName, COMMAND.CONSTANTS.NO_RESPONSE_ERR, discordClient)]
+          embeds: [
+            generateEmbed({
+              name: commandName, 
+              content: COMMAND.CONSTANTS.NO_RESPONSE_ERR, 
+              client: discordClient.client
+            })
+          ]
         });
         return
       } else if (response.rankings.length === 0) {
         await interaction.editReply({
-          embeds: [generateEmbed(commandName, COMMAND.CONSTANTS.BAD_INPUT_ERROR, discordClient)]
+          embeds: [
+            generateEmbed({
+              name: commandName, 
+              content: COMMAND.CONSTANTS.BAD_INPUT_ERROR, 
+              client: discordClient.client
+            })
+          ]
         });
         return
       }

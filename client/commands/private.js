@@ -8,9 +8,8 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    await interaction.deferReply({
-      ephemeral: true
-    })
+    // { ephemeral: true }
+    await interaction.deferReply()
 
     const db = discordClient.db
 
@@ -20,7 +19,13 @@ module.exports = {
 
     if (!user.length) {
       await interaction.editReply({
-        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_ACC_ERROR, discordClient)]
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name, 
+            content: COMMAND.CONSTANTS.NO_ACC_ERROR, 
+            client: discordClient.client
+          })
+        ]
       });
       return
     }
@@ -36,7 +41,13 @@ module.exports = {
     }
 
     await interaction.editReply({
-      embeds: [generateEmbed(COMMAND.INFO.name, content, discordClient)],
+      embeds: [
+        generateEmbed({
+          name: COMMAND.INFO.name, 
+          conent: content, 
+          client: discordClient.client
+        })
+      ],
       ephemeral: true 
     });
   }

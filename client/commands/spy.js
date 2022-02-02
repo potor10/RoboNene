@@ -18,7 +18,13 @@ module.exports = {
       if (!accountId) {
         // Do something because there is an empty account id input
         await interaction.editReply({
-          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_ID_ERR, discordClient)]
+          embeds: [
+            generateEmbed({
+              name: COMMAND.INFO.name, 
+              content: COMMAND.CONSTANTS.BAD_ID_ERR, 
+              client: discordClient.client
+            })
+          ]
         })
       } else {
         getRank(COMMAND.INFO.name, interaction, discordClient, {
@@ -31,7 +37,13 @@ module.exports = {
       })
     } else {
       await interaction.editReply({
-        embeds: [generateEmbed(COMMAND.INFO.name, ERR_COMMAND, discordClient)]
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name, 
+            content: ERR_COMMAND, 
+            client: discordClient.client
+          })
+        ]
       });
     }
   }

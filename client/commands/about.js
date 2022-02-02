@@ -11,57 +11,100 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    await interaction.deferReply({
-      ephemeral: true
-    })
+    // { ephemeral: true }
+    await interaction.deferReply()
 
     const EMBED_TITLE = `About ${BOT_NAME}`
 
     const aboutPages = [
-      generateEmbed(EMBED_TITLE, {
-        type: '**Programming**',
-        message: COMMAND.CONSTANTS.PROGRAMMERS.join('\n')
-      }, discordClient),
-      generateEmbed(EMBED_TITLE, {
-        type: '**Design**',
-        message: COMMAND.CONSTANTS.DESIGNERS.join('\n')
-      }, discordClient),
-      generateEmbed(EMBED_TITLE, {
-        type: '**Testers**',
-        message: COMMAND.CONSTANTS.TESTERS.join('\n')
-      }, discordClient),
-      generateEmbed(EMBED_TITLE, {
-        type: '**Game Data**',
-        message: `[Sekai World](${COMMAND.CONSTANTS.GAME_DATA_LINK})`
-      }, discordClient),
-      generateEmbed(EMBED_TITLE, {
-        type: '**Calculating Estimation**',
-        message: `[Bandori Estimation](${COMMAND.CONSTANTS.ESTIMATION_LINK})`
-      }, discordClient),
-      generateEmbed(EMBED_TITLE, {
-        type: '**Ranking Data**',
-        message: `[Sekai Best](${COMMAND.CONSTANTS.RANKING_DATA_LINK})`
-      }, discordClient),
-      generateEmbed(EMBED_TITLE, {
-        type: '**Discord**',
-        message: COMMAND.CONSTANTS.ABOUT_DISCORD
-      }, discordClient),
-      generateEmbed(EMBED_TITLE, {
-        type: '**Project Sekai**',
-        message: COMMAND.CONSTANTS.ABOUT_SEKAI
-      }, discordClient),
-      generateEmbed(EMBED_TITLE, {
-        type: '**Contribute**',
-        message: COMMAND.CONSTANTS.ABOUT_CONTRIBUTE
-      }, discordClient),
-      generateEmbed(EMBED_TITLE, {
-        type: '**Tech Stack**',
-        message: COMMAND.CONSTANTS.ABOUT_TECH
-      }, discordClient),
-      generateEmbed(EMBED_TITLE, {
-        type: '**License**',
-        message: COMMAND.CONSTANTS.ABOUT_LICENSE
-      }, discordClient)
+      generateEmbed({
+        name: EMBED_TITLE, 
+        content: {
+          type: '**Programming**',
+          message: COMMAND.CONSTANTS.PROGRAMMERS.join('\n')
+        },
+        client: discordClient.client
+      }),
+      generateEmbed({
+        name: EMBED_TITLE, 
+        content: {
+          type: '**Design**',
+          message: COMMAND.CONSTANTS.DESIGNERS.join('\n')
+        }, 
+        client: discordClient.client
+      }),
+      generateEmbed({
+        name: EMBED_TITLE, 
+        content: {
+          type: '**Testers**',
+          message: COMMAND.CONSTANTS.TESTERS.join('\n')
+        }, 
+        client: discordClient.client
+      }),
+      generateEmbed({
+        name: EMBED_TITLE,
+        content: {
+          type: '**Game Data**',
+          message: `[Sekai World](${COMMAND.CONSTANTS.GAME_DATA_LINK})`
+        }, 
+        client: discordClient.client
+      }),
+      generateEmbed({
+        name: EMBED_TITLE, 
+        content: {
+          type: '**Calculating Estimation**',
+          message: `[Bandori Estimation](${COMMAND.CONSTANTS.ESTIMATION_LINK})`
+        }, 
+        client: discordClient.client
+      }),
+      generateEmbed({
+        name: EMBED_TITLE, 
+        content: {
+          type: '**Ranking Data**',
+          message: `[Sekai Best](${COMMAND.CONSTANTS.RANKING_DATA_LINK})`
+        }, 
+        client: discordClient.client
+      }),
+      generateEmbed({
+        name: EMBED_TITLE, 
+        content: {
+          type: '**Discord**',
+          message: COMMAND.CONSTANTS.ABOUT_DISCORD
+        }, 
+        client: discordClient.client
+      }),
+      generateEmbed({
+        name: EMBED_TITLE, 
+        content: {
+          type: '**Project Sekai**',
+          message: COMMAND.CONSTANTS.ABOUT_SEKAI
+        }, 
+        client: discordClient.client
+      }),
+      generateEmbed({
+        name: EMBED_TITLE, 
+        content: {
+          type: '**Contribute**',
+          message: COMMAND.CONSTANTS.ABOUT_CONTRIBUTE
+        }, 
+        client: discordClient.client
+      }),
+      generateEmbed({
+        name: EMBED_TITLE, 
+        content: {
+          type: '**Tech Stack**',
+          message: COMMAND.CONSTANTS.ABOUT_TECH
+        }, 
+        client: discordClient.client
+      }),
+      generateEmbed({
+        name: EMBED_TITLE, 
+        content: {
+          type: '**License**',
+          message: COMMAND.CONSTANTS.ABOUT_LICENSE
+        }, 
+        client: discordClient.client
+      })
     ]
 
     const aboutButtons = new MessageActionRow()
@@ -69,12 +112,12 @@ module.exports = {
         new MessageButton()
           .setCustomId(`prev`)
           .setLabel('PREV')
-          .setStyle('PRIMARY')
+          .setStyle('SECONDARY')
           .setEmoji(COMMAND.CONSTANTS.LEFT),
         new MessageButton()
           .setCustomId(`next`)
           .setLabel('NEXT')
-          .setStyle('PRIMARY')
+          .setStyle('SECONDARY')
           .setEmoji(COMMAND.CONSTANTS.RIGHT))
 
     let page = 0

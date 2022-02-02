@@ -220,7 +220,13 @@ const getProfile = async (interaction, discordClient, userId) => {
   }, async (response) => {
     if (response.httpStatus === 404) {
       await interaction.editReply({
-        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_ACC_ERR, discordClient)]
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name, 
+            content: COMMAND.CONSTANTS.BAD_ACC_ERR, 
+            client: discordClient.client
+          })
+        ]
       });
       return
     }
@@ -259,7 +265,13 @@ module.exports = {
 
       if (!user.length) {
         await interaction.editReply({
-          embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.NO_ACC_ERR, discordClient)]
+          embeds: [
+            generateEmbed({
+              name: COMMAND.INFO.name, 
+              content: COMMAND.CONSTANTS.NO_ACC_ERR, 
+              client: discordClient.client
+            })
+          ]
         });
         return
       }
@@ -269,7 +281,13 @@ module.exports = {
     if (!accountId) {
       // Do something because there is an empty account id input
       await interaction.editReply({
-        embeds: [generateEmbed(COMMAND.INFO.name, COMMAND.CONSTANTS.BAD_ID_ERR, discordClient)]
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name, 
+            contnet: COMMAND.CONSTANTS.BAD_ID_ERR, 
+            client: discordClient.client
+          })
+        ]
       })
       return
     }
