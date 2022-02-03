@@ -28,7 +28,8 @@ module.exports = {
       'i like potor and airi',
       'uhh',
       'Sela',
-      'PbSky'
+      'PbSky',
+      'chi'
     ],
 
     'GAME_DATA_LINK': 'https://github.com/Sekai-World/sekai-master-db-en-diff/blob/main/events.json',

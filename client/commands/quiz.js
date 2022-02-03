@@ -215,21 +215,23 @@ class areaQuestion {
         const incorrectAreaItem = areaShuffle.pop()
         if (incorrectAreaItem[attr] !== areaItem[attr]) {
           let attrExists = false
+          let attrValue =  this.prompts[questionIdx].name(incorrectAreaItem)
+
           for (const wrongIdx in wrong) {
-            if (wrong[wrongIdx] === incorrectAreaItem[attr]) {
+            if (wrong[wrongIdx] === attrValue) {
               attrExists = true
               break
             }
           }
 
           if (!attrExists) {
-            wrong.push(incorrectAreaItem[attr])
+            wrong.push(attrValue)
           }
         }
       }
 
       return {
-        right: areaItem[attr],
+        right: this.prompts[questionIdx].name(areaItem),
         wrong: wrong,
         prompt: this.prompts[questionIdx].prompt(areaItem)
       }
