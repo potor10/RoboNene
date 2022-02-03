@@ -216,6 +216,7 @@ class areaQuestion {
         if (incorrectAreaItem[attr] !== areaItem[attr]) {
           let attrExists = false
           let attrValue =  this.prompts[questionIdx].name(incorrectAreaItem)
+          console.log(attrValue)
 
           for (const wrongIdx in wrong) {
             if (wrong[wrongIdx] === attrValue) {
@@ -229,7 +230,7 @@ class areaQuestion {
           }
         }
       }
-
+      
       return {
         right: this.prompts[questionIdx].name(areaItem),
         wrong: wrong,

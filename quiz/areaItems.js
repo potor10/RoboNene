@@ -2,7 +2,7 @@ module.exports = [
   {
     'attr': 'areaName',
     'name': (item) => {
-      return item.name
+      return item.areaName
     },
     'prompt': (item) => {
       return `Where can you find \`\`${item.name}\`\`?`
@@ -11,7 +11,7 @@ module.exports = [
   {
     'attr': 'areaName',
     'name': (item) => {
-      return item.areaName
+      return item.name
     },
     'prompt': (item) => {
       return `Which item can be found in \`\`${item.areaName}\`\`?`
