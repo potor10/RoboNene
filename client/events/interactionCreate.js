@@ -42,7 +42,13 @@ module.exports = {
         let permissions = interaction.member.permissions
         if (!permissions.has('ADMINISTRATOR') && !permissions.has('MANAGE_GUILD')) {
           await interaction.reply({
-            embeds: [generateEmbed(command.data.name, INTERACTION_CONST.NO_ACCESS_ADMIN, discordClient)],
+            embeds: [
+              generateEmbed({
+                name: command.data.name, 
+                content: INTERACTION_CONST.NO_ACCESS_ADMIN, 
+                client: discordClient.client
+              })
+            ],
             ephemeral: true 
           });
           return
@@ -56,7 +62,13 @@ module.exports = {
         });
         if (request.length === 0) {
           await interaction.reply({
-            embeds: [generateEmbed(command.data.name, INTERACTION_CONST.NO_ACCESS_LINK, discordClient)],
+            embeds: [
+              generateEmbed({
+                name: command.data.name, 
+                content: INTERACTION_CONST.NO_ACCESS_LINK, 
+                client: discordClient.client
+              })
+            ],
             ephemeral: true 
           });
 
