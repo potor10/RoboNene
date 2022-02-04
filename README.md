@@ -29,8 +29,8 @@ If you have any issues with the bot or would like to contribute, please contact 
 
 **Design**
 * Potor10#3237
-* Reinhäla#4444
+* Reinhäla
 
 **Testing**
 * Potor10#3237
-* Reinhäla#4444
+* Reinhäla
