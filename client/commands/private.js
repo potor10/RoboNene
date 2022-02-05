@@ -44,7 +44,7 @@ module.exports = {
       embeds: [
         generateEmbed({
           name: COMMAND.INFO.name, 
-          conent: content, 
+          content: content, 
           client: discordClient.client
         })
       ],
