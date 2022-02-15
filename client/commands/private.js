@@ -38,7 +38,7 @@ module.exports = {
     const content = {
       type: 'Success',
       message: `Private\nStatus: \`\`${(interaction.options._hoistedOptions[0].value) ? 'Enabled' : 'Disabled'}\`\`\n\n` +
-        `You can ${(interaction.options._hoistedOptions[0].value) ? 'now' : 'no longer'} see \`Area Item\` and \`Card Level\`` +
+        `You can ${(interaction.options._hoistedOptions[0].value) ? 'no longer' : 'now'} see \`Area Item\` and \`Card Level\`` +
         `information when someone uses /profile on your ID`
     }
 

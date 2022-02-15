@@ -34,7 +34,7 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
     `character/member/${leaderCard.assetbundleName}_rip/`
 
 
-  if (leader.specialTrainingStatus === 'done') {
+  if (leader.defaultImage === 'special_training') {
     leaderThumbURL += '_after_training.webp'
     leaderFullURL += 'card_after_training.webp'
   } else {
@@ -229,23 +229,10 @@ const getProfile = async (interaction, discordClient, userId) => {
     })
     return
   }
-  
+
   discordClient.addSekaiRequest('profile', {
     userId: userId
   }, async (response) => {
-    if (response.httpStatus === 404) {
-      await interaction.editReply({
-        embeds: [
-          generateEmbed({
-            name: COMMAND.INFO.name, 
-            content: COMMAND.CONSTANTS.BAD_ACC_ERR, 
-            client: discordClient.client
-          })
-        ]
-      });
-      return
-    }
-
     let private = true
     const user = discordClient.db.prepare('SELECT * FROM users WHERE sekai_id=@sekaiId').all({
       sekaiId: userId
@@ -267,13 +254,25 @@ const getProfile = async (interaction, discordClient, userId) => {
       message: err.toString()
     })
 
-    await interaction.editReply({
-      embeds: [generateEmbed({
-        name: COMMAND.INFO.name,
-        content: { type: 'error', message: err.toString() },
-        client: discordClient.client
-      })]
-    })
+    if (err.getCode() === 404) {
+      await interaction.editReply({
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name, 
+            content: COMMAND.CONSTANTS.BAD_ACC_ERR, 
+            client: discordClient.client
+          })
+        ]
+      });
+    } else {
+      await interaction.editReply({
+        embeds: [generateEmbed({
+          name: COMMAND.INFO.name,
+          content: { type: 'error', message: err.toString() },
+          client: discordClient.client
+        })]
+      })
+    }
   })
 }
 
@@ -314,7 +313,7 @@ module.exports = {
         embeds: [
           generateEmbed({
             name: COMMAND.INFO.name, 
-            contnet: COMMAND.CONSTANTS.BAD_ID_ERR, 
+            content: COMMAND.CONSTANTS.BAD_ID_ERR, 
             client: discordClient.client
           })
         ]
