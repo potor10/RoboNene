@@ -103,6 +103,7 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
       // Log the error
       discordClient.logger.log({
         level: 'error',
+        timestamp: Date.now(),
         message: err.toString()
       })
 

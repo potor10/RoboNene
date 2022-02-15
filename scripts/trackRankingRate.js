@@ -52,7 +52,6 @@ const generateRateInfo = (event, rankData) => {
   let halfDayIdx = -1
   let lastDayIdx = rankData.length
 
-  // 24 hours have passed into the event
   for(let i = 0; i < rankData.length; i++) {
     const currentEventTime = (new Date(rankData[i].timestamp)).getTime()
     if (halfDayIdx === -1 && currentEventTime >= event.startAt + 43200000) {
@@ -70,20 +69,40 @@ const generateRateInfo = (event, rankData) => {
     }
   }
 
+  // Our final output of rates
+  let rates = []
+
+  // Filtered data from our indices
+  let usableData = rankData.slice(halfDayIdx, lastDayIdx)
+
+  // We start at 1 day into our event
+  let eventTime = event.startAt + 86400000
+
+  // Our current aggregate of points
   const points = []
 
-  // Only get data points past 12 hours and before last 24 hours
-  rankData.slice(halfDayIdx, lastDayIdx).forEach((point) => {
-    points.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score])
-  })
+  // Our current index 
+  let idx = 0
 
-  const model = regression.linear(points, {precision: 100});
+  // Store a slope every 30 minutes until event ends
+  while (eventTime < event.aggregateAt) {
 
-  const finalScore = rankData[rankData.length-1].score
-  const newSlope = (finalScore - model.equation[1]) / (event.aggregateAt - event.startAt)
-  const slopeRate = newSlope / model.equation[0]
+    while(idx < usableData.length && (new Date(usableData[idx].timestamp)).getTime() < eventTime) {
+      points.push([(new Date(usableData[idx].timestamp)).getTime() - event.startAt, usableData[idx].score])
+      idx++
+    }
 
-  return slopeRate
+    const model = regression.linear(points, {precision: 100});
+
+    const finalScore = rankData[rankData.length-1].score
+    const newSlope = (finalScore - model.equation[1]) / (event.aggregateAt - event.startAt)
+    const slopeRate = newSlope / model.equation[0]
+
+    rates.push(slopeRate)
+    eventTime += 1800000
+  }
+
+  return rates
 }
 
 const trackRankingRate = () => {

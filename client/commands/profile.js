@@ -248,6 +248,7 @@ const getProfile = async (interaction, discordClient, userId) => {
     // Log the error
     discordClient.logger.log({
       level: 'error',
+      timestamp: Date.now(),
       message: err.toString()
     })
 

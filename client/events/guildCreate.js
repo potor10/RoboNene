@@ -7,6 +7,7 @@ module.exports = {
       level: 'info',
       guild_id: guild.id,
       guild_name: guild.name,
+      timestamp: Date.now(),
       message: `Added to ${guild.name} (id: ${guild.id})`
     });
 

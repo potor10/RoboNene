@@ -103,6 +103,10 @@ const generateCutoff = async ({interaction, event,
     let allTotalRate = 0;
     let rateCount = 0;
 
+    // Calculate the idx of our rate (based on time into event)
+    // Each index starts from 1 day into the event -> the end of the event, with 30 minute intervals
+    const rateIdx = Math.floor((timestamp - 86400000) / 1800000)
+
     // Identify a constant c used in y = (c * m)x + b that can be used via this event
     for(const eventId in rate) {
       if (rate[eventId].eventType !== events[eventId-1].eventType) {
@@ -111,14 +115,17 @@ const generateCutoff = async ({interaction, event,
       
       const similarity = characterIds.filter(el => { return rate[eventId].characterIds.indexOf(el) >= 0 }).length;
       if (rate[eventId][tier]) {
+        // Make sure our idx is within bounds
+        const eventRateIdx = Math.min(rateIdx, rate[eventId][tier].length - 1)
+
         // Calculate recency factor
         const eventWeight = parseInt(eventId, 10) / event.id
 
         // Total Rate = Rate * # of similar characters * recency of event
-        totalRate += rate[eventId][tier] * similarity * eventWeight
+        totalRate += rate[eventId][tier][eventRateIdx] * similarity * eventWeight
         totalSimilar += similarity * eventWeight
 
-        allTotalRate += rate[eventId][tier]
+        allTotalRate += rate[eventId][tier][eventRateIdx]
         rateCount += 1
       }
     }
@@ -327,12 +334,14 @@ module.exports = {
             } catch (err) {
               discordClient.logger.log({
                 level: 'error',
+                timestamp: Date.now(),
                 message: `Error parsing JSON data from cutoff: ${err}`
               })
             }
           } else {
             discordClient.logger.log({
               level: 'error',
+              timestamp: Date.now(),
               message: `Error retrieving via cutoff data via HTTPS. Status: ${res.statusCode}`
             })
           }
@@ -340,6 +349,7 @@ module.exports = {
       }).on('error', (err) => {
         discordClient.logger.log({
           level: 'error',
+          timestamp: Date.now(),
           message: `${err}`
         })
       });
@@ -347,6 +357,7 @@ module.exports = {
       // Log the error
       discordClient.logger.log({
         level: 'error',
+        timestamp: Date.now(),
         message: err.toString()
       })
       

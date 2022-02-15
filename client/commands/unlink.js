@@ -168,6 +168,7 @@ module.exports = {
           // Log the error
           discordClient.logger.log({
             level: 'error',
+            timestamp: Date.now(),
             message: err.toString()
           })
 
@@ -208,6 +209,7 @@ module.exports = {
       // Log the error
       discordClient.logger.log({
         level: 'error',
+        timestamp: Date.now(),
         message: err.toString()
       })
 

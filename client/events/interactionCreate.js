@@ -20,14 +20,14 @@ module.exports = {
 
     discordClient.logger.log({
       level: 'info',
+      timestamp: Date.now(),
       discord_id: interaction.user.id,
       discord_name: `${interaction.user.username}#${interaction.user.discriminator}`,
       guild_id: interaction.guildId,
       guild_name: interaction.member.guild.name,
       command: interaction.commandName,
       subcommand: interaction.options._subcommand,
-      inputs: interaction.options._hoistedOptions,
-      timestamp: Date.now()
+      inputs: interaction.options._hoistedOptions
     });
 
     const interactionIdx = discordClient.commands
