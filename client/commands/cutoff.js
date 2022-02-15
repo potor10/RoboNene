@@ -325,13 +325,38 @@ module.exports = {
                 discordClient: discordClient
               });
             } catch (err) {
-              // Error parsing JSON: ${err}`
+              discordClient.logger.log({
+                level: 'error',
+                message: `Error parsing JSON data from cutoff: ${err}`
+              })
             }
           } else {
-            // Error retrieving via HTTPS. Status: ${res.statusCode}
+            discordClient.logger.log({
+              level: 'error',
+              message: `Error retrieving via cutoff data via HTTPS. Status: ${res.statusCode}`
+            })
           }
         });
-      }).on('error', (err) => {});
+      }).on('error', (err) => {
+        discordClient.logger.log({
+          level: 'error',
+          message: `${err}`
+        })
+      });
+    }, async (err) => {
+      // Log the error
+      discordClient.logger.log({
+        level: 'error',
+        message: err.toString()
+      })
+      
+      await interaction.editReply({
+        embeds: [generateEmbed({
+          name: COMMAND.INFO.name,
+          content: { type: 'error', message: err.toString() },
+          client: discordClient.client
+        })]
+      })
     })
   }
 };

@@ -244,6 +244,20 @@ const getProfile = async (interaction, discordClient, userId) => {
     await interaction.editReply({
       embeds: [profileEmbed]
     });
+  }, async (err) => {
+    // Log the error
+    discordClient.logger.log({
+      level: 'error',
+      message: err.toString()
+    })
+
+    await interaction.editReply({
+      embeds: [generateEmbed({
+        name: COMMAND.INFO.name,
+        content: { type: 'error', message: err.toString() },
+        client: discordClient.client
+      })]
+    })
   })
 }
 

@@ -109,8 +109,142 @@ module.exports = {
     discordClient.addSekaiRequest('profile', {
       userId: accountId
     }, async (response) => {
-      // We got an error trying to find this account
-      if (response.httpStatus) {
+      // Generate a new code for the user
+      const code = Math.random().toString(36).slice(-5) 
+      const expires = Date.now() + COMMAND.CONSTANTS.INTERACTION_TIME
+
+      const linkButton = new MessageActionRow()
+        .addComponents(new MessageButton()
+          .setCustomId(`link`)
+          .setLabel('LINK')
+          .setStyle('SUCCESS')
+          .setEmoji(COMMAND.CONSTANTS.LINK_EMOJI))
+
+      const linkMessage = await interaction.editReply({
+        embeds: [
+          generateLinkEmbed({
+            code: code, 
+            accountId: accountId,
+            expires: expires,
+            client: discordClient.client
+          })
+        ],
+        components: [linkButton],
+        fetchReply: true
+      });
+
+      let linked = false;
+
+      const filter = (i) => {
+        return i.customId == `link`
+      }
+  
+      const collector = linkMessage.createMessageComponentCollector({ 
+        filter, 
+        time: COMMAND.CONSTANTS.INTERACTION_TIME 
+      });
+      
+      collector.on('collect', async (i) => {
+        await i.update({
+          embeds: [
+            generateLinkEmbed({
+              code: code, 
+              accountId: accountId,
+              expires: expires,
+              client: discordClient.client
+            })
+          ],
+          components: []
+        });
+
+        // We got a response, proceeding to authenticate
+        discordClient.addSekaiRequest('profile', {
+          userId: accountId
+        }, async (response) => {
+          if (response.userProfile.word === code) {
+            db.prepare('REPLACE INTO users (discord_id, sekai_id) ' + 
+              'VALUES(@discordId, @sekaiId)').run({
+              discordId: interaction.user.id,
+              sekaiId: accountId
+            })
+
+            linked = true
+
+            await interaction.editReply({
+              embeds: [
+                generateLinkEmbed({
+                  code: code, 
+                  accountId: accountId,
+                  expires: expires,
+                  content: COMMAND.CONSTANTS.LINK_SUCC,
+                  client: discordClient.client
+                })
+              ],
+              components: []
+            });
+          } else {
+            await interaction.editReply({
+              embeds: [
+                generateLinkEmbed({
+                  code: code, 
+                  accountId: accountId,
+                  expires: expires,
+                  content: COMMAND.CONSTANTS.BAD_CODE_ERR(response.userProfile.word),
+                  client: discordClient.client
+                })
+              ],
+              components: [linkButton]
+            });
+          }
+        }, async (err) => {
+          // Log the error
+          discordClient.logger.log({
+            level: 'error',
+            message: err.toString()
+          })
+
+          // If the account does not exist (even though we should have checked)
+          await interaction.editReply({
+            embeds: [
+              generateLinkEmbed({
+                code: code, 
+                accountId: accountId,
+                expires: expires,
+                content: { type: 'error', message: err.toString() },
+                client: discordClient.client
+              })
+            ],
+            components: []
+          });
+        })
+      })
+
+      collector.on('end', async (collected) => {
+        // No Response
+        if (!linked) {
+          await interaction.editReply({ 
+            embeds: [
+              generateLinkEmbed({
+                code: code, 
+                accountId: accountId,
+                expires: expires,
+                content: COMMAND.CONSTANTS.EXPIRED_CODE_ERR,
+                client: discordClient.client
+              })
+            ], 
+            components: []
+          });
+        }
+      });
+    }, async (err) => {
+      // Log the error
+      discordClient.logger.log({
+        level: 'error',
+        message: err.toString()
+      })
+
+      if (err.getCode() === 404) {
+        // We got an error trying to find this account
         await interaction.editReply({
           embeds: [
             generateEmbed({
@@ -121,131 +255,13 @@ module.exports = {
           ]
         })
       } else {
-        // Generate a new code for the user
-        const code = Math.random().toString(36).slice(-5) 
-        const expires = Date.now() + COMMAND.CONSTANTS.INTERACTION_TIME
-
-        const linkButton = new MessageActionRow()
-          .addComponents(new MessageButton()
-            .setCustomId(`link`)
-            .setLabel('LINK')
-            .setStyle('SUCCESS')
-            .setEmoji(COMMAND.CONSTANTS.LINK_EMOJI))
-
-        const linkMessage = await interaction.editReply({
-          embeds: [
-            generateLinkEmbed({
-              code: code, 
-              accountId: accountId,
-              expires: expires,
-              client: discordClient.client
-            })
-          ],
-          components: [linkButton],
-          fetchReply: true
-        });
-
-        let linked = false;
-
-        const filter = (i) => {
-          return i.customId == `link`
-        }
-    
-        const collector = linkMessage.createMessageComponentCollector({ 
-          filter, 
-          time: COMMAND.CONSTANTS.INTERACTION_TIME 
-        });
-        
-        collector.on('collect', async (i) => {
-          await i.update({
-            embeds: [
-              generateLinkEmbed({
-                code: code, 
-                accountId: accountId,
-                expires: expires,
-                client: discordClient.client
-              })
-            ],
-            components: []
-          });
-
-          // We got a response, proceeding to authenticate
-          discordClient.addSekaiRequest('profile', {
-            userId: accountId
-          }, async (response) => {
-            // If the account does not exist (even though we should have checked)
-            if (response.httpStatus) {
-              await interaction.editReply({
-                embeds: [
-                  generateLinkEmbed({
-                    code: code, 
-                    accountId: accountId,
-                    expires: expires,
-                    content: COMMAND.CONSTANTS.BAD_ACC_ERR,
-                    client: discordClient.client
-                  })
-                ],
-                components: []
-              });
-
-              return
-            }
-
-            if (response.userProfile.word === code) {
-              db.prepare('REPLACE INTO users (discord_id, sekai_id) ' + 
-                'VALUES(@discordId, @sekaiId)').run({
-                discordId: interaction.user.id,
-                sekaiId: accountId
-              })
-
-              linked = true
-
-              await interaction.editReply({
-                embeds: [
-                  generateLinkEmbed({
-                    code: code, 
-                    accountId: accountId,
-                    expires: expires,
-                    content: COMMAND.CONSTANTS.LINK_SUCC,
-                    client: discordClient.client
-                  })
-                ],
-                components: []
-              });
-            } else {
-              await interaction.editReply({
-                embeds: [
-                  generateLinkEmbed({
-                    code: code, 
-                    accountId: accountId,
-                    expires: expires,
-                    content: COMMAND.CONSTANTS.BAD_CODE_ERR(response.userProfile.word),
-                    client: discordClient.client
-                  })
-                ],
-                components: [linkButton]
-              });
-            }
-          })
+        await interaction.editReply({
+          embeds: [generateEmbed({
+            name: COMMAND.INFO.name,
+            content: { type: 'error', message: err.toString() },
+            client: discordClient.client
+          })]
         })
-
-        collector.on('end', async (collected) => {
-          // No Response
-          if (!linked) {
-            await interaction.editReply({ 
-              embeds: [
-                generateLinkEmbed({
-                  code: code, 
-                  accountId: accountId,
-                  expires: expires,
-                  content: COMMAND.CONSTANTS.EXPIRED_CODE_ERR,
-                  client: discordClient.client
-                })
-              ], 
-              components: []
-            });
-          }
-        });
       }
     })
   }

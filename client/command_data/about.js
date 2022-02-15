@@ -30,7 +30,10 @@ module.exports = {
       'Sela',
       'PbSky',
       'chi',
-      'morgz'
+      'morgz',
+      'tiramiiz#2456',
+      'cecil#1309',
+      'Plutone'
     ],
 
     'GAME_DATA_LINK': 'https://github.com/Sekai-World/sekai-master-db-en-diff/blob/main/events.json',

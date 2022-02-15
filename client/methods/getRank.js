@@ -99,6 +99,20 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
       await interaction.editReply({ 
         embeds: [leaderboardEmbed]
       });
+    }, async (err) => {
+      // Log the error
+      discordClient.logger.log({
+        level: 'error',
+        message: err.toString()
+      })
+
+      await interaction.editReply({
+        embeds: [generateEmbed({
+          name: commandName,
+          content: { type: 'error', message: err.toString() },
+          client: discordClient.client
+        })]
+      })
     })
   })
 }

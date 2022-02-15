@@ -72,6 +72,22 @@ class DiscordClient {
         new winston.transports.File({ filename: `${dir}/combined.log` }),
       ],
     });
+
+    this.client.on('shardError', error => {
+      this.logger.log({
+        level: 'error',
+        message: `A websocket connection encountered an error: ${error}`
+      })
+    });
+
+    /* Uncomment this in production
+    process.on('unhandledRejection', error => {
+      this.logger.log({
+        level: 'error',
+        message: `Unhandled promise rejection: ${error}`
+      })
+    });
+    */
   }
 
   loadDb(dir = CLIENT_CONSTANTS.DB_DIR) {
@@ -109,34 +125,43 @@ class DiscordClient {
     }
   }
 
-  async addSekaiRequest(type, params, callback) {
+  async addSekaiRequest(type, params, callback, error) {
     this.apiQueue.unshift({
       type: type,
       params: params,
-      callback: callback
+      callback: callback,
+      error: error
     })
   }
 
-  async addPrioritySekaiRequest(type, params, callback) {
+  async addPrioritySekaiRequest(type, params, callback, error) {
     this.priorityApiQueue.unshift({
       type: type,
       params: params,
-      callback: callback
+      callback: callback,
+      error: error
     })
   }
 
   async runSekaiRequests(rate=10) {
-    // TODO: Idk do some error handling here to reset the specific client (wrap in try catch?)
     const runRequest = async (apiClient, request) => {
       if (request.type === 'profile') {
-        const response = await apiClient.userProfile(request.params.userId)
-        request.callback(response)
+        const response = await apiClient.userProfile(request.params.userId, request.error)
+
+        // If our response is valid we run the callback
+        if (response) {
+          request.callback(response)
+        }
       } else if (request.type === 'ranking') {
         const queryParams = {...request.params}
         delete queryParams.eventId
 
-        const response = await apiClient.eventRanking(request.params.eventId, queryParams)
-        request.callback(response)
+        const response = await apiClient.eventRanking(request.params.eventId, queryParams, request.error)
+
+        // If our response is valid we run the callback
+        if (response) {
+          request.callback(response)
+        }
       }
       runClient(apiClient, rate)
     }

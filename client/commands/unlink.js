@@ -79,20 +79,6 @@ module.exports = {
     discordClient.addSekaiRequest('profile', {
       userId: accountId
     }, async (response) => {
-      // If the account does not exist
-      if (response.httpStatus) {
-        await interaction.editReply({
-          embeds: [
-            generateEmbed({
-              name: COMMAND.INFO.name, 
-              content: COMMAND.CONSTANTS.BAD_ID_ERR, 
-              client: discordClient.client
-            })
-          ]
-        })
-
-        return
-      }
       // Generate a new code for the user
       const code = Math.random().toString(36).slice(-5)
       const expires = Date.now() + COMMAND.CONSTANTS.INTERACTION_TIME
@@ -144,24 +130,6 @@ module.exports = {
         discordClient.addSekaiRequest('profile', {
           userId: accountId
         }, async (response) => {
-          // Account could not be found
-          if (response.httpStatus) {
-            await interaction.editReply({
-              embeds: [
-                generateUnlinkEmbed({
-                  code: code, 
-                  accountId: accountId,
-                  expires: expires,
-                  content: COMMAND.CONSTANTS.BAD_ACC_ERR,
-                  client: discordClient.client
-                })
-              ],
-              components: []
-            });
-
-            return
-          }
-  
           if (response.userProfile.word === code) {
             // Check through the client if the code is set in the description
             db.prepare('DELETE FROM users WHERE sekai_id=@sekaiId').run({
@@ -196,6 +164,26 @@ module.exports = {
               components: [unlinkButton]
             });
           }
+        }, async (err) => {
+          // Log the error
+          discordClient.logger.log({
+            level: 'error',
+            message: err.toString()
+          })
+
+          // Account could not be found
+          await interaction.editReply({ 
+            embeds: [
+              generateUnlinkEmbed({
+                code: code, 
+                accountId: accountId,
+                expires: expires,
+                content: { type: 'error', message: err.toString() },
+                client: discordClient.client
+              })
+            ], 
+            components: []
+          });
         })
       })
 
@@ -216,6 +204,33 @@ module.exports = {
           });
         }
       });
+    }, async (err) => {
+      // Log the error
+      discordClient.logger.log({
+        level: 'error',
+        message: err.toString()
+      })
+
+      if (err.getCode() === 404) {
+        // We got an error trying to find this account
+        await interaction.editReply({
+          embeds: [
+            generateEmbed({
+              name: COMMAND.INFO.name, 
+              content: COMMAND.CONSTANTS.BAD_ID_ERR, 
+              client: discordClient.client
+            })
+          ]
+        })
+      } else {
+        await interaction.editReply({
+          embeds: [generateEmbed({
+            name: COMMAND.INFO.name,
+            content: { type: 'error', message: err.toString() },
+            client: discordClient.client
+          })]
+        })
+      }
     })
   } 
 };

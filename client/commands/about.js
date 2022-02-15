@@ -21,7 +21,9 @@ module.exports = {
         name: EMBED_TITLE, 
         content: {
           type: '**Programming**',
-          message: COMMAND.CONSTANTS.PROGRAMMERS.join('\n')
+          message: COMMAND.CONSTANTS.PROGRAMMERS.map((name, index) => {
+            return `${index+1}. ${name}`
+          }).join('\n')
         },
         client: discordClient.client
       }),
@@ -29,7 +31,9 @@ module.exports = {
         name: EMBED_TITLE, 
         content: {
           type: '**Design**',
-          message: COMMAND.CONSTANTS.DESIGNERS.join('\n')
+          message: COMMAND.CONSTANTS.DESIGNERS.map((name, index) => {
+            return `${index+1}. ${name}`
+          }).join('\n')
         }, 
         client: discordClient.client
       }),
@@ -37,7 +41,9 @@ module.exports = {
         name: EMBED_TITLE, 
         content: {
           type: '**Testers**',
-          message: COMMAND.CONSTANTS.TESTERS.join('\n')
+          message: COMMAND.CONSTANTS.TESTERS.map((name, index) => {
+            return `${index+1}. ${name}`
+          }).join('\n')
         }, 
         client: discordClient.client
       }),
