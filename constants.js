@@ -23,6 +23,9 @@ module.exports = {
   // Results per page on leaderboard embeds (1-20)
   "RESULTS_PER_PAGE": 20,
 
+  // Max Requests Per Account Per Hour (120 ~1 request every 30 seconds)
+  "RATE_LIMIT": 120,
+
   // Source of game data
   "DIR_DATA": "./sekai_master",
 }

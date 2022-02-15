@@ -1,6 +1,7 @@
 const { token } = require('../config.json');
 const { Client, Intents, Guild } = require('discord.js');
 const { SekaiClient } = require('sekapi');
+const { RATE_LIMIT } = require('../constants');
 const https = require('https');
 
 const winston = require('winston');
@@ -8,6 +9,8 @@ const Database = require('better-sqlite3');
 
 const fs = require('fs');
 const path = require('path');
+
+const generateEmbed = require('./methods/generateEmbed') 
 
 const CLIENT_CONSTANTS = {
   "CMD_DIR": path.join(__dirname, '/commands'),
@@ -29,6 +32,8 @@ class DiscordClient {
     this.api = [];
     this.priorityApiQueue = [];
     this.apiQueue = [];
+
+    this.rateLimit = {};
 
     this.client = new Client({ 
       intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS] });
@@ -125,6 +130,29 @@ class DiscordClient {
     }
   }
 
+  checkRateLimit(userId) {
+    if (!(userId in this.rateLimit) || 
+      this.rateLimit[userId].timestamp < Date.now()) {
+      this.rateLimit[userId] = {
+        timestamp: Date.now() + 3600000,
+        usage: 0
+      }
+    }
+
+    console.log(this.rateLimit)
+    if (this.rateLimit[userId].usage + 1 > RATE_LIMIT) {
+      return false
+    } 
+
+    this.rateLimit[userId].usage++
+    return true
+  }
+
+  getRateLimitRemoval(userId) {
+    return this.rateLimit[userId].timestamp
+  }
+
+  // Standard user requests
   async addSekaiRequest(type, params, callback, error) {
     this.apiQueue.unshift({
       type: type,
@@ -134,6 +162,7 @@ class DiscordClient {
     })
   }
 
+  // Reserved for bot's self tracking 
   async addPrioritySekaiRequest(type, params, callback, error) {
     this.priorityApiQueue.unshift({
       type: type,
@@ -163,7 +192,7 @@ class DiscordClient {
           request.callback(response)
         }
       }
-      runClient(apiClient, rate)
+      return runClient(apiClient, rate)
     }
 
     const runClient = async (apiClient, rate) => {

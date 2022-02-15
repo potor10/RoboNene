@@ -22,6 +22,12 @@ module.exports = {
         '4. Press the red ❌ Unlink button!'
     },
 
+    'RATE_LIMIT_ERR': {
+      'type': 'Error', 
+      'message': 'You have reached the maximum amount of requests to the API. ' + 
+        'You have been temporarily rate limited.'
+    },
+
     'EXPIRED_CODE_ERR': {
       'type': 'Error',
       'message': 'Your link code has expired'

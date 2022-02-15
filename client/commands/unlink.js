@@ -76,6 +76,21 @@ module.exports = {
       return
     }
 
+    if (!discordClient.checkRateLimit(interaction.user.id)) {
+      await interaction.editReply({
+        embeds: [generateEmbed({
+          name: COMMAND.INFO.name,
+          content: { 
+            type: COMMAND.CONSTANTS.RATE_LIMIT_ERR.type, 
+            message: COMMAND.CONSTANTS.RATE_LIMIT_ERR.message + 
+              `\n\nExpires: <t:${Math.floor(discordClient.getRateLimitRemoval(interaction.user.id) / 1000)}>`
+          },
+          client: discordClient.client
+        })]
+      })
+      return
+    }
+
     discordClient.addSekaiRequest('profile', {
       userId: accountId
     }, async (response) => {
@@ -104,6 +119,7 @@ module.exports = {
       });
 
       let unlinked = false
+      let limited = false
 
       const filter = (i) => {
         return i.customId == `unlink`
@@ -126,6 +142,29 @@ module.exports = {
           ],
           components: []
         });
+
+
+        if (!discordClient.checkRateLimit(interaction.user.id)) {
+          limited = true
+
+          await interaction.editReply({
+            embeds: [
+              generateUnlinkEmbed({
+                code: code, 
+                accountId: accountId,
+                expires: expires,
+                content: { 
+                  type: COMMAND.CONSTANTS.RATE_LIMIT_ERR.type, 
+                  message: COMMAND.CONSTANTS.RATE_LIMIT_ERR.message + 
+                    `\n\nExpires: <t:${Math.floor(discordClient.getRateLimitRemoval(interaction.user.id) / 1000)}>`
+                },
+                client: discordClient.client
+              })
+            ],
+            components: []
+          });
+          return
+        }
   
         discordClient.addSekaiRequest('profile', {
           userId: accountId
@@ -190,7 +229,7 @@ module.exports = {
 
       collector.on('end', async (collected) => {
         // No Response
-        if (!unlinked) {
+        if (!unlinked && !limited) {
           await interaction.editReply({ 
             embeds: [
               generateUnlinkEmbed({

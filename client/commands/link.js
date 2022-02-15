@@ -105,6 +105,21 @@ module.exports = {
       return
     }
     
+    if (!discordClient.checkRateLimit(interaction.user.id)) {
+      await interaction.editReply({
+        embeds: [generateEmbed({
+          name: COMMAND.INFO.name,
+          content: { 
+            type: COMMAND.CONSTANTS.RATE_LIMIT_ERR.type, 
+            message: COMMAND.CONSTANTS.RATE_LIMIT_ERR.message + 
+              `\n\nExpires: <t:${Math.floor(discordClient.getRateLimitRemoval(interaction.user.id) / 1000)}>`
+          },
+          client: discordClient.client
+        })]
+      })
+      return
+    }
+
     // No Errors
     discordClient.addSekaiRequest('profile', {
       userId: accountId
@@ -134,6 +149,7 @@ module.exports = {
       });
 
       let linked = false;
+      let limited = false;
 
       const filter = (i) => {
         return i.customId == `link`
@@ -156,6 +172,28 @@ module.exports = {
           ],
           components: []
         });
+
+        if (!discordClient.checkRateLimit(interaction.user.id)) {
+          limited = true;
+
+          await interaction.editReply({
+            embeds: [
+              generateLinkEmbed({
+                code: code, 
+                accountId: accountId,
+                expires: expires,
+                content: { 
+                  type: COMMAND.CONSTANTS.RATE_LIMIT_ERR.type, 
+                  message: COMMAND.CONSTANTS.RATE_LIMIT_ERR.message + 
+                    `\n\nExpires: <t:${Math.floor(discordClient.getRateLimitRemoval(interaction.user.id) / 1000)}>`
+                },
+                client: discordClient.client
+              })
+            ],
+            components: []
+          })
+          return
+        }
 
         // We got a response, proceeding to authenticate
         discordClient.addSekaiRequest('profile', {
@@ -222,7 +260,7 @@ module.exports = {
 
       collector.on('end', async (collected) => {
         // No Response
-        if (!linked) {
+        if (!linked && !limited) {
           await interaction.editReply({ 
             embeds: [
               generateLinkEmbed({

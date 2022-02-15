@@ -215,6 +215,21 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
 }
 
 const getProfile = async (interaction, discordClient, userId) => {
+  if (!discordClient.checkRateLimit(interaction.user.id)) {
+    await interaction.editReply({
+      embeds: [generateEmbed({
+        name: COMMAND.INFO.name,
+        content: { 
+          type: COMMAND.CONSTANTS.RATE_LIMIT_ERR.type, 
+          message: COMMAND.CONSTANTS.RATE_LIMIT_ERR.message + 
+            `\n\nExpires: <t:${Math.floor(discordClient.getRateLimitRemoval(interaction.user.id) / 1000)}>`
+        },
+        client: discordClient.client
+      })]
+    })
+    return
+  }
+  
   discordClient.addSekaiRequest('profile', {
     userId: userId
   }, async (response) => {

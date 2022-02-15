@@ -22,6 +22,12 @@ module.exports = {
         '4. Press the green ✅ Link button!'
     },
 
+    'RATE_LIMIT_ERR': {
+      'type': 'Error', 
+      'message': 'You have reached the maximum amount of requests to the API. ' + 
+        'You have been temporarily rate limited.'
+    },
+
     'DISCORD_LINKED_ERR': {
       'type': 'Error',
       'message': 'Your Discord account is already linked to a Project Sekai account.'

@@ -9,14 +9,21 @@ const RANK_CONSTANTS = {
     message: 'There was an issue with your input parameters. Please try again.'
   },
 
-  "NO_EVENT_ERR": {
+  'NO_EVENT_ERR': {
     type: 'Error',
     message: "There is currently no event going on",
   },
 
-  "NO_RESPONSE_ERR": {
+  'NO_RESPONSE_ERR': {
     type: 'Error',
-    message: "There was no response from the server. \nPlease wait ~10 minutes after ranking concludes before trying again.",
+    message: 'There was no response from the server. ' + 
+      '\nPlease wait ~10 minutes after ranking concludes before trying again.',
+  },
+
+  'RATE_LIMIT_ERR': {
+    type: 'Error', 
+    message: 'You have reached the maximum amount of requests to the API. ' + 
+      'You have been temporarily rate limited.'
   },
 
   'HIGHER_LIMIT': (RESULTS_PER_PAGE%2) ? Math.floor(RESULTS_PER_PAGE/2) : Math.floor(RESULTS_PER_PAGE/2)-1,
@@ -36,6 +43,22 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
         })
       ]
     });
+    return
+  }
+
+  if (!discordClient.checkRateLimit(interaction.user.id)) {
+    await interaction.editReply({
+      embeds: [generateEmbed({
+        name: commandName,
+        content: { 
+          type: RATE_LIMIT_ERR.type, 
+          message: RATE_LIMIT_ERR.message + 
+            `\n\nExpires: <t:${Math.floor(discordClient.getRateLimitRemoval(interaction.user.id) / 1000)}>`
+        },
+        client: discordClient.client
+      })]
+    })
+
     return
   }
 

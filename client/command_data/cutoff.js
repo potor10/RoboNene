@@ -45,6 +45,12 @@ module.exports = {
   },
 
   'CONSTANTS': {
+    'RATE_LIMIT_ERR': {
+      'type': 'Error', 
+      'message': 'You have reached the maximum amount of requests to the API. ' + 
+        'You have been temporarily rate limited.'
+    },
+    
     'NO_EVENT_ERR': {
       'type': 'Error',
       'message': 'There is currently no event going on'

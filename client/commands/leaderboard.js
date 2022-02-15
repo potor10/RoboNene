@@ -30,6 +30,21 @@ module.exports = {
       return
     }
 
+    if (!discordClient.checkRateLimit(interaction.user.id)) {
+      await interaction.editReply({
+        embeds: [generateEmbed({
+          name: COMMAND.INFO.name,
+          content: { 
+            type: COMMAND.CONSTANTS.RATE_LIMIT_ERR.type, 
+            message: COMMAND.CONSTANTS.RATE_LIMIT_ERR.message + 
+              `\n\nExpires: <t:${Math.floor(discordClient.getRateLimitRemoval(interaction.user.id) / 1000)}>`
+          },
+          client: discordClient.client
+        })]
+      })
+      return
+    }
+
     discordClient.addSekaiRequest('ranking', {
       eventId: event.id,
       targetRank: 1,

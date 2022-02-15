@@ -1,5 +1,5 @@
 const { MessageActionRow, MessageButton } = require('discord.js');
-const { BOT_NAME, NENE_COLOR, FOOTER } = require('../../constants');
+const { BOT_NAME } = require('../../constants');
 
 const COMMAND = require('../command_data/about')
 
