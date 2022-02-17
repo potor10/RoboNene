@@ -276,13 +276,6 @@ module.exports = {
         }
       });
     }, async (err) => {
-      // Log the error
-      discordClient.logger.log({
-        level: 'error',
-        timestamp: Date.now(),
-        message: err.toString()
-      })
-
       if (err.getCode() === 404) {
         // We got an error trying to find this account
         await interaction.editReply({
@@ -295,6 +288,13 @@ module.exports = {
           ]
         })
       } else {
+        // Log the error
+        discordClient.logger.log({
+          level: 'error',
+          timestamp: Date.now(),
+          message: err.toString()
+        })
+        
         await interaction.editReply({
           embeds: [generateEmbed({
             name: COMMAND.INFO.name,
