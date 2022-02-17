@@ -3,6 +3,7 @@ module.exports = {
     'name': 'link',
     'utilization': '/link',
     'description': 'Link your Project Sekai account to Robo Nene!',
+    'ephemeral': true,
     'params': [
       {
         'type': 'string',

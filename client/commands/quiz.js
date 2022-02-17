@@ -230,7 +230,7 @@ class areaQuestion {
           }
         }
       }
-      
+
       return {
         right: this.prompts[questionIdx].name(areaItem),
         wrong: wrong,
@@ -260,7 +260,9 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    await interaction.deferReply()
+    await interaction.deferReply({
+      ephemeral: COMMAND.INFO.ephemeral
+    })
 
     // Init our question generators
     const questions = [

@@ -9,7 +9,9 @@ module.exports = {
   
   async execute(interaction, discordClient) {
     // { ephemeral: true }
-    await interaction.deferReply()
+    await interaction.deferReply({
+      ephemeral: COMMAND.INFO.ephemeral
+    })
 
     const db = discordClient.db
 
@@ -49,8 +51,7 @@ module.exports = {
           content: content, 
           client: discordClient.client
         })
-      ],
-      ephemeral: true 
+      ]
     });
   }
 };

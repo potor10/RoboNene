@@ -2,7 +2,8 @@ module.exports = {
   'INFO': {
     'name': 'quiz',
     'utilization': '/quiz',
-    'description': 'A Fun Project Sekai Quiz!'
+    'description': 'A Fun Project Sekai Quiz!',
+    'ephemeral': false
   },
 
   'CONSTANTS': {

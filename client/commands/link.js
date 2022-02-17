@@ -38,8 +38,9 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    // { ephemeral: true }
-    await interaction.deferReply()
+    await interaction.deferReply({
+      ephemeral: COMMAND.INFO.ephemeral
+    })
 
     const db = discordClient.db
     const accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g,'');
@@ -294,7 +295,7 @@ module.exports = {
           timestamp: Date.now(),
           message: err.toString()
         })
-        
+
         await interaction.editReply({
           embeds: [generateEmbed({
             name: COMMAND.INFO.name,

@@ -3,6 +3,7 @@ module.exports = {
     'name': 'leaderboard',
     'utilization': '/leaderboard',
     'description': 'Show the current T100 leaderboard',
+    'ephemeral': false,
     'params': [
       {
         'type': 'integer',
@@ -19,7 +20,7 @@ module.exports = {
       'message': 'You have reached the maximum amount of requests to the API. ' + 
         'You have been temporarily rate limited.'
     },
-    
+
     'BAD_INPUT_ERROR': {
       'type': 'Error',
       'message': 'There was an issue with your input parameters. Please try again.'

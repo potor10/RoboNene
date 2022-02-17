@@ -14,7 +14,9 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
 
   async execute(interaction, discordClient) {
-    await interaction.deferReply()
+    await interaction.deferReply({
+      ephemeral: COMMAND.INFO.ephemeral
+    })
 
     const event = discordClient.getCurrentEvent()
     if (event.id === -1) {

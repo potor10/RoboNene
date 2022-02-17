@@ -3,6 +3,7 @@ module.exports = {
     'name': 'tracking',
     'utilization': '/tracking',
     'description': 'Add a live update event ranking tracker to a server.',
+    'ephemeral': true,
     'params': [
       {
         'type': 'channel',

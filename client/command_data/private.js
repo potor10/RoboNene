@@ -3,6 +3,7 @@ module.exports = {
     'name': 'private',
     'utilization': '/private',
     'description': 'Determines if extra information that will display on your profile. (Private by default)',
+    'ephemeral': true,
     'params': [
       {
         'type': 'boolean',

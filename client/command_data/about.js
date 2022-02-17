@@ -2,7 +2,8 @@ module.exports = {
   'INFO': {
     'name': 'about',
     'utilization': '/about',
-    'description': 'Learn about Robo Nene'
+    'description': 'Learn about Robo Nene',
+    'ephemeral': true
   },
 
   'CONSTANTS': {

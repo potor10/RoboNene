@@ -86,7 +86,9 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    await interaction.deferReply()
+    await interaction.deferReply({
+      ephemeral: COMMAND.INFO.ephemeral
+    })
 
     const events = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
     const scheduleEmbed = createScheduleEmbed(events, discordClient.client);

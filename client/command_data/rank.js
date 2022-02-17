@@ -3,6 +3,7 @@ module.exports = {
     'name': 'rank',
     'utilization': '/rank',
     'description': 'Display your current ranking on the leaderboard.',
+    'ephemeral': false,
     'params': [
       {
         'type': 'user',

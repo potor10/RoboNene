@@ -3,6 +3,7 @@ module.exports = {
     'name': 'cutoff',
     'utilization': '/cutoff',
     'description': 'Obtain detailed information about the the cutoff',
+    'ephemeral': false,
     'params': [
       {
         'type': 'integer',
@@ -50,7 +51,7 @@ module.exports = {
       'message': 'You have reached the maximum amount of requests to the API. ' + 
         'You have been temporarily rate limited.'
     },
-    
+
     'NO_EVENT_ERR': {
       'type': 'Error',
       'message': 'There is currently no event going on'

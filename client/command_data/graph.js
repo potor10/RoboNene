@@ -3,6 +3,7 @@ module.exports = {
     'name': 'graph',
     'utilization': '/graph',
     'description': 'Display a graph displaying the historical amount of points at a certain cutoff',
+    'ephemeral': false,
     'params': [
       {
         'type': 'integer',

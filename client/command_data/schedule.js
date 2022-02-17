@@ -2,7 +2,8 @@ module.exports = {
   'INFO': {
     'name': 'schedule',
     'utilization': '/schedule',
-    'description': 'Get the current datamined schedule information.'
+    'description': 'Get the current datamined schedule information.',
+    'ephemeral': false
   },
 
   'CONSTANTS': {

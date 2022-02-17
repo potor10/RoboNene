@@ -3,6 +3,7 @@ module.exports = {
     'name': 'unlink',
     'utilization': '/unlink',
     'description': 'Unlink a Discord account from your Project Sekai account!',
+    'ephemeral': true,
     'params': [
       {
         'type': 'string',

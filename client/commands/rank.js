@@ -9,7 +9,9 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    await interaction.deferReply()
+    await interaction.deferReply({
+      ephemeral: COMMAND.INFO.ephemeral
+    })
 
     const target = (interaction.options._hoistedOptions.length) ? 
       interaction.options._hoistedOptions[0].value :

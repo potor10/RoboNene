@@ -11,8 +11,9 @@ module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
-    // { ephemeral: true }
-    await interaction.deferReply()
+    await interaction.deferReply({
+      ephemeral: COMMAND.INFO.ephemeral
+    })
 
     const EMBED_TITLE = `About ${BOT_NAME}`
 

@@ -3,6 +3,7 @@ module.exports = {
     'name': 'profile',
     'utilization': '/profile',
     'description': 'Display your project sekai profile.',
+    'ephemeral': false,
     'params': [
       {
         'type': 'string',
