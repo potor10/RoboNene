@@ -70,7 +70,7 @@ module.exports = {
   
   async execute(interaction, discordClient) {
     await interaction.deferReply({
-      ephemeral: COMMAND.INFO.ephemeral
+      ephemeral: true
     })
 
     if (!(commands.hasOwnProperty(interaction.options._hoistedOptions[0].value))) {

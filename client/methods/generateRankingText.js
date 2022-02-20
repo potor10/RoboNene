@@ -19,6 +19,11 @@ const generateRankingText = (data, page, target) => {
 
   let leaderboardText = '';
   for (i = 0; i < RESULTS_PER_PAGE; i++) {
+    if (i > data[i].length) {
+      leaderboardText += '\u200b';
+      break;
+    }
+
     let rank = " ".repeat(maxRankLength - data[i].rank.toString().length) + data[i].rank
     let name = data[i].name + " ".repeat(maxNameLength - data[i].name.length) 
     let score = " ".repeat(maxScoreLength - data[i].score.toLocaleString().length) + 
