@@ -19,7 +19,7 @@ const generateRankingText = (data, page, target) => {
 
   let leaderboardText = '';
   for (i = 0; i < RESULTS_PER_PAGE; i++) {
-    if (i > data[i].length) {
+    if (i > data.length) {
       leaderboardText += '\u200b';
       break;
     }
