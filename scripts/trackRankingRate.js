@@ -40,8 +40,8 @@ const getTimeEventClose = () => {
   const currentTime = Date.now()
 
   for (let i = 0; i < events.length; i++) {
-    if (events[i].startAt <= currentTime && events[i].closedAt >= currentTime) {
-      return (events[i].closedAt - currentTime)
+    if (events[i].startAt <= currentTime && events[i].aggregateAt >= currentTime) {
+      return (events[i].aggregateAt - currentTime)
     }
   }
 
