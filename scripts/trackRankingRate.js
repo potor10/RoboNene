@@ -181,9 +181,9 @@ const trackRankingRate = () => {
 
   recursiveRequest(0)
 
-  let eta_ms = getTimeEventClose()
-  console.log(`Requested Ranking Rate Constant, Sleeping for ${eta_ms + 1000} ms`)
-  setTimeout(() => {trackRankingRate()}, eta_ms + 1000);
+  let eta_ms = getTimeEventClose() + 10000
+  console.log(`Requested Ranking Rate Constant, Sleeping for ${eta_ms} ms`)
+  setTimeout(() => {trackRankingRate()}, eta_ms);
 }
 
 module.exports = trackRankingRate
