@@ -1,3 +1,4 @@
+const { DMChannel } = require('discord.js');
 const generateEmbed = require('../methods/generateEmbed') 
 
 const INTERACTION_CONST = {
@@ -24,7 +25,7 @@ module.exports = {
       discord_id: interaction.user.id,
       discord_name: `${interaction.user.username}#${interaction.user.discriminator}`,
       guild_id: interaction.guildId,
-      guild_name: interaction.member.guild.name,
+      guild_name: interaction.channel instanceof DMChannel ? interaction.channel.recipient.username : interaction.member.guild.name,
       command: interaction.commandName,
       subcommand: interaction.options._subcommand,
       inputs: interaction.options._hoistedOptions

@@ -36,7 +36,7 @@ class DiscordClient {
     this.rateLimit = {};
 
     this.client = new Client({ 
-      intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS] });
+      intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS], partials: ['CHANNEL'] });
   }
 
   loadCommands(dir=CLIENT_CONSTANTS.CMD_DIR) {
