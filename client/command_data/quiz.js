@@ -11,17 +11,15 @@ module.exports = {
       'type': 'Error',
       'message': 'You are not the intended user for this interaction.\nPlease use /quiz to start your own quiz.'
     },
-
-    'NO_RESPONSE': {
-      'type': 'Failed',
-      'message': 'There was no response within the alotted time. \nThe question was **failed**!'
-    },
   
     'QUESTION_RIGHT_TYPE': 'Correct ✅',
     'QUESTION_RIGHT_MSG': 'You have answered the question **correctly**!',
   
     'QUESTION_WRONG_TYPE': 'Incorrect ❌',
     'QUESTION_WRONG_MSG': 'You have answered the question **incorrectly**!',
+
+    'QUESTION_TIMEOUT_TYPE': 'Timeout ❌',
+    'QUESTION_TIMEOUT_MSG': 'There was no response within the alotted time.',
 
     'LINK_MSG': 'Link an account to save your progress',
 

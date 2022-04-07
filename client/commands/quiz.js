@@ -304,9 +304,11 @@ module.exports = {
           .setPlaceholder('Select Your Answer!')
           .addOptions(answerOptions))
 
+    const interactionSec = Math.round(COMMAND.CONSTANTS.INTERACTION_TIME / 1000)
+    
     const content = {
       type: questionCreator.getType(),
-      message: prompt
+      message: prompt + `\n*You have ${interactionSec} seconds to answer this question*`
     }
 
     const quizMessage = await interaction.editReply({ 
@@ -416,7 +418,11 @@ module.exports = {
         console.log(`Collected ${collected.size} items`)
 
         // If the user has not answered the question yet
-        const content = { ... COMMAND.CONSTANTS.NO_RESPONSE }
+        const content = {
+          type: COMMAND.CONSTANTS.QUESTION_TIMEOUT_TYPE,
+          message: `${question.prompt}\nCorrect Answer: \`\`${question.right}\`\`\n\n` +
+            COMMAND.CONSTANTS.QUESTION_TIMEOUT_MSG
+        }
 
         let account = getAccount(interaction.user.id, discordClient)
 
