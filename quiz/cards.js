@@ -48,7 +48,7 @@ module.exports = [
     }
   },
   {
-    'attr': 'prefix',
+    'attr': 'characterId',
     'name': (card) => {
       return card.prefix
     },
