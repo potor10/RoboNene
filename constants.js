@@ -1,6 +1,6 @@
 module.exports = {
   // Bot Information
-  "BOT_NAME": "Robo Nene",
+  "BOT_NAME": "Nene Robo",
   "BOT_ACTIVITY": () => {
     let activities = [
       "Beep Boop in ", 
