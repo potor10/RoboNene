@@ -26,11 +26,4 @@ If you have any issues with the bot or would like to contribute, please contact 
 * Ult#0001
 * Redside#1337
 * Yuu#6883
-
-**Design**
-* Potor10#3237
-* Reinhäla
-
-**Testing**
-* Potor10#3237
-* Reinhäla
+* Maid
