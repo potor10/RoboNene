@@ -10,6 +10,36 @@ const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
 const binarySearch = require('../methods/binarySearch')
 
+const requestRate = () => {
+  return new Promise((resolve, reject) => {
+    const options = {
+      host: COMMAND.CONSTANTS.RATE_HOST,
+      path: COMMAND.CONSTANTS.RATE_PATH,
+      headers: {'User-Agent': 'request'}
+    };
+  
+    https.get(options, (res) => {
+      let json = '';
+      res.on('data', (chunk) => {
+        json += chunk;
+      });
+      res.on('end', async () => {
+        if (res.statusCode === 200) {
+          try {
+            resolve(JSON.parse(json))
+          } catch (err) {
+            reject(err)
+          }
+        } else {
+          reject(res.statusCode)
+        }
+      });
+    }).on('error', (err) => {
+      reject(err)
+    });
+  })
+}
+
 const generateCutoff = async ({interaction, event, 
   timestamp, tier, score, rankData, detailed, discordClient}) => {
   
@@ -82,7 +112,7 @@ const generateCutoff = async ({interaction, event,
   // If we are at least 1 day into the event
   if (oneDayIdx !== -1) {
     // Get game information from saved json files
-    const rate = JSON.parse(fs.readFileSync('./rank/rate.json'));
+    const rate = await requestRate();
     const eventCards = JSON.parse(fs.readFileSync(`${DIR_DATA}/eventCards.json`));
     const events = JSON.parse(fs.readFileSync(`${DIR_DATA}/events.json`));
     const cards = JSON.parse(fs.readFileSync(`${DIR_DATA}/cards.json`));

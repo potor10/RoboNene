@@ -46,6 +46,9 @@ module.exports = {
   },
 
   'CONSTANTS': {
+    "RATE_HOST": "raw.githubusercontent.com",
+    "RATE_PATH": "/potor10/SekaiCutoffRate/master/rank/rate.json",
+
     'RATE_LIMIT_ERR': {
       'type': 'Error', 
       'message': 'You have reached the maximum amount of requests to the API. ' + 

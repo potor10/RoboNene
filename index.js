@@ -3,7 +3,6 @@ const DiscordClient = require('./client/client')
 const loadGameData = require('./scripts/loadGameData');
 const trackGameData = require('./scripts/trackGameData');
 const trackRankingData = require('./scripts/trackRankingData');
-const trackRankingRate = require('./scripts/trackRankingRate');
 
 loadGameData(0, async () => {
   const client = new DiscordClient()
@@ -19,5 +18,4 @@ loadGameData(0, async () => {
   // Begin the scripts
   trackGameData(client)
   trackRankingData(client)
-  trackRankingRate()
 });
