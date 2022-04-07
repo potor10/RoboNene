@@ -16,7 +16,8 @@ module.exports = {
       'Potor10#3237',
       'Ult#0001',
       'Redside#1337',
-      'Yuu#6883'
+      'Yuu#6883',
+      'Maid'
     ],
 
     'DESIGNERS': [
