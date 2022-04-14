@@ -207,8 +207,6 @@ class areaQuestion {
       return area.name !== 'Music Speakers'
     })
 
-    console.log(areaShuffle)
-
     const wrong = []
     const questionIdx = Math.floor(Math.random() * this.prompts.length)
     const attr = this.prompts[questionIdx].attr
@@ -221,7 +219,6 @@ class areaQuestion {
         if (incorrectAreaItem[attr] !== areaItem[attr]) {
           let attrExists = false
           let attrValue =  this.prompts[questionIdx].name(incorrectAreaItem)
-          console.log(attrValue)
 
           for (const wrongIdx in wrong) {
             if (wrong[wrongIdx] === attrValue) {
