@@ -15,6 +15,8 @@ module.exports = {
   },
 
   'CONSTANTS': {
+    'LINK_IMG': 'https://media.discordapp.net/attachments/883062753294704681/964272786535235654/IMG_0037.png',
+
     'LINK_INSTRUCTIONS': {
       'type': 'Instructions',
       'message': '1. Go to your profile in Project Sekai.\n' +

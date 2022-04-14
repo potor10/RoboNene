@@ -2,7 +2,7 @@ module.exports = {
   'INFO': {
     'name': 'private',
     'utilization': '/private',
-    'description': 'Determines if extra information that will display on your profile. (Private by default)',
+    'description': 'Enable or disable additional information displayed when using /profile. (Private by default)',
     'ephemeral': true,
     'params': [
       {

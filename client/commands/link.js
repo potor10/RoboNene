@@ -7,8 +7,6 @@ const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
 
 const generateLinkEmbed = ({code, accountId, expires, content, client}) => {
-  const imageUrl = 'https://cdn.discordapp.com/attachments/812255511667015691/938557065469788190/IMG_0037.png'
-
   const linkInformation = {
     type: 'Link Information',
     message: `Link Code: \`${code}\`\n` + 
@@ -21,7 +19,7 @@ const generateLinkEmbed = ({code, accountId, expires, content, client}) => {
     .setTitle(COMMAND.INFO.name.charAt(0).toUpperCase() + COMMAND.INFO.name.slice(1))
     .addField(linkInformation.type, linkInformation.message)
     .addField(COMMAND.CONSTANTS.LINK_INSTRUCTIONS.type, COMMAND.CONSTANTS.LINK_INSTRUCTIONS.message)
-    .setImage(imageUrl)
+    .setImage(COMMAND.CONSTANTS.LINK_IMG)
     .setThumbnail(client.user.displayAvatarURL())
     .setTimestamp()
     .setFooter(FOOTER, client.user.displayAvatarURL());

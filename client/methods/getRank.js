@@ -4,9 +4,9 @@ const generateRankingText = require('../methods/generateRankingText')
 const generateEmbed = require('../methods/generateEmbed') 
 
 const RANK_CONSTANTS = {
-  'BAD_INPUT_ERROR': {
+  'NO_RESULTS_ERR': {
     type: 'Error',
-    message: 'There was an issue with your input parameters. Please try again.'
+    message: 'Unable to find the specified player on the ranking leaderboard.'
   },
 
   'NO_EVENT_ERR': {
@@ -84,7 +84,7 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
         embeds: [
           generateEmbed({
             name: commandName, 
-            content: RANK_CONSTANTS.BAD_INPUT_ERROR, 
+            content: RANK_CONSTANTS.NO_RESULTS_ERR, 
             client: discordClient.client
           })
         ]
