@@ -202,7 +202,12 @@ class areaQuestion {
   }
 
   getQuestion() {
-    const areaShuffle = shuffle(this.areaItemInfo)
+    // Remove duplicates of Music Speakers from the pool
+    const areaShuffle = shuffle(this.areaItemInfo).filter((area) => {
+      return area.name !== 'Music Speakers'
+    })
+
+    console.log(areaShuffle)
 
     const wrong = []
     const questionIdx = Math.floor(Math.random() * this.prompts.length)
