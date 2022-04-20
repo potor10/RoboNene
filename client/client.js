@@ -1,11 +1,11 @@
-const { token } = require('../config.json');
+const { token, secretKey } = require('../config.json');
 const { Client, Intents, Guild } = require('discord.js');
 const { SekaiClient } = require('sekapi');
 const { RATE_LIMIT } = require('../constants');
 const https = require('https');
 
 const winston = require('winston');
-const Database = require('better-sqlite3');
+const Database = require('better-sqlite3-multiple-ciphers');
 
 const fs = require('fs');
 const path = require('path');
@@ -97,14 +97,13 @@ class DiscordClient {
 
   loadDb(dir = CLIENT_CONSTANTS.DB_DIR) {
     this.db = new Database(`${dir}/${CLIENT_CONSTANTS.DB_NAME}`);
+
+    // Read an encrypted database
+    this.db.pragma(`key='${secretKey}'`);
+
     this.db.prepare('CREATE TABLE IF NOT EXISTS users ' + 
       '(discord_id TEXT PRIMARY KEY, sekai_id TEXT, private INTEGER DEFAULT 1, ' + 
       'quiz_correct INTEGER DEFAULT 0, quiz_question INTEGER DEFAULT 0)').run()
-
-    // Initialize the event database instance
-    this.db.prepare('CREATE TABLE IF NOT EXISTS events ' + 
-      '(event_id INTEGER, sekai_id TEXT, name TEXT, ' + 
-      'rank INTEGER, score INTEGER, timestamp INTEGER)').run()
 
     // Initialize the tracking database instance
     this.db.prepare('CREATE TABLE IF NOT EXISTS tracking ' + 

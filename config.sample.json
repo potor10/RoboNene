@@ -1,4 +1,5 @@
 {
   "token" : "Replace this with your bot's token",
-  "clientId" : "Replace this with your bot's client ID"
+  "clientId" : "Replace this with your bot's client ID",
+  "secretKey" : "Replace this with a custom secret key for your DB encryption"
 }
