@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Description of file, its uses and information
+ * about its dependencies.
+ * @package
+ */
+
 const { MessageActionRow, MessageButton } = require('discord.js');
 const { BOT_NAME } = require('../../constants');
 

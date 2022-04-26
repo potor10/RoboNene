@@ -114,7 +114,6 @@ const generateCutoff = async ({interaction, event,
     // Get game information from saved json files
     const rate = await requestRate();
     const eventCards = JSON.parse(fs.readFileSync(`${DIR_DATA}/eventCards.json`));
-    const events = JSON.parse(fs.readFileSync(`${DIR_DATA}/events.json`));
     const cards = JSON.parse(fs.readFileSync(`${DIR_DATA}/cards.json`));
 
     const characterIds = []
@@ -127,6 +126,7 @@ const generateCutoff = async ({interaction, event,
       }
     })
 
+    // Values used to calculate the c constant in y = (c * m)x + b
     let totalRate = 0;
     let totalSimilar = 0;
 
@@ -137,9 +137,12 @@ const generateCutoff = async ({interaction, event,
     // Each index starts from 1 day into the event -> the end of the event, with 30 minute intervals
     const rateIdx = Math.floor((timestamp - 86400000) / 1800000)
 
+    // Obtain The Event Type of the Current Event
+    let currentEventType = discordClient.getCurrentEvent().eventType
+
     // Identify a constant c used in y = (c * m)x + b that can be used via this event
     for(const eventId in rate) {
-      if (rate[eventId].eventType !== events[eventId-1].eventType) {
+      if (rate[eventId].eventType !== currentEventType) {
         continue
       }
       
@@ -176,7 +179,6 @@ const generateCutoff = async ({interaction, event,
     // Create a linear regression model with our data points
     const model = regression.linear(points, {precision: 100});
     const predicted = (model.equation[0] * finalRate * duration) + model.equation[1]
-    // console.log(model)
 
     // Final model without smoothing
     noSmoothingEstimate = Math.round(predicted).toLocaleString()
