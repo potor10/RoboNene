@@ -1,3 +1,9 @@
+/**
+ * @fileoverview The main output when users call for the /private command
+ * Updates the user information on their profile's desired privacy setting
+ * @author Potor10
+ */
+
 const COMMAND = require('../command_data/private')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Show detailed information about other commands
+ * @author Potor10
+ */
+
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
@@ -5,9 +10,10 @@ const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
 const path = require('path');
 
-const COMMAND_NAME = 'help'
-
 const generateEmbed = require('../methods/generateEmbed') 
+
+// Constants that are used within the command 
+const COMMAND_NAME = 'help'
 
 const HELP_CONSTANTS = {
   'BAD COMMAND': {
@@ -42,6 +48,12 @@ slashCommand.addStringOption(op => {
   return op
 })
 
+/**
+ * Generate an options string based on the command that we're trying to query
+ * @param {Object} commandInfo detailed information about the command
+ * @param {String} commandName named of the command
+ * @return {String} option string dynamically generated from existing data
+ */
 const generateOptions = (commandInfo, commandName) => {
   let optStr = `\n\`\`/${commandName}`
 

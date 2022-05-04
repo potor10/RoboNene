@@ -1,5 +1,16 @@
+/**
+ * @fileoverview Dynamically generate our slash commands from data files rather than
+ * generating them on an individual basis in each file.
+ * @author Potor10
+ */
+
 const { SlashCommandBuilder } = require('@discordjs/builders');
 
+/**
+ * Applies options to a specific command using SlashCommandBuilder
+ * @param {SlashCommandBuilder} command the builder for the command in question
+ * @param {Object} info command info provided
+ */
 const generateOptions = (command, info) => {
   if (info.params) {
     info.params.forEach(option => {
@@ -34,7 +45,10 @@ const generateOptions = (command, info) => {
   }
 }
 
-
+/**
+ * Builds a slash command using data provided
+ * @param {Object} commandInfo command info provided
+ */
 const generateSlashCommand = (commandInfo) => {
   const slashCommand = new SlashCommandBuilder()
   

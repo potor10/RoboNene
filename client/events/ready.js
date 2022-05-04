@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Event handler that is run whenever the bot starts
+ * Updates the bot's status to reflect how many servers it has joined
+ * @author Potor10
+ */
+
 const { BOT_ACTIVITY } = require('../../constants');
 
 module.exports = {

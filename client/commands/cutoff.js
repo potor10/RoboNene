@@ -1,3 +1,9 @@
+/**
+ * @fileoverview The main output when users call for the /cutoff command
+ * Will display detailed information about ranking cutoff 
+ * @author Potor10
+ */
+
 const { MessageEmbed } = require('discord.js');
 const { DIR_DATA, NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
@@ -10,6 +16,11 @@ const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
 const binarySearch = require('../methods/binarySearch')
 
+/**
+ * Operates on a http request and returns the current rate being hosted on GH actions.
+ * @return {Object} Json object of the ranking rate constants.
+ * @error Status code of the http request
+ */
 const requestRate = () => {
   return new Promise((resolve, reject) => {
     const options = {
@@ -40,6 +51,17 @@ const requestRate = () => {
   })
 }
 
+/**
+ * Calculates the return embed and sends it via discord interaction
+ * @param {Interaction} interaction class provided via discord.js
+ * @param {Object} event object that we are investigating
+ * @param {Integer} timestamp in epochseconds
+ * @param {Integer} tier the ranking that the user wants to find
+ * @param {Integer} score of the current cutoff
+ * @param {Object} rankData the ranking data obtained
+ * @param {boolean} detailed determines if extra information shows
+ * @param {DiscordClient} client we are using to interact with disc
+ */
 const generateCutoff = async ({interaction, event, 
   timestamp, tier, score, rankData, detailed, discordClient}) => {
   

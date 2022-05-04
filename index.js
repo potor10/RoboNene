@@ -1,4 +1,9 @@
 // Import 
+/**
+ * @fileoverview The main code to run when you start the bot
+ * @author Potor10
+ */
+
 const DiscordClient = require('./client/client')
 const loadGameData = require('./scripts/loadGameData');
 const trackGameData = require('./scripts/trackGameData');

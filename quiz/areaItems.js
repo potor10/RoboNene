@@ -1,3 +1,8 @@
+/**
+ * @fileoverview A collection of questions involving area items for the quiz
+ * @author Potor10
+ */
+
 module.exports = [
   {
     'attr': 'areaName',

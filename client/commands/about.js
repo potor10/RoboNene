@@ -1,7 +1,7 @@
 /**
- * @fileoverview Description of file, its uses and information
- * about its dependencies.
- * @package
+ * @fileoverview The main output when users call for the /about command
+ * Will create a scrollable leaderboard elaborating about the bot and other features
+ * @author Potor10
  */
 
 const { MessageActionRow, MessageButton } = require('discord.js');
@@ -24,6 +24,7 @@ module.exports = {
     const EMBED_TITLE = `About ${BOT_NAME}`
 
     const aboutPages = [
+      // Embed generation of a list of programmers who supported the bot
       generateEmbed({
         name: EMBED_TITLE, 
         content: {
@@ -34,6 +35,7 @@ module.exports = {
         },
         client: discordClient.client
       }),
+      // Embed generation of a list of designers who provided feedback to the bot
       generateEmbed({
         name: EMBED_TITLE, 
         content: {
@@ -44,6 +46,7 @@ module.exports = {
         }, 
         client: discordClient.client
       }),
+      // Embed generation of a list of bot beta testers
       generateEmbed({
         name: EMBED_TITLE, 
         content: {
@@ -54,6 +57,7 @@ module.exports = {
         }, 
         client: discordClient.client
       }),
+      // Credit to alternative sources where data is pulled from
       generateEmbed({
         name: EMBED_TITLE,
         content: {
@@ -62,6 +66,7 @@ module.exports = {
         }, 
         client: discordClient.client
       }),
+      // Credit to sources of information on implementing predictions
       generateEmbed({
         name: EMBED_TITLE, 
         content: {
@@ -70,6 +75,7 @@ module.exports = {
         }, 
         client: discordClient.client
       }),
+      // Credit to sources of cached / stored ranking data information
       generateEmbed({
         name: EMBED_TITLE, 
         content: {
@@ -78,6 +84,7 @@ module.exports = {
         }, 
         client: discordClient.client
       }),
+      // Learn about discord policies & nene robo
       generateEmbed({
         name: EMBED_TITLE, 
         content: {
@@ -86,6 +93,7 @@ module.exports = {
         }, 
         client: discordClient.client
       }),
+      // Learn about project sekai policies & nene robo
       generateEmbed({
         name: EMBED_TITLE, 
         content: {
@@ -94,6 +102,7 @@ module.exports = {
         }, 
         client: discordClient.client
       }),
+      // Information on how to contribute to the bot
       generateEmbed({
         name: EMBED_TITLE, 
         content: {
@@ -102,6 +111,7 @@ module.exports = {
         }, 
         client: discordClient.client
       }),
+      // Tech stack information
       generateEmbed({
         name: EMBED_TITLE, 
         content: {
@@ -110,6 +120,7 @@ module.exports = {
         }, 
         client: discordClient.client
       }),
+      // Nene Robo License
       generateEmbed({
         name: EMBED_TITLE, 
         content: {

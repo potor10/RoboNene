@@ -1,3 +1,8 @@
+/**
+ * @fileoverview A collection of questions involving characters for the quiz
+ * @author Potor10
+ */
+
 module.exports = [
   {
     'attr': 'height',

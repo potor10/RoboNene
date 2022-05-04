@@ -1,3 +1,9 @@
+/**
+ * @fileoverview The main output when users call for the /profile command
+ * Creates and returns an embed with all of the user's information available ingame
+ * @author Potor10
+ */
+
 const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
@@ -8,6 +14,14 @@ const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
 const binarySearch = require('../methods/binarySearch')
 
+/**
+ * Generates an embed for the profile of the player
+ * @param {DiscordClient} client we are using to interact with disc
+ * @param {String} userId the id of the user we are trying to access
+ * @param {Object} data the player data returned from the API acess of the user in question
+ * @param {boolean} private if the play has set their profile to private (private by default)
+ * @return {MessageEmbed} the embed we will display to the user
+ */
 const generateProfileEmbed = (discordClient, userId, data, private) => {
   const areas = JSON.parse(fs.readFileSync('./sekai_master/areas.json'));
   const areaItemLevels = JSON.parse(fs.readFileSync('./sekai_master/areaItemLevels.json'));
@@ -157,6 +171,7 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
     challengeRankText += `\`\`${charName}  ${rankText}\`\`\n`
   })
 
+  // Create the Embed for the profile using the pregenerated values
   const profileEmbed = new MessageEmbed()
     .setColor(NENE_COLOR)
     .setTitle(`${data.user.userGamedata.name}'s Profile`)
@@ -214,6 +229,12 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
   return profileEmbed 
 }
 
+/**
+ * Makes a request to Project Sekai to obtain the information of the player
+ * @param {Interaction} interaction class provided via discord.js
+ * @param {DiscordClient} client we are using to interact with disc
+ * @param {Integer} userId the id of the user we are trying to access
+ */
 const getProfile = async (interaction, discordClient, userId) => {
   if (!discordClient.checkRateLimit(interaction.user.id)) {
     await interaction.editReply({

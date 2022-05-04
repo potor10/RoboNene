@@ -1,9 +1,23 @@
+/**
+ * @fileoverview The main implementation towards maintaining tracked ranking information
+ * Will update servers that have signed up with live update leaderboard every 2 minutes or 1 hour
+ * @author Potor10
+ */
+
 const { MessageEmbed } = require('discord.js');
 const { RESULTS_PER_PAGE, NENE_COLOR, FOOTER } = require('../constants');
 const RANKING_RANGE = require('./trackRankingRange.json')
 const fs = require('fs');
 const generateRankingText = require('../client/methods/generateRankingText')
 
+/**
+ * Sends an embed containing the top 20 players to specific Discord servers that have
+ * signed up for tracking updates
+ * @param {Object} data a collection of the top 20 players on the leaderboard
+ * @param {Object} event data about the current event that is going on
+ * @param {Integer} timestamp the time when the data was collected, in epochseconds
+ * @param {DiscordClient} discordClient the client we are using to interact with Discord
+ */
 const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
   const generateTrackingEmbed = () => {
     let leaderboardText = generateRankingText(data.slice(0, RESULTS_PER_PAGE), 0, 0)
@@ -59,9 +73,7 @@ const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
 }
 
 /**
- * @name getNextCheck
- * @description identifies the time needed before the next check of data
- * 
+ * Identifies the time needed before the next check of data
  * @return {number} the ms to wait before checking again
  */
 const getNextCheck = () => {
@@ -78,8 +90,7 @@ const getNextCheck = () => {
 }
 
 /**
- * @name requestRanking
- * @description requests the next rank of data recursively
+ * Requests the next rank of data recursively
  * @param {Object} event our ranking event data
  * @param {DiscordClient} discordClient the client we are using 
  */
@@ -107,10 +118,8 @@ const requestRanking = async (event, discordClient) => {
 }
 
 /**
- * @name getRankingEvent
- * @description Obtains the current event within the ranking period
- * 
- * @returns {Object} the ranking event information
+ * Obtains the current event within the ranking period
+ * @return {Object} the ranking event information
  */
 const getRankingEvent = () => {
   let events = {}
@@ -135,8 +144,7 @@ const getRankingEvent = () => {
 }
 
 /**
- * @name trackRankingData
- * @description continaully grabs and updates the ranking data
+ * Continaully grabs and updates the ranking data
  * @param {DiscordClient} discordClient the client we are using 
  */
 const trackRankingData = async (discordClient) => {

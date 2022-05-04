@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Constants utilized within the bot
+ * @author Potor10
+ */
+
 module.exports = {
   // Bot Information
   "BOT_NAME": "Nene Robo",

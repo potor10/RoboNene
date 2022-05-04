@@ -1,8 +1,15 @@
+/**
+ * @fileoverview Implementation when users request any form of ranking information
+ * from Project Sekai.
+ * @author Potor10
+ */
+
 const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
 const generateRankingText = require('../methods/generateRankingText')
 const generateEmbed = require('../methods/generateEmbed') 
 
+// Messages displayed when there is an error
 const RANK_CONSTANTS = {
   'NO_RESULTS_ERR': {
     type: 'Error',
@@ -30,6 +37,14 @@ const RANK_CONSTANTS = {
   'LOWER_LIMIT':  Math.floor(RESULTS_PER_PAGE/2)
 };
 
+/**
+ * Obtains a snapshot of the ranking leaderboard from the provided parameters and replies to the
+ * interaction with an embed.
+ * @param {String} commandName the name of the command which needs to access the ranking leaderboard
+ * @param {Interaction} interaction the discord interaction which initiated the command to access the leaderboard
+ * @param {DiscordClient} discordClient the Discord Client we are accessing the interface with discord
+ * @param {Object} requestParams the parameters provided to the API for our ranking leaderboard query 
+ */
 const getRank = async (commandName, interaction, discordClient, requestParams) => {
   const event = discordClient.getCurrentEvent()
 

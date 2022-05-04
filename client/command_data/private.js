@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Command Data & Constants Related to the /private command
+ * These constants are used to dynamically generate a slash command on discord.
+ * This File also contains the constants values used exclusively in the /private command.
+ * @author Potor10
+ */
+
 module.exports = {
   'INFO': {
     'name': 'private',

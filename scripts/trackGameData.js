@@ -1,7 +1,14 @@
+/**
+ * @fileoverview The main implementation towards maintaining our bot with up to data information.
+ * Will async download data from Sekai.best once in a while when the bot is running
+ * @author Potor10
+ */
+
 const { DIR_DATA } = require('../constants');
 const https = require('https');
 const fs = require('fs');
 
+// The location we pull from and data modules we pull 
 const GAME_CONSTANTS = {
   "HOST": "raw.githubusercontent.com",
   "PATH": "/Sekai-World/sekai-master-db-en-diff/main/",
@@ -17,6 +24,9 @@ const GAME_CONSTANTS = {
   ]
 }
 
+/**
+ * Downloads all the requested data one by one
+ */
 const getData = () => {
   GAME_CONSTANTS.JSON.forEach((filename) => {
     const options = {
@@ -46,6 +56,10 @@ const getData = () => {
   })
 }
 
+/**
+ * Enables the tracking of the game database, and requests game data once every two hours
+ * @param {DiscordClient} discordClient the client we are using to interact with Discord
+ */
 const trackGameData = async (discordClient) => {
   // Obtain the game data
   getData();

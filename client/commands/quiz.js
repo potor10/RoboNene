@@ -1,3 +1,12 @@
+/**
+ * @fileoverview The main output when users call for the /quiz command
+ * Contains various classes designed to pool information from the master db and
+ * dynamically generate questions for the user.
+ * Also contains the main method of user access to the quiz, and randomly selection
+ * of a category.
+ * @author Potor10
+ */
+
 const { MessageActionRow, MessageSelectMenu } = require('discord.js');
 const fs = require('fs');
 
@@ -8,7 +17,8 @@ const generateEmbed = require('../methods/generateEmbed')
 
 /**
  * Shuffles array in place.
- * @param {Array} a items An array containing the items.
+ * @param {Array} a An array containing the items.
+ * @return {Array} an array that has been shuffled 
  */
 const shuffle = (a) => {
   var j, x, i;
@@ -21,6 +31,9 @@ const shuffle = (a) => {
   return a;
 }
 
+/**
+ * A class designed to obtain questions from existing event data
+ */
 class eventQuestion {
   constructor() {
     this.type = 'events';
@@ -28,10 +41,18 @@ class eventQuestion {
     this.prompts = require('../../quiz/event')
   }
 
+  /**
+   * Obtain the type of entry we are looking for (question specific)
+   * @return the question's type of prompt
+   */
   getType() {
     return this.type
   }
 
+  /**
+   * Obtain a question prompt, 3 incorrect and 1 correct answers
+   * @return {Object} a collection of the aforementioned values
+   */
   getQuestion() {
     const eventShuffle = shuffle(this.events)
 
@@ -49,6 +70,9 @@ class eventQuestion {
   }
 }
 
+/**
+ * A class designed to obtain questions from existing character data
+ */
 class characterQuestion {
   constructor() {
     this.type = 'characters';
@@ -65,11 +89,19 @@ class characterQuestion {
 
     this.prompts = require('../../quiz/characters')
   }
-
+  
+  /**
+   * Obtain the type of entry we are looking for (question specific)
+   * @return the question's type of prompt
+   */
   getType() {
     return this.type
   }
 
+  /**
+   * Obtain a question prompt, 3 incorrect and 1 correct answers
+   * @return {Object} a collection of the aforementioned values
+   */
   getQuestion() {
     const charaShuffle = shuffle(this.characterInfo)
 
@@ -85,6 +117,7 @@ class characterQuestion {
     const questionIdx = Math.floor(Math.random() * this.prompts.length)
     const attr = this.prompts[questionIdx].attr
 
+    // Recursively sample random characters until a character w/o the same trait is found
     const chooseCharacter = () => {
       const character = charaShuffle.pop()
 
@@ -110,6 +143,9 @@ class characterQuestion {
   }
 }
 
+/**
+ * A class designed to obtain questions from existing card data
+ */
 class cardQuestion {
   constructor() {
     this.type = 'cards';
@@ -128,10 +164,18 @@ class cardQuestion {
     this.prompts = require('../../quiz/cards')
   }
 
+  /**
+   * Obtain the type of entry we are looking for (question specific)
+   * @return the question's type of prompt
+   */
   getType() {
     return this.type
   }
 
+  /**
+   * Obtain a question prompt, 3 incorrect and 1 correct answers
+   * @return {Object} a collection of the aforementioned values
+   */
   getQuestion() {
     const cardShuffle = shuffle(this.cardInfo)
 
@@ -139,6 +183,7 @@ class cardQuestion {
     const questionIdx = Math.floor(Math.random() * this.prompts.length)
     const attr = this.prompts[questionIdx].attr
 
+    // Recursively sample random characters until a character w/o the same trait is found
     const chooseCard = () => {
       const card = cardShuffle.pop()
 
@@ -172,6 +217,9 @@ class cardQuestion {
   }
 }
 
+/**
+ * A class designed to obtain questions from area item data
+ */
 class areaQuestion {
   constructor() {
     this.type = 'cards';
@@ -197,10 +245,18 @@ class areaQuestion {
     this.prompts = require('../../quiz/areaItems')
   }
 
+  /**
+   * Obtain the type of entry we are looking for (question specific)
+   * @return the question's type of prompt
+   */
   getType() {
     return this.type
   }
 
+  /**
+   * Obtain a question prompt, 3 incorrect and 1 correct answers
+   * @return {Object} a collection of the aforementioned values
+   */
   getQuestion() {
     // Remove duplicates of Music Speakers from the pool
     const areaShuffle = shuffle(this.areaItemInfo).filter((area) => {
@@ -211,6 +267,7 @@ class areaQuestion {
     const questionIdx = Math.floor(Math.random() * this.prompts.length)
     const attr = this.prompts[questionIdx].attr
 
+    // Recursively sample random characters until a character w/o the same trait is found
     const chooseAreaItem = () => {
       const areaItem = areaShuffle.pop()
 
@@ -244,6 +301,12 @@ class areaQuestion {
   }
 }
 
+/**
+ * Obtain the account statistics of the user (if it exists)
+ * @param {String} userId the Id of the user using the quiz
+ * @param {DiscordClient} discordClient the client we are using to serve requests
+ * @return {Object} an object containing the overall stats of the user
+ */
 const getAccount = (userId, discordClient) => {
   // Obtain our user stats
   const user = discordClient.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({

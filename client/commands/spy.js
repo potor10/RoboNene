@@ -1,3 +1,9 @@
+/**
+ * @fileoverview The main output when users call for the /spy command
+ * Generates a leaderboard snapshot of ~20 users between a specified user ID, or a specific rank
+ * @author Potor10
+ */
+
 const { ERR_COMMAND } = require('../../constants');
 
 const COMMAND = require('../command_data/spy')

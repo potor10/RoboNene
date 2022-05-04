@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Display a graph of the previous ranking trend
+ * @author Potor10
+ */
+
 const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
@@ -7,6 +12,13 @@ const COMMAND = require('../command_data/graph')
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
 
+/**
+ * Create a graph embed to be sent to the discord interaction
+ * @param {string} graphUrl url of the graph we are trying to embed
+ * @param {Integer} tier the ranking that the user wants to find
+ * @param {DiscordClient} client we are using to interact with discord
+ * @return {MessageEmbed} graph embed to be used as a reply via interaction
+ */
 const generateGraphEmbed = (graphUrl, tier, discordClient) => {
   const graphEmbed = new MessageEmbed()
     .setColor(NENE_COLOR)
@@ -20,6 +32,14 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
   return graphEmbed
 }
 
+/**
+ * Operates on a http request and returns the url embed of the graph using quickchart.io
+ * @param {Object} interaction object provided via discord
+ * @param {Integer} tier the ranking that the user wants to find
+ * @param {Object} rankData the ranking data obtained
+ * @param {DiscordClient} client we are using to interact with discord
+ * @error Status code of the http request
+ */
 const postQuickChart = async (interaction, tier, rankData, discordClient) => {
   if (!rankData.data.eventRankings) {
     await interaction.editReply({

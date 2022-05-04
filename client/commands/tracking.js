@@ -1,3 +1,9 @@
+/**
+ * @fileoverview The main output when users call for the /tracking command
+ * Enables or disables 2-minute or 1-hour tracking for a specific channel within the server
+ * @author Potor10
+ */
+
 const COMMAND = require('../command_data/tracking')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')

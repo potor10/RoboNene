@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Event handler that is run whenever the bot joins a guild
+ * Updates the bot's status to reflect that it has joined a new server
+ * @author Potor10
+ */
+
 const { BOT_ACTIVITY } = require('../../constants');
 
 module.exports = {

@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Event handler that is run whenever the bot is removed from a guild
+ * Updates the bot's status to reflect that it has left a server
+ * @author Potor10
+ */
+
 const { BOT_ACTIVITY } = require('../../constants');
 
 module.exports = {

@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Load all commands from a bot into a global cache on Discord
+ * May take a while to update, due to Discord's caching system
+ * @author Potor10
+ */
+
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 const { token, clientId } = require('../config.json');

@@ -1,6 +1,14 @@
+/**
+ * @fileoverview Event handler that is run whenever the bot recieves an interaction
+ * Based on the status of the interaction, the bot may forward the payload to be run
+ * as a command, or reject the data.
+ * @author Potor10
+ */
+
 const { DMChannel } = require('discord.js');
 const generateEmbed = require('../methods/generateEmbed') 
 
+// General constants used to reply to standard interactions
 const INTERACTION_CONST = {
   "NO_ACCESS_ADMIN": {
     type: 'Error',

@@ -1,3 +1,9 @@
+/**
+ * @fileoverview The main output when users call for the /rank command
+ * Generates a leaderboard snapshot of ~20 users between where you are currently ranked
+ * @author Potor10
+ */
+
 const COMMAND = require('../command_data/rank')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')

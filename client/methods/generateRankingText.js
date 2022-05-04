@@ -1,5 +1,18 @@
+/**
+ * @fileoverview An implementation designed to efficiently generate an embed for a
+ * leaderboard display, given ranking data
+ * @author Potor10
+ */
+
 const { RESULTS_PER_PAGE } = require('../../constants');
 
+/**
+ * Generates an ranking embed from the provided params
+ * @param {Object} data a collection of player data on the leaderboard
+ * @param {Integer} page the current page (if applicable)
+ * @param {Integer} target the rank that we will highlight on the embed with a star
+ * @return {MessageEmbed} a generated embed of the current leaderboard
+ */
 const generateRankingText = (data, page, target) => {
   let maxRankLength = 0
   let maxNameLength = 0

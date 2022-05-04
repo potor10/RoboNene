@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Command Data & Constants Related to the /cutoff command
+ * These constants are used to dynamically generate a slash command on discord.
+ * This File also contains the constants and error values used exclusively in the /cutoff command.
+ * @author Potor10
+ */
+
 module.exports = {
   'INFO': {
     'name': 'cutoff',

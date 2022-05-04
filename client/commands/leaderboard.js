@@ -1,3 +1,9 @@
+/**
+ * @fileoverview The main output when users call for the /leaderboard command
+ * Shows an updated, scrollable snapshot of the top 100 ranks at the moment
+ * @author Potor10
+ */
+
 const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
 
@@ -19,6 +25,7 @@ module.exports = {
     })
 
     const event = discordClient.getCurrentEvent()
+    // There is no event at the moment
     if (event.id === -1) {
       await interaction.editReply({
         embeds: [
@@ -32,6 +39,7 @@ module.exports = {
       return
     }
 
+    // Ensure that the user has not surpassed the rate limit
     if (!discordClient.checkRateLimit(interaction.user.id)) {
       await interaction.editReply({
         embeds: [generateEmbed({
@@ -146,6 +154,7 @@ module.exports = {
         time: COMMAND.CONSTANTS.INTERACTION_TIME 
       });
       
+      // Collect user interactions with the prev / next buttons
       collector.on('collect', async (i) => {
         if (i.user.id !== interaction.user.id) {
           await i.reply({

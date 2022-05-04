@@ -1,3 +1,9 @@
+/**
+ * @fileoverview The main output when users call for the /unlink command
+ * Shows an prompt for the user to unlink their account the the bot
+ * @author Potor10
+ */
+
 const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
 const { ERR_COMMAND, NENE_COLOR, FOOTER } = require('../../constants');
 
@@ -6,6 +12,15 @@ const COMMAND = require('../command_data/unlink')
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
 
+/**
+ * Generates the embed that is used when users request a link
+ * @param {String} code the code that the user needs to enter into their profile to link
+ * @param {String} accountId the ID of the account that is trying to link to the bot
+ * @param {Integer} expires in epochseconds before the linking expires
+ * @param {Object} content the message body within the link embed (ex: success, or failure)
+ * @param {DiscordClient} client we are using to interact with disc
+ * @return {MessageEmbed} embed that we recieve to display to the user
+ */
 const generateUnlinkEmbed = ({code, accountId, expires, content, client}) => {
   const unlinkInformation = {
     type: 'Unlink Information',

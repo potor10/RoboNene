@@ -1,3 +1,12 @@
+/**
+ * @fileoverview A collection of questions involving cards for the quiz
+ * @author Potor10
+ */
+
+/**
+ * Obtains the full name of a card; Last Name + First Name (otherwise just Last Name)
+ * @param {Object} card the data of the card we want to obtain a name from
+ */
 const getName = (card) => {
   let charName = card.givenName
   if (card.firstName) {
