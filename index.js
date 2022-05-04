@@ -1,4 +1,3 @@
-// Import 
 /**
  * @fileoverview The main code to run when you start the bot
  * @author Potor10
