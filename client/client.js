@@ -223,7 +223,8 @@ class DiscordClient {
           name: events[i].name,
           startAt: events[i].startAt,
           aggregateAt: events[i].aggregateAt,
-          closedAt: events[i].closedAt
+          closedAt: events[i].closedAt,
+          eventType: events[i].eventType
         }
       }
     }
