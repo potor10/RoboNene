@@ -69,7 +69,7 @@ module.exports = {
   
     'NO_DATA_ERR': {
       'type': 'Error',
-      'message': 'Please cloose a different cutoff tier'
+      'message': 'There was a problem with retrieving ranking data from sekai.best'
     },
 
     'NO_RESPONSE_ERR': {
