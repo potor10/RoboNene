@@ -32,8 +32,8 @@ class music {
         const musicMetasJSON = JSON.parse(fs.readFileSync('./sekai_master/music_metas.json'))
 
         //Checks music metas first for all IDs listed
-        musicMetasJSON.forEach(music => {
-            this.ids.add(music.music_id);
+        musicMetasJSON.forEach(musicMeta => {
+            this.ids.add(musicMeta.music_id);
         });
 
         //Checks musics second to get listed IDs titles
@@ -46,6 +46,7 @@ class music {
 
         this.ids = this.getIntersection(this.ids, tempIDs);
 
+        //Create new object for each song to store difficulties
         this.ids.forEach(id => {
             this.musicmetas[id] = new Object();
         })
@@ -58,14 +59,14 @@ class music {
                 let skillScores = music.skill_score_multi.slice(0, 5);
                 let skillScoreOrder = [];
                 let skillOrder = [];
-                skillScores.forEach((skill, i) => {
-                    skillScoreOrder.push([skill, i]);
-                })
 
+                skillScoreOrder = skillScoreOrder.map(skillScore, i => [skillScore, i])
+
+                //Sort to get correct order
                 skillScoreOrder.sort(this.sortFunction);
 
-                skillScoreOrder.forEach(skill => {
-                    skillOrder.push(ProsekaSkillOrder[skill[1]]);
+                skillOrder = skillScoreOrder.map(skill => {
+                    ProsekaSkillOrder[skill[1]];
                 })
 
                 this.musicmetas[music.music_id][music.difficulty] = skillOrder;
@@ -73,16 +74,18 @@ class music {
         })
     }
 
-    //Sort function for skill scores
+    //Sort function for 2D arrays that orders it by value of first index
+    //Sorts From highest to lowest
     sortFunction(a, b) {
         if (a[0] === b[0]) {
             return 0;
         }
         else {
-            return (a[0] < b[0]) ? -1 : 1;
+            return (a[0] > b[0]) ? -1 : 1;
         }
     }
 
+    //Returns intersection of two sets
     getIntersection(setA, setB) {
         const intersection = new Set(
             [...setA].filter(element => setB.has(element))
