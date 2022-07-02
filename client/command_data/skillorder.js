@@ -14,9 +14,13 @@ module.exports = {
         'params': [
             {
                 'type': 'integer',
-                'name': 'rank',
+                'name': 'song',
                 'required': false,
-                'description': 'Optional rank to jump to.'
+                'description': 'Song Name',
+                'choices': [
+                    ["Melt", 47],
+                    ["Hitorinbo Envy", 74]
+                ]
             }
         ]
     },
