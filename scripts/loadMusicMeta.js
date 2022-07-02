@@ -7,7 +7,6 @@
 const { DIR_DATA } = require('../constants');
 const https = require('https');
 const fs = require('fs');
-const loadGameData = require('./loadGameData');
 
 // The location we pull from and data modules we pull 
 const GAME_CONSTANTS = {
@@ -19,10 +18,8 @@ const GAME_CONSTANTS = {
 }
 
 /**
- * Recursively downloads the data one by one, then executes a callback to confirm all
- * data has been downloaded
+ * Recursively downloads the data one by one
  * @param {Integer} idx the current index on that data we have downloaded
- * @param {Function} callback a callback to run upon the successful download of all data
  */
 const loadMusicMeta = (idx) => {
     if (idx >= GAME_CONSTANTS.JSON.length) {
@@ -46,7 +43,7 @@ const loadMusicMeta = (idx) => {
                     try {
                         fs.writeFileSync(`${DIR_DATA}/${filename}.json`, JSON.stringify(JSON.parse(json)));
                         console.log(`${filename}.json Retrieved`)
-                        loadGameData(idx + 1)
+                        loadMusicMeta(idx + 1)
                     } catch (err) {
                         console.log(`Error parsing JSON: ${err}`)
                     }

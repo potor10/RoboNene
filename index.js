@@ -9,9 +9,8 @@ const loadMusicMeta = require('./scripts/loadMusicMeta')
 const trackGameData = require('./scripts/trackGameData');
 const trackRankingData = require('./scripts/trackRankingData');
 
-
+loadMusicMeta(0)
 loadGameData(0, async () => {
-  loadMusicMeta(0)
   const client = new DiscordClient()
   client.loadCommands()
   client.loadEvents()
