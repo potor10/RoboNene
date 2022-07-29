@@ -51,6 +51,28 @@ const requestRate = () => {
   })
 }
 
+
+/**
+ * Calculates the standard error of 
+ * @param {Array} Array of all data points
+ * @param {Object} Linear Regression Model
+ * @param {Integer} Calculated Final Rate of the event
+ */
+function stdError(data, model, finalRate)
+{
+  let s = 0;
+
+  data.forEach((v) => {
+    let duration = v[0];
+    let points = v[1];
+    let estimate = (model.equation[0] * finalRate * duration) + model.equation[1];
+
+    s += Math.abs(points - estimate);
+  });
+
+  return s / data.length;
+}
+
 /**
  * Calculates the return embed and sends it via discord interaction
  * @param {Interaction} interaction class provided via discord.js
@@ -79,11 +101,11 @@ const generateCutoff = async ({interaction, event,
     return
   }
 
-  const msTaken = timestamp - event.startAt
-  const duration = event.aggregateAt - event.startAt
+  const msTaken = timestamp - event.startAt;
+  const duration = event.aggregateAt - event.startAt;
 
   // Overall score gain per hour
-  const scorePH = Math.round(score * 3600000 / msTaken)
+  const scorePH = Math.round(score * 3600000 / msTaken);
 
   let lastHourPt = (rankData) ? rankData[0] : {
     timestamp: (new Date(timestamp)).toISOString(),
@@ -97,16 +119,18 @@ const generateCutoff = async ({interaction, event,
   }
 
   // Estimate texts used in the embed
-  let noSmoothingEstimate = 'N/A'
-  let smoothingEstimate = 'N/A'
+  let noSmoothingEstimate = 'N/A';
+  let smoothingEstimate = 'N/A';
+  let noSmoothingError = 'N/A';
+  let smoothingError = 'N/A';
 
   // The string we show that highlights the equation we use in detailed
-  let linEquationStr = ''
+  let linEquationStr = '';
 
   // Saved indices of critical timestamps
-  let oneDayIdx = -1
-  let halfDayIdx = -1
-  let lastDayIdx = rankData.length
+  let oneDayIdx = -1;
+  let halfDayIdx = -1;
+  let lastDayIdx = rankData.length;
 
   // Find the index where 12 and 24 hours have passed into the event (or the latest timestamp)
   for(let i = 0; i < rankData.length; i++) {
@@ -138,7 +162,7 @@ const generateCutoff = async ({interaction, event,
     const eventCards = JSON.parse(fs.readFileSync(`${DIR_DATA}/eventCards.json`));
     const cards = JSON.parse(fs.readFileSync(`${DIR_DATA}/cards.json`));
 
-    const characterIds = []
+    const characterIds = [];
 
     // Find the characters relevant to the event
     eventCards.forEach(card => {
@@ -146,7 +170,7 @@ const generateCutoff = async ({interaction, event,
         const cardInfo = binarySearch(card.cardId, 'id', cards);
         characterIds.push(cardInfo.characterId)
       }
-    })
+    });
 
     // Values used to calculate the c constant in y = (c * m)x + b
     let totalRate = 0;
@@ -157,10 +181,10 @@ const generateCutoff = async ({interaction, event,
 
     // Calculate the idx of our rate (based on time into event)
     // Each index starts from 1 day into the event -> the end of the event, with 30 minute intervals
-    const rateIdx = Math.floor((timestamp - 86400000) / 1800000)
+    const rateIdx = Math.floor((timestamp - 86400000) / 1800000);
 
     // Obtain The Event Type of the Current Event
-    let currentEventType = discordClient.getCurrentEvent().eventType
+    let currentEventType = discordClient.getCurrentEvent().eventType;
 
     // Identify a constant c used in y = (c * m)x + b that can be used via this event
     for(const eventId in rate) {
@@ -189,75 +213,86 @@ const generateCutoff = async ({interaction, event,
     // otherwise use the average of all events of same type
     // If there is no data to go off of, we use 1
     const finalRate = (totalSimilar) ? (totalRate / totalSimilar) : ((rateCount) ? (allTotalRate / rateCount) : 1)
-    console.log(`The Final Rate is ${finalRate}`)
+    console.log(`The Final Rate is ${finalRate}`);
 
-    const points = []
+    const points = [];
 
     // Only get data points past 12 hours and before last 24 hours
     rankData.slice(halfDayIdx, lastDayIdx).forEach((point) => {
-      points.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score])
-    })
+      points.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score]);
+    });
 
     // Create a linear regression model with our data points
     const model = regression.linear(points, {precision: 100});
-    const predicted = (model.equation[0] * finalRate * duration) + model.equation[1]
+    const predicted = (model.equation[0] * finalRate * duration) + model.equation[1];
+
+    // Calculate Error 
+    const error = stdError(points, model, finalRate);
 
     // Final model without smoothing
-    noSmoothingEstimate = Math.round(predicted).toLocaleString()
+    noSmoothingEstimate = Math.round(predicted).toLocaleString();
+    noSmoothingError = Math.round(error).toLocaleString();
 
     // Generate the string for the equation
     linEquationStr = `\n*${+(model.equation[0]).toFixed(5)} \\* ` + 
-      `${+(finalRate).toFixed(2)} \\* ms into event + ${+(model.equation[1]).toFixed(2)}*`
+      `${+(finalRate).toFixed(2)} \\* ms into event + ${+(model.equation[1]).toFixed(2)}*`;
 
     // Calculate smoothed result
-    let totalWeight = 0
-    let totalTime = 0
+    let totalWeight = 0;
+    let totalTime = 0;
+
+    //Stores error
+    let errorSmoothed = 0;
 
     // Grab 1 Estimate Every 60 Minutes For Smoothing
-    const smoothingPoints = []
+    const smoothingPoints = [];
 
     rankData.slice(halfDayIdx, oneDayIdx).forEach((point) => {
-      smoothingPoints.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score])
-    })
+      smoothingPoints.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score]);
+    });
 
-    let lastIdx = oneDayIdx
+    let lastIdx = oneDayIdx;
 
     for(let i = oneDayIdx; i < lastDayIdx; i += 60) {
       // console.log(`Added ${rankData.slice(lastIdx, i).length} points to the smoothingPts`)
       rankData.slice(lastIdx, i).forEach((point) => {
-        smoothingPoints.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score])
-      })
+        smoothingPoints.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score]);
+      });
 
       lastIdx = i;
       // TODO: Add error checking if smoothingPoints remains empty after this
 
       // Create a linear regression model with the current data points
-      const result = regression.linear(smoothingPoints, {precision: 100});
-      const estimate = (result.equation[0] * finalRate * duration) + result.equation[1]
+      const modelSmoothed = regression.linear(smoothingPoints, {precision: 100});
+      const predictedSmoothed = (modelSmoothed.equation[0] * finalRate * duration) + modelSmoothed.equation[1]
+      
+      // Calculate Error 
+      errorSmoothed = stdError(smoothingPoints, modelSmoothed, finalRate);
 
       // Calculate the % through the event, we will use this as a weight for the estimation
-      const amtThrough = (smoothingPoints[smoothingPoints.length-1][0]) / duration
+      const amtThrough = (smoothingPoints[smoothingPoints.length-1][0]) / duration;
 
       // console.log(`last point ts ${smoothingPoints[smoothingPoints.length-1][0]}`)
 
       // Total score of all of our estimates with account to weight
-      totalWeight += estimate * Math.pow(amtThrough, 2)
+      totalWeight += predictedSmoothed * Math.pow(amtThrough, 2);
 
       // Total time weights
-      totalTime += Math.pow(amtThrough, 2)
+      totalTime += Math.pow(amtThrough, 2);
     }
 
-    smoothingEstimate = Math.round(totalWeight / totalTime).toLocaleString()
+    smoothingEstimate = Math.round(totalWeight / totalTime).toLocaleString();
+    smoothingError = Math.round(errorSmoothed).toLocaleString();
   }
 
   // Generate the cutoff embed
-  const lastHourPtTimeMs = new Date(lastHourPt.timestamp).getTime()
+  const lastHourPtTimeMs = new Date(lastHourPt.timestamp).getTime();
   const lastHourPtTime = (timestamp > event.aggregateAt) ? Math.floor(timestamp / 1000) : 
-    Math.floor(lastHourPtTimeMs / 1000)
+    Math.floor(lastHourPtTimeMs / 1000);
   const lastHourPtSpeed = (timestamp > event.aggregateAt) ? 0 :
-    Math.round((score - lastHourPt.score) * 3600000 / (timestamp - lastHourPtTimeMs))
+    Math.round((score - lastHourPt.score) * 3600000 / (timestamp - lastHourPtTimeMs));
 
-  const eventPercentage = Math.min((timestamp - event.startAt) * 100 / duration, 100)
+  const eventPercentage = Math.min((timestamp - event.startAt) * 100 / duration, 100);
   
   const cutoffEmbed = new MessageEmbed()
     .setColor(NENE_COLOR)
@@ -277,9 +312,11 @@ const generateCutoff = async ({interaction, event,
     cutoffEmbed.addField('Warning', `*${COMMAND.CONSTANTS.PRED_WARNING}*`)
   }
 
-  cutoffEmbed.addField('Point Estimation (Predictions)', `Estimated Points: \`\`${noSmoothingEstimate}\`\`\n` +
+  cutoffEmbed.addField('Point Estimation (Predictions)', `Estimated Points: \`\`${noSmoothingEstimate}` +
+      ` ± ${noSmoothingError}\`\`\n` +
       ((detailed) ? `*${COMMAND.CONSTANTS.PRED_DESC}*${linEquationStr}\n\n`: '') +
-      `Estimated Points (Smoothing): \`\`${smoothingEstimate}\`\`\n` + 
+      `Estimated Points (Smoothing): \`\`${smoothingEstimate}` + 
+      ` ± ${smoothingError}\`\`\n` +
       ((detailed) ? `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n` : ''))
   
 
@@ -308,9 +345,9 @@ module.exports = {
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
+    });
 
-    const event = discordClient.getCurrentEvent()
+    const event = discordClient.getCurrentEvent();
     if (event.id === -1) {
       await interaction.editReply({
         embeds: [
@@ -324,7 +361,7 @@ module.exports = {
       return
     }
 
-    const tier = interaction.options._hoistedOptions[0].value
+    const tier = interaction.options._hoistedOptions[0].value;
 
     if (!discordClient.checkRateLimit(interaction.user.id)) {
       await interaction.editReply({
@@ -337,8 +374,8 @@ module.exports = {
           },
           client: discordClient.client
         })]
-      })
-      return
+      });
+      return;
     }
 
     discordClient.addSekaiRequest('ranking', {
@@ -357,7 +394,7 @@ module.exports = {
             })
           ]
         });
-        return
+        return;
       } else if (response.rankings.length === 0) {
         await interaction.editReply({
           embeds: [
@@ -368,14 +405,14 @@ module.exports = {
             })
           ]
         });
-        return
+        return;
       }
 
-      const timestamp = Date.now()
-      const score = response.rankings[0].score
+      const timestamp = Date.now();
+      const score = response.rankings[0].score;
 
-      let paramCount = interaction.options._hoistedOptions.length
-      let detailed = (paramCount === 1) ? false : interaction.options._hoistedOptions[1].value
+      let paramCount = interaction.options._hoistedOptions.length;
+      let detailed = (paramCount === 1) ? false : interaction.options._hoistedOptions[1].value;
 
       const options = {
         host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
@@ -391,7 +428,7 @@ module.exports = {
         res.on('end', async () => {
           if (res.statusCode === 200) {
             try {
-              const rankData = JSON.parse(json)
+              const rankData = JSON.parse(json);
               generateCutoff({
                 interaction: interaction, 
                 event: event, 
@@ -402,12 +439,13 @@ module.exports = {
                 detailed: detailed,
                 discordClient: discordClient
               });
+
             } catch (err) {
               discordClient.logger.log({
                 level: 'error',
                 timestamp: Date.now(),
                 message: `Error parsing JSON data from cutoff: ${err}`
-              })
+              });
             }
           } else {
             discordClient.logger.log({

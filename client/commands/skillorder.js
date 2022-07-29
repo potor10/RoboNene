@@ -4,32 +4,34 @@
  * @author Ai0796
  */
 
-const { MessageActionRow, MessageButton } = require('discord.js');
-const { BOT_NAME } = require('../../constants');
+const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
 
-const COMMAND = require('../command_data/skillorder')
+const { BOT_NAME, NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateEmbed = require('../methods/generateEmbed')
+const COMMAND = require('../command_data/skillorder');
+
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const generateEmbed = require('../methods/generateEmbed');
 const fs = require('fs');
 const skillorder = require('../command_data/skillorder');
+const generateSkillText = require('../methods/generateSkillText');
 
 //Required since Proseka Skill order is not 1 2 3 4 5
-const ProsekaSkillOrder = [2, 1, 4, 5, 3]
-const Difficulties = ["easy", "normal", "hard", "expert", "master"]
+const ProsekaSkillOrder = [2, 1, 4, 5, 3];
+const Difficulties = ["easy", "normal", "hard", "expert", "master"];
 
 /**
  * A class designed to store music data from JSON Files
  */
 class music {
     constructor() {
-        this.ids = new Set()
-        this.musics = new Object()
-        this.musicmetas = new Object()
+        this.ids = new Set();
+        this.musics = new Object();
+        this.musicmetas = new Object();
 
-        const tempIDs = new Set()
+        const tempIDs = new Set();
         const musicsJSON = JSON.parse(fs.readFileSync('./sekai_master/musics.json'));
-        const musicMetasJSON = JSON.parse(fs.readFileSync('./sekai_master/music_metas.json'))
+        const musicMetasJSON = JSON.parse(fs.readFileSync('./sekai_master/music_metas.json'));
 
         //Checks music metas first for all IDs listed
         musicMetasJSON.forEach(musicMeta => {
@@ -42,14 +44,14 @@ class music {
                 this.musics[music.id] = music.title;
                 tempIDs.add(music.id);
             }
-        })
+        });
 
         this.ids = this.getIntersection(this.ids, tempIDs);
 
         //Create new object for each song to store difficulties
         this.ids.forEach(id => {
             this.musicmetas[id] = new Object();
-        })
+        });
 
         //Checks music metas again now that we have titles to be used as keys
         musicMetasJSON.forEach(music => {
@@ -60,18 +62,18 @@ class music {
                 let skillScoreOrder = [];
                 let skillOrder = [];
 
-                skillScoreOrder = skillScoreOrder.map(skillScore, i => [skillScore, i])
+                skillScoreOrder = skillScores.map((skillScore, i) => [skillScore, i]);
 
                 //Sort to get correct order
                 skillScoreOrder.sort(this.sortFunction);
 
-                skillOrder = skillScoreOrder.map(skill => {
-                    ProsekaSkillOrder[skill[1]];
-                })
+                skillOrder = skillScoreOrder.map((skill) => {
+                    return ProsekaSkillOrder[skill[1]];
+                });
 
                 this.musicmetas[music.music_id][music.difficulty] = skillOrder;
             }
-        })
+        });
     }
 
     //Sort function for 2D arrays that orders it by value of first index
@@ -96,20 +98,20 @@ class music {
 }
 
 function skillOrder(order){
-    return `${order[0]} > ${order[1]} > ${order[2]} > ${order[3]} > ${order[4]}`
+    return `${order[0]} > ${order[1]} > ${order[2]} > ${order[3]} > ${order[4]}`;
 }
 
 function musicSkillOrder(song)
 {
-    let str = ""
+    let arr = [];
     Difficulties.forEach(difficulty => {
-        str += `${difficulty}: ${skillOrder(song[difficulty])}\n`
-    })
+        arr.push(`${skillOrder(song[difficulty])}`);
+    });
 
-    return str;
+    return arr;
 }
 
-const musicData = new music()
+const musicData = new music();
 
 module.exports = {
     ...COMMAND.INFO,
@@ -120,10 +122,21 @@ module.exports = {
         if (interaction.options._hoistedOptions[0] && musicData.ids.has(interaction.options._hoistedOptions[0].value)) {
             // console.log(interaction.options._hoistedOptions[0].value)
             let id = interaction.options._hoistedOptions[0].value;
-            let data = musicData.musicmetas[id]
+            let data = musicData.musicmetas[id];
 
-            await interaction.reply(`${musicData.musics[id]}: \n${musicSkillOrder(data)}`)
-        }
+            let skillOrderText = generateSkillText(Difficulties, musicSkillOrder(data));
+
+            let skillOrderEmbed = new MessageEmbed()
+                .setColor(NENE_COLOR)
+                .setTitle(`${musicData.musics[id]}`)
+                .setTimestamp()
+                .addField('Skill Orders', skillOrderText, false)
+                .setFooter(FOOTER, interaction.user.displayAvatarURL());
+
+            await interaction.reply({
+                embeds: [skillOrderEmbed],
+            });
+        }   
     }
 };
 
