@@ -56,10 +56,10 @@ const loadGameData = (idx, callback) => {
             console.log(`${filename}.json Retrieved`)
             loadGameData(idx+1, callback)
           } catch (err) {
-            console.log(`Error parsing JSON: ${err}`)
+            // console.log(`Error parsing JSON: ${err}`)
           }
         } else {
-          console.log(`Error retrieving via HTTPS. Status: ${res.statusCode}`)
+          // console.log(`Error retrieving via HTTPS. Status: ${res.statusCode}`)
         }
       });
     }).on('error', (err) => {});
