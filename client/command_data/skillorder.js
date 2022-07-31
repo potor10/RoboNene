@@ -9,7 +9,7 @@ module.exports = {
     'INFO': {
         'name': 'skillorder',
         'utilization': '/skillorder',
-        'description': 'Show the current T100 leaderboard',
+        'description': 'Shows the Optimal Skill Order (Best to Worst) of a Song',
         'ephemeral': false,
         'params': [
             {
