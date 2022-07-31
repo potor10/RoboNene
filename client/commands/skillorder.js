@@ -117,25 +117,29 @@ module.exports = {
 
     async execute(interaction, discordClient) {
         // await interaction.reply("test")
-        if (interaction.options._hoistedOptions[0] && musicData.ids.has(interaction.options._hoistedOptions[0].value)) {
-            // console.log(interaction.options._hoistedOptions[0].value)
-            let id = interaction.options._hoistedOptions[0].value;
-            let data = musicData.musicmetas[id];
+        try{
+            if (interaction.options._hoistedOptions[0] && musicData.ids.has(interaction.options._hoistedOptions[0].value)) {
+                // console.log(interaction.options._hoistedOptions[0].value)
+                let id = interaction.options._hoistedOptions[0].value;
+                let data = musicData.musicmetas[id];
 
-            let skillOrderText = generateSkillText(Difficulties, musicSkillOrder(data));
+                let skillOrderText = generateSkillText(Difficulties, musicSkillOrder(data));
 
-            //Generate Embed with given text
-            let skillOrderEmbed = new MessageEmbed()
-                .setColor(NENE_COLOR)
-                .setTitle(`${musicData.musics[id]}`)
-                .setTimestamp()
-                .addField('Skill Orders', skillOrderText, false)
-                .setFooter(FOOTER, interaction.user.displayAvatarURL());
+                //Generate Embed with given text
+                let skillOrderEmbed = new MessageEmbed()
+                    .setColor(NENE_COLOR)
+                    .setTitle(`${musicData.musics[id]}`)
+                    .setTimestamp()
+                    .addField('Skill Orders', skillOrderText, false)
+                    .setFooter(FOOTER, interaction.user.displayAvatarURL());
 
-            await interaction.reply({
-                embeds: [skillOrderEmbed],
-            });
-        }   
+                await interaction.reply({
+                    embeds: [skillOrderEmbed],
+                });
+            }   
+        } catch (e) {
+            console.log(e);
+        } // Due to possible null values add a try catch
     }
 };
 
