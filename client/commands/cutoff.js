@@ -56,7 +56,7 @@ const requestRate = () => {
  * Calculates the standard error of 
  * @param {Array} Array of all data points
  * @param {Object} Linear Regression Model
- * @param {Integer} Calculated Standard Error of model
+ * @return {Integer} Calculated Standard Error of model
  */
 function stdError(data, model, finalRate)
 {
