@@ -53,7 +53,7 @@ const requestRate = () => {
 
 
 /**
- * Calculates the standard error of 
+ * Calculates the standard error of given data points and model
  * @param {Array} Array of all data points
  * @param {Object} Linear Regression Model
  * @return {Integer} Calculated Standard Error of model
