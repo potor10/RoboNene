@@ -10,7 +10,7 @@ const { RESULTS_PER_PAGE } = require('../../constants');
  * Generates an ranking embed from the provided params
  * @param {Array} Array of Difficulty Names
  * @param {Array} Array of Skill Orders, should be same length as difficulties
- * @return {MessageEmbed} a generated embed of the optimal skill order
+ * @return {String} a String of the optimal skill order
  */
 const generateSkillText = (difficulties, skillOrders) => {
     let maxDifficultyLength = 0;
