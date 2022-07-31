@@ -4,16 +4,14 @@
  * @author Ai0796
  */
 
-const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 
-const { BOT_NAME, NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
+const { NENE_COLOR, FOOTER} = require('../../constants');
 
 const COMMAND = require('../command_data/skillorder');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
-const generateEmbed = require('../methods/generateEmbed');
 const fs = require('fs');
-const skillorder = require('../command_data/skillorder');
 const generateSkillText = require('../methods/generateSkillText');
 
 //Required since Proseka Skill order is not 1 2 3 4 5
@@ -126,6 +124,7 @@ module.exports = {
 
             let skillOrderText = generateSkillText(Difficulties, musicSkillOrder(data));
 
+            //Generate Embed with given text
             let skillOrderEmbed = new MessageEmbed()
                 .setColor(NENE_COLOR)
                 .setTitle(`${musicData.musics[id]}`)
