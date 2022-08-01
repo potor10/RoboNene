@@ -20,7 +20,9 @@ const GAME_CONSTANTS = {
     "areaItemLevels",
     "events",
     "eventCards",
-    "cards"
+    "cards",
+    "musics",
+    
   ]
 }
 
@@ -54,10 +56,10 @@ const loadGameData = (idx, callback) => {
             console.log(`${filename}.json Retrieved`)
             loadGameData(idx+1, callback)
           } catch (err) {
-            // Error parsing JSON: ${err}`
+            // console.log(`Error parsing JSON: ${err}`)
           }
         } else {
-          // Error retrieving via HTTPS. Status: ${res.statusCode}
+          // console.log(`Error retrieving via HTTPS. Status: ${res.statusCode}`)
         }
       });
     }).on('error', (err) => {});
