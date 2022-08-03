@@ -227,7 +227,7 @@ const generateCutoff = async ({interaction, event,
     const predicted = (model.equation[0] * finalRate * duration) + model.equation[1];
 
     // Calculate Error 
-    const error = stdError(points, model, finalRate);
+    const error = stdError(points, model, finalRate) * finalRate * (duration / points[points.length - 1][0]);
 
     // Final model without smoothing
     noSmoothingEstimate = Math.round(predicted).toLocaleString();
@@ -267,7 +267,7 @@ const generateCutoff = async ({interaction, event,
       const predictedSmoothed = (modelSmoothed.equation[0] * finalRate * duration) + modelSmoothed.equation[1]
       
       // Calculate Error 
-      errorSmoothed = stdError(smoothingPoints, modelSmoothed, finalRate);
+      errorSmoothed = stdError(points, model, finalRate) * finalRate * (duration / points[points.length - 1][0]);
 
       // Calculate the % through the event, we will use this as a weight for the estimation
       const amtThrough = (smoothingPoints[smoothingPoints.length-1][0]) / duration;
