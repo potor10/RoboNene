@@ -5,7 +5,7 @@
  */
 
 const { MessageEmbed } = require('discord.js');
-const { DIR_DATA, NENE_COLOR, FOOTER } = require('../../constants');
+const { DIR_DATA, NENE_COLOR, FOOTER, CUTOFF_DATA } = require('../../constants');
 const https = require('https');
 const fs = require('fs');
 const regression = require('regression');
@@ -417,10 +417,10 @@ module.exports = {
       const options = {
         host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
         path: `/event/${event.id}/rankings?rank=${tier}&limit=100000&region=en`,
-        headers: {'User-Agent': 'request'}
+        headers: {'User-Agent': 'request'},
       };
     
-      https.get(options, (res) => {
+      const request = https.get(options, (res) => {
         let json = '';
         res.on('data', (chunk) => {
           json += chunk;
@@ -452,15 +452,40 @@ module.exports = {
               level: 'error',
               timestamp: Date.now(),
               message: `Error retrieving via cutoff data via HTTPS. Status: ${res.statusCode}`
-            })
+            });
           }
         });
-      }).on('error', (err) => {
+      });
+      request.on('error', (err) => {
         discordClient.logger.log({
           level: 'error',
           timestamp: Date.now(),
           message: `${err}`
-        })
+        });
+      }); 
+      request.setTimeout(5000, async () => {
+        console.log('Sekai.best Timed out, using internal data');
+        try {
+          const rankData = JSON.parse(fs.readFileSync(`${CUTOFF_DATA}/Event${event}/${tier}.json`, 'utf8'));
+          console.log('Data Read, Generating Internal cutoff');
+          generateCutoff({
+            interaction: interaction,
+            event: event,
+            timestamp: timestamp,
+            tier: tier,
+            score: score,
+            rankData: rankData.data.eventRankings,
+            detailed: detailed,
+            discordClient: discordClient
+          });
+
+        } catch (err) {
+          discordClient.logger.log({
+            level: 'error',
+            timestamp: Date.now(),
+            message: `Error parsing JSON data from cutoff: ${err}`
+          });
+        }
       });
     }, async (err) => {
       // Log the error
@@ -468,7 +493,7 @@ module.exports = {
         level: 'error',
         timestamp: Date.now(),
         message: err.toString()
-      })
+      });
       
       await interaction.editReply({
         embeds: [generateEmbed({
@@ -476,7 +501,7 @@ module.exports = {
           content: { type: 'error', message: err.toString() },
           client: discordClient.client
         })]
-      })
-    })
+      });
+    });
   }
 };
