@@ -75,26 +75,24 @@ async function logResults(response) {
  * @param {Integer} target event, if -1 calculates the event based on current time
  * @param {DiscordClient} discordClient the client we are using 
 */
-async function getCutoffs(target, event, discordClient) {
+async function getCutoffs(discordClient) {
     try {
+        let event = getRankingEvent().id;
         if (event == -1) {
-            event = getRankingEvent().id;
-        }
-        if (target >= cutoffs.length || event == -1) {
             return -1;
-        }
-        else {
-            discordClient.addPrioritySekaiRequest('ranking', {
-                eventId: event,
-                targetRank: cutoffs[target],
-                lowerLimit: 0
-            }, logResults, (err) => {
-                discordClient.logger.log({
-                    level: 'error',
-                    message: err.toString()
+        } else {
+            cutoffs.forEach(cutoff => {
+                discordClient.addPrioritySekaiRequest('ranking', {
+                    eventId: event,
+                    targetRank: cutoff,
+                    lowerLimit: 0
+                }, logResults, (err) => {
+                    discordClient.logger.log({
+                        level: 'error',
+                        message: err.toString()
+                    });
                 });
-            });
-            getCutoffs(target + 1, event, discordClient);
+            }); 
         }
     } catch (error) {
         console.log(error);
@@ -139,8 +137,8 @@ const getRankingEvent = () => {
  * @param {DiscordClient} discordClient the client we are using 
  */
 const trackCutoffData = async (discordClient) => {
-    let dataUpdater = setInterval(getCutoffs, CUTOFF_INTERVAL, 0, -1, discordClient);
-    getCutoffs(0, -1, discordClient); //Run function once since setInterval waits an interval to run it
+    let dataUpdater = setInterval(getCutoffs, CUTOFF_INTERVAL, discordClient);
+    getCutoffs(discordClient); //Run function once since setInterval waits an interval to run it
 };
 
 module.exports = trackCutoffData;
