@@ -418,9 +418,10 @@ module.exports = {
         host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
         path: `/event/${event.id}/rankings?rank=${tier}&limit=100000&region=en`,
         headers: {'User-Agent': 'request'},
+        timeout: 5000
       };
     
-      const request = https.get(options, (res) => {
+      const request = https.request(options, (res) => {
         let json = '';
         res.on('data', (chunk) => {
           json += chunk;
@@ -466,7 +467,7 @@ module.exports = {
       request.setTimeout(5000, async () => {
         console.log('Sekai.best Timed out, using internal data');
         try {
-          const rankData = JSON.parse(fs.readFileSync(`${CUTOFF_DATA}/Event${event}/${tier}.json`, 'utf8'));
+          const rankData = JSON.parse(fs.readFileSync(`${CUTOFF_DATA}/Event${event.id}/${tier}.json`, 'utf8'));
           console.log('Data Read, Generating Internal cutoff');
           generateCutoff({
             interaction: interaction,
@@ -474,7 +475,7 @@ module.exports = {
             timestamp: timestamp,
             tier: tier,
             score: score,
-            rankData: rankData.data.eventRankings,
+            rankData: rankData,
             detailed: detailed,
             discordClient: discordClient
           });
