@@ -32,7 +32,7 @@ module.exports = {
   "RATE_LIMIT": 120,
 
   //Amount of Time between Cutoff data in milliseconds
-  "CUTOFF_INTERVAL": 1800000,
+  "CUTOFF_INTERVAL": 60000,
 
   // Source of game data
   "DIR_DATA": "./sekai_master",
