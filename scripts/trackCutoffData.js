@@ -34,7 +34,7 @@ const cutoffs = [
 ];
 
 /**
- * Recurvsively writes cutoff data to a JSON
+ * Writes JSON response from Project Sekai servers to local JSON
  * @param {Object} response from project sekai client
 */
 async function logResults(response) {

@@ -464,6 +464,8 @@ module.exports = {
           message: `${err}`
         });
       }); 
+      
+      //On Timeout use internal data
       request.setTimeout(5000, async () => {
         console.log('Sekai.best Timed out, using internal data');
         try {
