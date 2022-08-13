@@ -31,6 +31,12 @@ module.exports = {
   // Max Requests Per Account Per Hour (120 ~1 request every 30 seconds)
   "RATE_LIMIT": 120,
 
+  //Amount of Time between Cutoff data in milliseconds
+  "CUTOFF_INTERVAL": 60000,
+
   // Source of game data
   "DIR_DATA": "./sekai_master",
+
+  // Source of Cutoff data
+  "CUTOFF_DATA": "./cutoff-data"
 }
