@@ -469,7 +469,13 @@ module.exports = {
       request.setTimeout(5000, async () => {
         console.log('Sekai.best Timed out, using internal data');
         try {
-          const rankData = JSON.parse(fs.readFileSync(`${CUTOFF_DATA}/Event${event.id}/${tier}.json`, 'utf8'));
+
+          let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+            'WHERE (EventID=@eventID AND Tier=@tier)').all({
+              eventID: event.id,
+              tier: tier
+            });
+          let rankData = cutoffs.map(x => [x.Timestamp, x.Score]);
           console.log('Data Read, Generating Internal cutoff');
           generateCutoff({
             interaction: interaction,
@@ -483,6 +489,7 @@ module.exports = {
           });
 
         } catch (err) {
+          console.log(err);
           discordClient.logger.log({
             level: 'error',
             timestamp: Date.now(),
