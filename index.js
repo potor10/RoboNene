@@ -16,6 +16,7 @@ loadGameData(0, async () => {
   client.loadCommands();
   client.loadEvents();
   client.loadDb();
+  client.loadCutoffDb();
   client.loadLogger();
 
   await client.loadSekaiClient();

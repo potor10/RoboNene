@@ -253,36 +253,44 @@ const generateCutoff = async ({interaction, event,
 
     let lastIdx = oneDayIdx;
 
-    for(let i = oneDayIdx; i < lastDayIdx; i += 60) {
-      // console.log(`Added ${rankData.slice(lastIdx, i).length} points to the smoothingPts`)
-      rankData.slice(lastIdx, i).forEach((point) => {
-        smoothingPoints.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score]);
-      });
+    //If there's less than 60 data points then don't run smoothing equation as it'll crash
+    if(lastDayIdx - oneDayIdx > 60)
+    {
+      for (let i = oneDayIdx; i < lastDayIdx; i += 60) {
+        // console.log(`Added ${rankData.slice(lastIdx, i).length} points to the smoothingPts`)
+        rankData.slice(lastIdx, i).forEach((point) => {
+          smoothingPoints.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score]);
+        });
 
-      lastIdx = i;
-      // TODO: Add error checking if smoothingPoints remains empty after this
+        lastIdx = i;
+        // TODO: Add error checking if smoothingPoints remains empty after this
 
-      // Create a linear regression model with the current data points
-      const modelSmoothed = regression.linear(smoothingPoints, {precision: 100});
-      const predictedSmoothed = (modelSmoothed.equation[0] * finalRate * duration) + modelSmoothed.equation[1]
-      
-      // Calculate Error 
-      errorSmoothed = stdError(points, model, finalRate) * finalRate * (duration / points[points.length - 1][0]);
+        // Create a linear regression model with the current data points
+        const modelSmoothed = regression.linear(smoothingPoints, {precision: 100});
+        const predictedSmoothed = (modelSmoothed.equation[0] * finalRate * duration) + modelSmoothed.equation[1]
 
-      // Calculate the % through the event, we will use this as a weight for the estimation
-      const amtThrough = (smoothingPoints[smoothingPoints.length-1][0]) / duration;
+        // Calculate Error 
+        errorSmoothed = stdError(points, model, finalRate) * finalRate * (duration / points[points.length - 1][0]);
 
-      // console.log(`last point ts ${smoothingPoints[smoothingPoints.length-1][0]}`)
+        // Calculate the % through the event, we will use this as a weight for the estimation
+        const amtThrough = (smoothingPoints[smoothingPoints.length - 1][0]) / duration;
 
-      // Total score of all of our estimates with account to weight
-      totalWeight += predictedSmoothed * Math.pow(amtThrough, 2);
+        // console.log(`last point ts ${smoothingPoints[smoothingPoints.length-1][0]}`)
 
-      // Total time weights
-      totalTime += Math.pow(amtThrough, 2);
+        // Total score of all of our estimates with account to weight
+        totalWeight += predictedSmoothed * Math.pow(amtThrough, 2);
+
+        // Total time weights
+        totalTime += Math.pow(amtThrough, 2);
+      }
+
+      smoothingEstimate = Math.round(totalWeight / totalTime).toLocaleString();
+      smoothingError = Math.round(errorSmoothed).toLocaleString();
     }
-
-    smoothingEstimate = Math.round(totalWeight / totalTime).toLocaleString();
-    smoothingError = Math.round(errorSmoothed).toLocaleString();
+    else {
+      smoothingEstimate = 'N/A';
+      smoothingError = 'N/A';
+    }
   }
 
   // Generate the cutoff embed
@@ -464,10 +472,18 @@ module.exports = {
           message: `${err}`
         });
       }); 
+      
+      //On Timeout use internal data
       request.setTimeout(5000, async () => {
         console.log('Sekai.best Timed out, using internal data');
         try {
-          const rankData = JSON.parse(fs.readFileSync(`${CUTOFF_DATA}/Event${event.id}/${tier}.json`, 'utf8'));
+
+          let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+            'WHERE (EventID=@eventID AND Tier=@tier)').all({
+              eventID: event.id,
+              tier: tier
+            });
+          let rankData = cutoffs.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           console.log('Data Read, Generating Internal cutoff');
           generateCutoff({
             interaction: interaction,
@@ -481,6 +497,7 @@ module.exports = {
           });
 
         } catch (err) {
+          console.log(err);
           discordClient.logger.log({
             level: 'error',
             timestamp: Date.now(),

@@ -14,7 +14,7 @@ config.json
 /databases
 /prefs
 /sekai_master
-/cutoff-data
+/cutoff_data
 
 # local env files
 .env.local

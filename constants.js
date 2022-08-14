@@ -36,7 +36,4 @@ module.exports = {
 
   // Source of game data
   "DIR_DATA": "./sekai_master",
-
-  // Source of Cutoff data
-  "CUTOFF_DATA": "./cutoff-data"
 }

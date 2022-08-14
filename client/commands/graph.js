@@ -41,7 +41,7 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
  * @error Status code of the http request
  */
 const postQuickChart = async (interaction, tier, rankData, discordClient) => {
-  if (!rankData.data.eventRankings) {
+  if (!rankData) {
     await interaction.editReply({
       embeds: [
         generateEmbed({
@@ -56,7 +56,7 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
 
   graphData = []
 
-  rankData.data.eventRankings.forEach(point => {
+  rankData.forEach(point => {
     graphData.push({
       x: point.timestamp,
       y: point.score
@@ -160,10 +160,11 @@ module.exports = {
     const options = {
       host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
       path: `/event/${event.id}/rankings/graph?rank=${tier}&region=en`,
-      headers: {'User-Agent': 'request'}
+      headers: {'User-Agent': 'request'},
+      timeout: 5000
     };
   
-    https.get(options, (res) => {
+    const request = https.request(options, (res) => {
       let json = '';
       res.on('data', (chunk) => {
         json += chunk;
@@ -171,8 +172,8 @@ module.exports = {
       res.on('end', async () => {
         if (res.statusCode === 200) {
           try {
-            const rankData = JSON.parse(json)
-            postQuickChart(interaction, tier, rankData, discordClient)
+            const rankData = JSON.parse(json);
+            postQuickChart(interaction, tier, rankData.data.eventRankings, discordClient);
           } catch (err) {
             // Error parsing JSON: ${err}`
           }
@@ -181,5 +182,19 @@ module.exports = {
         }
       });
     }).on('error', (err) => {});
+    request.setTimeout(5000, () => {
+      try {
+        let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+          'WHERE (EventID=@eventID AND Tier=@tier)').all({
+            eventID: event.id,
+            tier: tier
+          });
+        let rankData = cutoffs.map(x => ({timestamp: x.Timestamp, score: x.Score}));
+        console.log(rankData);
+        postQuickChart(interaction, tier, rankData, discordClient);
+      } catch (err) {
+        // Error parsing JSON: ${err}`
+      }
+    });
   }
 };
