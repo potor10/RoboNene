@@ -161,7 +161,7 @@ module.exports = {
       host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
       path: `/event/${event.id}/rankings/graph?rank=${tier}&region=en`,
       headers: {'User-Agent': 'request'},
-      timeout: 500
+      timeout: 5000
     };
   
     const request = https.request(options, (res) => {
@@ -182,7 +182,7 @@ module.exports = {
         }
       });
     }).on('error', (err) => {});
-    request.setTimeout(500, () => {
+    request.setTimeout(5000, () => {
       try {
         let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
           'WHERE (EventID=@eventID AND Tier=@tier)').all({
