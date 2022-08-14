@@ -37,36 +37,7 @@ const cutoffs = [
  * Writes JSON response from Project Sekai servers to local JSON
  * @param {Object} response from project sekai client
 */
-async function logResults(response) {
-    try{
-        let event = getRankingEvent().id;
-        if (response['rankings'][0] != null && event != -1) {
-            let score = response['rankings'][0]['score'];
-            let rank = response['rankings'][0]['rank'];
-            let timestamp = new Date().toISOString();
-            var cutoffFile = null;
-            if (!fs.existsSync(`${CUTOFF_DATA}/Event${event}/${rank}.json`)) {
-                fs.mkdirSync(`${CUTOFF_DATA}/Event${event}`, { recursive: true });
-                cutoffFile = new Array();
-            }
-            else {
-                cutoffFile = JSON.parse(fs.readFileSync(`${CUTOFF_DATA}/Event${event}/${rank}.json`, 'utf8'));
-            }
 
-            cutoffFile.push({ 'timestamp': timestamp, 'score': score });
-
-            fs.writeFile(`${CUTOFF_DATA}/Event${event}/${rank}.json`, JSON.stringify(cutoffFile), err => {
-                if (err) {
-                    console.log('Error writing ${CUTOFF_DATA}/Event${event}/${rank}', err);
-                } else {
-                    console.log(`Wrote ${CUTOFF_DATA}/Event${event}/${rank} Successfully`);
-                }
-            });
-        }
-    } catch (e) {
-        console.log('Error occured while writing cutoffs: ', e);
-    }
-}
 
 
 /**
@@ -76,6 +47,27 @@ async function logResults(response) {
  * @param {DiscordClient} discordClient the client we are using 
 */
 async function getCutoffs(discordClient) {
+    async function logResults(response) {
+        try {
+            let event = getRankingEvent().id;
+            if (response['rankings'][0] != null && event != -1) {
+                let score = response['rankings'][0]['score'];
+                let rank = response['rankings'][0]['rank'];
+                let timestamp = new Date().toISOString();
+
+                discordClient.cutoffdb.prepare('INSERT INTO cutoffs ' +
+                    '(EventID, Tier, Timestamp, Score) ' + 
+                    'VALUES(@eventID, @tier, @timestamp, @score)').run({
+                        score: score,
+                        eventID: event,
+                        tier: rank,
+                        timestamp: timestamp
+                    });
+            }
+        } catch (e) {
+            console.log('Error occured while adding cutoffs: ', e);
+        }
+    }
     try {
         let event = getRankingEvent().id;
         if (event == -1) {

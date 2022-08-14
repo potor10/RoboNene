@@ -7,7 +7,7 @@
 const { token, secretKey } = require('../config.json');
 const { Client, Intents, Guild } = require('discord.js');
 const { SekaiClient } = require('sekapi');
-const { RATE_LIMIT } = require('../constants');
+const { RATE_LIMIT, CUTOFF_DATA } = require('../constants');
 const https = require('https');
 
 const winston = require('winston');
@@ -25,6 +25,8 @@ const CLIENT_CONSTANTS = {
   "LOG_DIR": path.join(__dirname, '../logs'),
   "DB_DIR": path.join(__dirname, '../databases'),
   "DB_NAME": "databases.db",
+  "CUTOFF_DB_DIR": path.join(__dirname, '../cutoff_data'),
+  "CUTOFF_DB_NAME": "cutoffs.db",
 
   "PREFS_DIR": path.join(__dirname, '../prefs')
 }
@@ -39,6 +41,7 @@ class DiscordClient {
     this.commands = [];
     this.logger = null;
     this.db = null;
+    this.cutoffdb = null;
 
     this.api = [];
     this.priorityApiQueue = [];
@@ -133,18 +136,35 @@ class DiscordClient {
 
     this.db.prepare('CREATE TABLE IF NOT EXISTS users ' + 
       '(discord_id TEXT PRIMARY KEY, sekai_id TEXT, private INTEGER DEFAULT 1, ' + 
-      'quiz_correct INTEGER DEFAULT 0, quiz_question INTEGER DEFAULT 0)').run()
+      'quiz_correct INTEGER DEFAULT 0, quiz_question INTEGER DEFAULT 0)').run();
 
     // Initialize the tracking database instance
     this.db.prepare('CREATE TABLE IF NOT EXISTS tracking ' + 
-      '(channel_id TEXT PRIMARY KEY, guild_id TEXT, tracking_type INTEGER)').run()
+      '(channel_id TEXT PRIMARY KEY, guild_id TEXT, tracking_type INTEGER)').run();
   }
 
   /**
    * Closes the databases that have been previously opened
    */
   closeDb() {
-    this.db.close()
+    this.db.close();
+  }
+
+  /**
+   * Initializes the user databases (if it does not already exist) and loads
+   * the databases for usage.
+   * @param {string} dir the directory containing the encrypted databases
+   */
+  loadCutoffDb(dir = CLIENT_CONSTANTS.CUTOFF_DB_DIR) {
+    this.cutoffdb = new Database(`${dir}/${CLIENT_CONSTANTS.CUTOFF_DB_NAME}`);
+
+    // Read an encrypted database
+    this.cutoffdb.pragma(`key='${secretKey}'`);
+
+    // Initialize the tracking database instance
+    this.cutoffdb.prepare('CREATE TABLE IF NOT EXISTS cutoffs ' +
+      '(EventID INTEGER, Tier TEXT, Timestamp TEXT, Score INTEGER,' +
+      'PRIMARY KEY(EventID, Tier, Timestamp))').run();
   }
 
   /**
@@ -160,9 +180,9 @@ class DiscordClient {
       console.log(`Loaded client ${playerPrefs.account_user_id} from ${file}`);
 
       // Sekai Api Init
-      const apiClient = new SekaiClient(playerPrefs)
-      await apiClient.login()
-      this.api.push(apiClient)
+      const apiClient = new SekaiClient(playerPrefs);
+      await apiClient.login();
+      this.api.push(apiClient);
     }
   }
 
@@ -238,40 +258,40 @@ class DiscordClient {
   async runSekaiRequests(rate=10) {
     const runRequest = async (apiClient, request) => {
       if (request.type === 'profile') {
-        const response = await apiClient.userProfile(request.params.userId, request.error)
+        const response = await apiClient.userProfile(request.params.userId, request.error);
 
         // If our response is valid we run the callback
         if (response) {
-          request.callback(response)
+          request.callback(response);
         }
       } else if (request.type === 'ranking') {
-        const queryParams = {...request.params}
-        delete queryParams.eventId
+        const queryParams = {...request.params};
+        delete queryParams.eventId;
 
         const response = await apiClient.eventRanking(request.params.eventId, queryParams, request.error)
 
         // If our response is valid we run the callback
         if (response) {
-          request.callback(response)
+          request.callback(response);
         }
       }
-      return runClient(apiClient, rate)
-    }
+      return runClient(apiClient, rate);
+    };
 
     const runClient = async (apiClient, rate) => {
       // console.log(`prioq: ${this.priorityApiQueue.length}, q: ${this.apiQueue.length}`)
       if (this.priorityApiQueue.length > 0) {
-        runRequest(apiClient, this.priorityApiQueue.pop())
+        runRequest(apiClient, this.priorityApiQueue.pop());
       } else if (this.apiQueue.length > 0) {
-        runRequest(apiClient, this.apiQueue.pop())
+        runRequest(apiClient, this.apiQueue.pop());
       } else {
-        setTimeout(() => {runClient(apiClient, rate)}, rate)
+        setTimeout(() => {runClient(apiClient, rate)}, rate);
       }
-    }
+    };
 
     this.api.forEach((apiClient) => {
-      runClient(apiClient, rate)
-    })
+      runClient(apiClient, rate);
+    });
   }
 
   /**
@@ -280,7 +300,7 @@ class DiscordClient {
    */
   getCurrentEvent() {
     const events = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
-    const currentTime = Date.now()
+    const currentTime = Date.now();
 
     for (let i = 0; i < events.length; i++) {
       if (events[i].startAt <= currentTime && events[i].closedAt >= currentTime) {
@@ -301,7 +321,7 @@ class DiscordClient {
       id: -1,
       banner: '',
       name: ''
-    }
+    };
   }
 
   /**
@@ -312,4 +332,4 @@ class DiscordClient {
   }
 }
 
-module.exports = DiscordClient
+module.exports = DiscordClient;
