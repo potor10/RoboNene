@@ -475,7 +475,7 @@ module.exports = {
               eventID: event.id,
               tier: tier
             });
-          let rankData = cutoffs.map(x => [x.Timestamp, x.Score]);
+          let rankData = cutoffs.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           console.log('Data Read, Generating Internal cutoff');
           generateCutoff({
             interaction: interaction,

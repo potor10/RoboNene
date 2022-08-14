@@ -161,7 +161,7 @@ module.exports = {
       host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
       path: `/event/${event.id}/rankings/graph?rank=${tier}&region=en`,
       headers: {'User-Agent': 'request'},
-      timeout: 5000
+      timeout: 500
     };
   
     const request = https.request(options, (res) => {
@@ -182,14 +182,15 @@ module.exports = {
         }
       });
     }).on('error', (err) => {});
-    request.setTimeout(5000, () => {
+    request.setTimeout(500, () => {
       try {
         let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
           'WHERE (EventID=@eventID AND Tier=@tier)').all({
             eventID: event.id,
             tier: tier
           });
-        let rankData = cutoffs.map(x => [x.Timestamp, x.Score]);
+        let rankData = cutoffs.map(x => ({timestamp: x.Timestamp, score: x.Score}));
+        console.log(rankData);
         postQuickChart(interaction, tier, rankData, discordClient);
       } catch (err) {
         // Error parsing JSON: ${err}`
