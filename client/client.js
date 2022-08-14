@@ -129,6 +129,9 @@ class DiscordClient {
    * @param {string} dir the directory containing the encrypted databases
    */
   loadDb(dir = CLIENT_CONSTANTS.DB_DIR) {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir);
+    }
     this.db = new Database(`${dir}/${CLIENT_CONSTANTS.DB_NAME}`);
 
     // Read an encrypted database
@@ -156,6 +159,9 @@ class DiscordClient {
    * @param {string} dir the directory containing the encrypted databases
    */
   loadCutoffDb(dir = CLIENT_CONSTANTS.CUTOFF_DB_DIR) {
+    if(!fs.existsSync(dir)) {
+      fs.mkdirSync(dir);
+    }
     this.cutoffdb = new Database(`${dir}/${CLIENT_CONSTANTS.CUTOFF_DB_NAME}`);
 
     // Read an encrypted database
