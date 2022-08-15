@@ -280,8 +280,12 @@ const generateCutoff = async ({interaction, event,
 
       // console.log(`last point ts ${smoothingPoints[smoothingPoints.length-1][0]}`)
 
-      // Total score of all of our estimates with account to weight
-      totalWeight += predictedSmoothed * Math.pow(amtThrough, 2);
+      //Make sure predicted Smoothed isn't NaN
+      if(!isNaN(predictedSmoothed))
+      {
+        // Total score of all of our estimates with account to weight
+        totalWeight += predictedSmoothed * Math.pow(amtThrough, 2);
+      }
 
       // Total time weights
       totalTime += Math.pow(amtThrough, 2);
