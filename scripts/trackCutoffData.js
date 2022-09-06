@@ -53,10 +53,10 @@ async function getCutoffs(discordClient) {
             if (response['rankings'][0] != null && event != -1) {
                 let score = response['rankings'][0]['score'];
                 let rank = response['rankings'][0]['rank'];
-                let timestamp = new Date().toISOString();
+                let timestamp = Date.now();
 
                 discordClient.cutoffdb.prepare('INSERT INTO cutoffs ' +
-                    '(EventID, Tier, Timestamp, Score) ' + 
+                    '(EventID, Tier, Timestamp, Score) ' +
                     'VALUES(@eventID, @tier, @timestamp, @score)').run({
                         score: score,
                         eventID: event,
