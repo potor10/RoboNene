@@ -14,10 +14,10 @@ const generateSlashCommand = require('../methods/generateSlashCommand');
 const { DateTime } = require('luxon');
 
 /**
-* Obtains the time of the next daily reset in game
-* @param {Date} currentDate the Date object of the current date time
-* @return {Integer} the epochseconds of the next daily reset in game
-*/
+  * Obtains the time of the next daily reset in game
+  * @param {Date} currentDate the Date object of the current date time
+  * @return {Integer} the epochseconds of the next daily reset in game
+  */
 const getNextReset = (currentDate) => {
 
   var nextReset = DateTime.now().setZone("America/Los_Angeles");
@@ -38,11 +38,11 @@ const getNextReset = (currentDate) => {
 };
 
 /**
-* Creates an embed of the current schedule data provided
-* @param {Object} data the current datamined schedule & event information
-* @param {DiscordClient} client the Discord Client we are recieving / sending requests to
-* @return {MessageEmbed} the embed that we will display to the user
-*/
+  * Creates an embed of the current schedule data provided
+  * @param {Object} data the current datamined schedule & event information
+  * @param {DiscordClient} client the Discord Client we are recieving / sending requests to
+  * @return {MessageEmbed} the embed that we will display to the user
+  */
 const createScheduleEmbed = (data, client) => {
   let currentDate = new Date();
   let nextReset = getNextReset(currentDate);
