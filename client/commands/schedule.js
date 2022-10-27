@@ -10,33 +10,39 @@ const fs = require('fs');
 
 const COMMAND = require('../command_data/schedule')
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const { DateTime } = require('luxon');
 
 /**
- * Obtains the time of the next daily reset in game
- * @param {Date} currentDate the Date object of the current date time
- * @return {Integer} the epochseconds of the next daily reset in game
- */
+* Obtains the time of the next daily reset in game
+* @param {Date} currentDate the Date object of the current date time
+* @return {Integer} the epochseconds of the next daily reset in game
+*/
 const getNextReset = (currentDate) => {
-  const nextReset = new Date();
-  nextReset.setUTCHours(12);
-  nextReset.setUTCMilliseconds(0);
-  nextReset.setUTCMinutes(0);
-  nextReset.setUTCSeconds(0);
+
+  var nextReset = DateTime.now().setZone("America/Los_Angeles");
+  nextReset = nextReset.set({
+    hour: 4,
+    minutes: 0,
+    seconds: 0,
+    millisecond: 0
+  });
 
   if (nextReset < currentDate) {
-    nextReset.setDate(nextReset.getDate() + 1);
+    nextReset = nextReset.set({
+      day: nextReset.day + 1
+    });
   }
 
-  return Math.floor(nextReset.getTime() / 1000);
+  return Math.floor(nextReset.toSeconds());
 };
 
 /**
- * Creates an embed of the current schedule data provided
- * @param {Object} data the current datamined schedule & event information
- * @param {DiscordClient} client the Discord Client we are recieving / sending requests to
- * @return {MessageEmbed} the embed that we will display to the user
- */
+* Creates an embed of the current schedule data provided
+* @param {Object} data the current datamined schedule & event information
+* @param {DiscordClient} client the Discord Client we are recieving / sending requests to
+* @return {MessageEmbed} the embed that we will display to the user
+*/
 const createScheduleEmbed = (data, client) => {
   let currentDate = new Date();
   let nextReset = getNextReset(currentDate);
