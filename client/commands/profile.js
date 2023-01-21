@@ -29,6 +29,19 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
   const gameCharacters = JSON.parse(fs.readFileSync('./sekai_master/gameCharacters.json'));
   const cards = JSON.parse(fs.readFileSync('./sekai_master/cards.json'));
 
+  const cardRarities = {
+    'rarity_1': '🌟',
+    'rarity_2': '🌟🌟',
+    'rarity_3': '🌟🌟🌟',
+    'rarity_4': '🌟🌟🌟🌟',
+    'rarity_birthday': '🎀',
+  };
+
+  const specialTrainingPossible = [
+    'rarity_3',
+    'rarity_4',
+  ];
+
   const leaderCardId = data.userDecks[0].leader
   let leader = {}
   
@@ -67,7 +80,7 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
           const cardInfo = binarySearch(positionId, 'id', cards);
           const charInfo = gameCharacters[cardInfo.characterId-1]
           teamText += `__${cardInfo.prefix} ${charInfo.givenName} ${charInfo.firstName}__\n`
-          teamText += `Rarity: ${'⭐'.repeat(cardInfo.rarity)}\n`
+          teamText += `${cardRarities[cardInfo.cardRarityType]}\n`
           teamText += `Type: ${COMMAND.CONSTANTS[cardInfo.attr]}\n`
 
           if (!private) {
@@ -76,7 +89,7 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
 
           teamText += `Master Rank: \`\`${card.masterRank}\`\`\n`
 
-          if (cardInfo.rarity > 2) {
+          if (specialTrainingPossible.includes(cardInfo.cardRarityType)) {
             let trainingText = (card.specialTrainingStatus === 'done') ? '✅' : '❌'
             teamText += `Special Training: ${trainingText}\n`
           }
