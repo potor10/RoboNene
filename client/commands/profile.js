@@ -54,10 +54,10 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
 
   const leaderCard = binarySearch(leaderCardId, 'id', cards);
 
-  let leaderThumbURL = 'https://sekai-res.dnaroma.eu/file/sekai-assets/' + 
+  let leaderThumbURL = 'https://storage.sekai.best/sekai-assets/' + 
     `thumbnail/chara_rip/${leaderCard.assetbundleName}`
 
-  let leaderFullURL = 'https://sekai-res.dnaroma.eu/file/sekai-assets/' + 
+  let leaderFullURL = 'https://storage.sekai.best/sekai-assets/' + 
     `character/member/${leaderCard.assetbundleName}_rip/`
 
 
