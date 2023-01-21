@@ -187,9 +187,9 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
     })
     .setThumbnail(leaderThumbURL)
     .addFields(
-      { name: 'Name', value: `${data.user.userGamedata.name}`, inline: false },
+      { name: 'Name', value: `${data.user.userGamedata.name}`, inline: true },
+      { name: 'Rank', value: `${data.user.userGamedata.rank}`, inline: true },
       { name: 'User ID', value: `${userId}`, inline: false },
-      { name: 'Rank', value: `${data.user.userGamedata.rank}`, inline: false },
       { name: 'Description', value: `${data.userProfile.word}\u200b` },
       { name: 'Twitter', value: `@${data.userProfile.twitterId}\u200b` },
       { name: 'Cards', value: `${teamText}` },
