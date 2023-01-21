@@ -72,7 +72,7 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
   // Generate Text For Profile's Teams
   let teamText = ''
   Object.keys(data.userDecks[0]).forEach((pos) => {
-    if (pos !== 'leader') {
+    if (pos !== 'leader' && pos !== 'subLeader') {
       positionId = data.userDecks[0][pos]
 
       data.userCards.forEach((card) => {
