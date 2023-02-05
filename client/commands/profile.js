@@ -29,6 +29,19 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
   const gameCharacters = JSON.parse(fs.readFileSync('./sekai_master/gameCharacters.json'));
   const cards = JSON.parse(fs.readFileSync('./sekai_master/cards.json'));
 
+  const cardRarities = {
+    'rarity_1': '🌟',
+    'rarity_2': '🌟🌟',
+    'rarity_3': '🌟🌟🌟',
+    'rarity_4': '🌟🌟🌟🌟',
+    'rarity_birthday': '🎀',
+  };
+
+  const specialTrainingPossible = [
+    'rarity_3',
+    'rarity_4',
+  ];
+
   const leaderCardId = data.userDecks[0].leader
   let leader = {}
   
@@ -41,10 +54,10 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
 
   const leaderCard = binarySearch(leaderCardId, 'id', cards);
 
-  let leaderThumbURL = 'https://sekai-res.dnaroma.eu/file/sekai-assets/' + 
+  let leaderThumbURL = 'https://storage.sekai.best/sekai-assets/' + 
     `thumbnail/chara_rip/${leaderCard.assetbundleName}`
 
-  let leaderFullURL = 'https://sekai-res.dnaroma.eu/file/sekai-assets/' + 
+  let leaderFullURL = 'https://storage.sekai.best/sekai-assets/' + 
     `character/member/${leaderCard.assetbundleName}_rip/`
 
 
@@ -59,7 +72,7 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
   // Generate Text For Profile's Teams
   let teamText = ''
   Object.keys(data.userDecks[0]).forEach((pos) => {
-    if (pos !== 'leader') {
+    if (pos !== 'leader' && pos !== 'subLeader') {
       positionId = data.userDecks[0][pos]
 
       data.userCards.forEach((card) => {
@@ -67,7 +80,7 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
           const cardInfo = binarySearch(positionId, 'id', cards);
           const charInfo = gameCharacters[cardInfo.characterId-1]
           teamText += `__${cardInfo.prefix} ${charInfo.givenName} ${charInfo.firstName}__\n`
-          teamText += `Rarity: ${'⭐'.repeat(cardInfo.rarity)}\n`
+          teamText += `${cardRarities[cardInfo.cardRarityType]}\n`
           teamText += `Type: ${COMMAND.CONSTANTS[cardInfo.attr]}\n`
 
           if (!private) {
@@ -76,7 +89,7 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
 
           teamText += `Master Rank: \`\`${card.masterRank}\`\`\n`
 
-          if (cardInfo.rarity > 2) {
+          if (specialTrainingPossible.includes(cardInfo.cardRarityType)) {
             let trainingText = (card.specialTrainingStatus === 'done') ? '✅' : '❌'
             teamText += `Special Training: ${trainingText}\n`
           }
@@ -85,91 +98,83 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
     }
   })
 
-  // Generate Text For Profile's Character Ranks
-  let characterRankText = ''
-  let maxNameLength = 0
-  let maxRankLength = 0
-
-  data.userCharacters.forEach((char) => {
-    const charInfo = gameCharacters[char.characterId-1]
-    let charName = charInfo.givenName
-    if (charInfo.firstName) {
-      charName += ` ${charInfo.firstName}`
-    }
-    let rankText = `Rank ${char.characterRank}`
-
-    if (maxNameLength < charName.length) {
-      maxNameLength = charName.length
-    }
-
-    if (maxRankLength < rankText.length) {
-      maxRankLength = rankText.length
-    }
-  })
-
-  data.userCharacters.forEach((char) => {
-    const charInfo = gameCharacters[char.characterId-1]
-
-    let charName = charInfo.givenName
-    if (charInfo.firstName) {
-      charName += ` ${charInfo.firstName}`
-    }
-    charName += ' '.repeat(maxNameLength-charName.length)
-
-    let rankText = `Rank ${char.characterRank}` 
-    rankText += ' '.repeat(maxRankLength-rankText.length)
-
-    characterRankText += `\`\`${charName}  ${rankText}\`\`\n`
-  })
-
-  // Generate Challenge Rank Text
-  let challengeRankInfo = {}
-  for(let i = 0; i < data.userChallengeLiveSoloStages.length; i++) {
-    const currentChallengeRank = data.userChallengeLiveSoloStages[i]
+  // Get Challenge Rank Data for all characters
+  let challengeRankInfo = {};
+  for (let i = 0; i < data.userChallengeLiveSoloStages.length; i++) {
+    const currentChallengeRank = data.userChallengeLiveSoloStages[i];
     if (!(currentChallengeRank.characterId in challengeRankInfo)) {
-      challengeRankInfo[currentChallengeRank.characterId] = currentChallengeRank.rank
+      challengeRankInfo[currentChallengeRank.characterId] = currentChallengeRank.rank;
     } else {
       if (challengeRankInfo[currentChallengeRank.characterId] < currentChallengeRank.rank) {
-        challengeRankInfo[currentChallengeRank.characterId] = currentChallengeRank.rank
+        challengeRankInfo[currentChallengeRank.characterId] = currentChallengeRank.rank;
       }
     }
   }
 
-  let challengeRankText = ''
-  maxNameLength = 0
-  maxRankLength = 0
+  // Generate Text For Profile's Character Ranks
 
-  Object.keys(challengeRankInfo).forEach((charId) => {
-    const charInfo = gameCharacters[charId-1]
-    let charName = charInfo.givenName
+  let nameTitle = 'Name';
+  let crTitle = 'CR';
+  let chlgTitle = 'CHLG';
+
+  let maxNameLength = nameTitle.length;
+  let maxCRLength = crTitle.length;
+  let maxCHLGLength = chlgTitle.length;
+
+  // Get Max Lengths for each column
+  data.userCharacters.forEach((char) => {
+    const charInfo = gameCharacters[char.characterId-1];
+    let charName = charInfo.givenName;
     if (charInfo.firstName) {
-      charName += ` ${charInfo.firstName}`
+      charName += ` ${charInfo.firstName}`;
     }
-    let rankText = `Rank ${challengeRankInfo[charId]}`
+    let rankText = `${char.characterRank}`;
+
+    let chlgText = '0';
+    if (char.characterId in challengeRankInfo) {
+      chlgText = `${challengeRankInfo[char.characterId]}`;
+    }
 
     if (maxNameLength < charName.length) {
-      maxNameLength = charName.length
+      maxNameLength = charName.length;
     }
 
-    if (maxRankLength < rankText.length) {
-      maxRankLength = rankText.length
+    if (maxCRLength < rankText.length) {
+      maxCRLength = rankText.length;
     }
-  })
+    
+    if (maxCHLGLength < chlgText.length) {
+      maxCHLGLength = chlgText.length;
+    }
+  });
 
-  Object.keys(challengeRankInfo).forEach((charId) => {
-    const charInfo = gameCharacters[charId-1]
+  // Set column headers
+  nameTitle = nameTitle + ' '.repeat(maxNameLength-nameTitle.length);
+  crTitle = ' '.repeat(maxCRLength - crTitle.length) + crTitle;
+  chlgTitle = ' '.repeat(maxCHLGLength - chlgTitle.length) + chlgTitle;
 
-    let charName = charInfo.givenName
+  let CRCHLGRankText = `\`${nameTitle} ${crTitle} ${chlgTitle}\`\n`;
+
+
+  // Add each character's rank and Challenge show to the text
+  data.userCharacters.forEach((char) => {
+    const charInfo = gameCharacters[char.characterId -1];
+
+    let charName = charInfo.givenName;
     if (charInfo.firstName) {
-      charName += ` ${charInfo.firstName}`
+      charName += ` ${charInfo.firstName}`;
     }
-    charName += ' '.repeat(maxNameLength-charName.length)
+    let rankText = `${char.characterRank}`;
+    let chlgText = '0';
+    if (char.characterId in challengeRankInfo) {
+      chlgText = `${challengeRankInfo[char.characterId]}`;
+    }
+    charName += ' '.repeat(maxNameLength-charName.length);
+    rankText = ' '.repeat(maxCRLength-rankText.length) + rankText;
+    chlgText = ' '.repeat(maxCHLGLength-chlgText.length) + chlgText;
 
-    let rankText = `Rank ${challengeRankInfo[charId]}` 
-    rankText += ' '.repeat(maxRankLength-rankText.length)
-
-    challengeRankText += `\`\`${charName}  ${rankText}\`\`\n`
-  })
+    CRCHLGRankText += `\`\`${charName} ${rankText} ${chlgText}\`\`\n`;
+  });
 
   // Create the Embed for the profile using the pregenerated values
   const profileEmbed = new MessageEmbed()
@@ -182,14 +187,13 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
     })
     .setThumbnail(leaderThumbURL)
     .addFields(
-      { name: 'Name', value: `${data.user.userGamedata.name}`, inline: false },
+      { name: 'Name', value: `${data.user.userGamedata.name}`, inline: true },
+      { name: 'Rank', value: `${data.user.userGamedata.rank}`, inline: true },
       { name: 'User ID', value: `${userId}`, inline: false },
-      { name: 'Rank', value: `${data.user.userGamedata.rank}`, inline: false },
       { name: 'Description', value: `${data.userProfile.word}\u200b` },
       { name: 'Twitter', value: `@${data.userProfile.twitterId}\u200b` },
       { name: 'Cards', value: `${teamText}` },
-      { name: 'Character Ranks', value: `${characterRankText}\u200b` },
-      { name: 'Challenge Rank', value: `${challengeRankText}\u200b`}
+      { name: 'Character & Challenge Ranks', value: `${CRCHLGRankText}\u200b` }
     )
     .setImage(leaderFullURL)
     .setTimestamp()
