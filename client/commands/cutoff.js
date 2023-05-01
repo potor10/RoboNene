@@ -5,7 +5,7 @@
  */
 
 const { MessageEmbed } = require('discord.js');
-const { DIR_DATA, NENE_COLOR, FOOTER } = require('../../constants');
+const { DIR_DATA, NENE_COLOR, FOOTER, CUTOFF_DATA } = require('../../constants');
 const https = require('https');
 const fs = require('fs');
 const regression = require('regression');
@@ -227,7 +227,7 @@ const generateCutoff = async ({interaction, event,
     const predicted = (model.equation[0] * finalRate * duration) + model.equation[1];
 
     // Calculate Error 
-    const error = stdError(points, model, finalRate);
+    const error = stdError(points, model, finalRate) * (duration / points[points.length - 1][0]);
 
     // Final model without smoothing
     noSmoothingEstimate = Math.round(predicted).toLocaleString();
@@ -253,7 +253,7 @@ const generateCutoff = async ({interaction, event,
 
     let lastIdx = oneDayIdx;
 
-    for(let i = oneDayIdx; i < lastDayIdx; i += 60) {
+    for (let i = oneDayIdx; i < lastDayIdx; i += 60) {
       // console.log(`Added ${rankData.slice(lastIdx, i).length} points to the smoothingPts`)
       rankData.slice(lastIdx, i).forEach((point) => {
         smoothingPoints.push([(new Date(point.timestamp)).getTime() - event.startAt, point.score]);
@@ -265,17 +265,27 @@ const generateCutoff = async ({interaction, event,
       // Create a linear regression model with the current data points
       const modelSmoothed = regression.linear(smoothingPoints, {precision: 100});
       const predictedSmoothed = (modelSmoothed.equation[0] * finalRate * duration) + modelSmoothed.equation[1]
-      
+
       // Calculate Error 
-      errorSmoothed = stdError(smoothingPoints, modelSmoothed, finalRate);
+      errorSmoothed = stdError(points, model, finalRate) * (duration / points[points.length - 1][0]);
+
+      var amtThrough = 0;
 
       // Calculate the % through the event, we will use this as a weight for the estimation
-      const amtThrough = (smoothingPoints[smoothingPoints.length-1][0]) / duration;
+      // If no indexes then crash and set amtThrough to 0
+      if(smoothingPoints.length > 0)
+      {
+        amtThrough = (smoothingPoints[smoothingPoints.length - 1][0]) / duration;
+      }
 
       // console.log(`last point ts ${smoothingPoints[smoothingPoints.length-1][0]}`)
 
-      // Total score of all of our estimates with account to weight
-      totalWeight += predictedSmoothed * Math.pow(amtThrough, 2);
+      //Make sure predicted Smoothed isn't NaN
+      if(!isNaN(predictedSmoothed))
+      {
+        // Total score of all of our estimates with account to weight
+        totalWeight += predictedSmoothed * Math.pow(amtThrough, 2);
+      }
 
       // Total time weights
       totalTime += Math.pow(amtThrough, 2);
@@ -417,10 +427,11 @@ module.exports = {
       const options = {
         host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
         path: `/event/${event.id}/rankings?rank=${tier}&limit=100000&region=en`,
-        headers: {'User-Agent': 'request'}
+        headers: {'User-Agent': 'request'},
+        timeout: 5000
       };
     
-      https.get(options, (res) => {
+      const request = https.request(options, (res) => {
         let json = '';
         res.on('data', (chunk) => {
           json += chunk;
@@ -452,15 +463,49 @@ module.exports = {
               level: 'error',
               timestamp: Date.now(),
               message: `Error retrieving via cutoff data via HTTPS. Status: ${res.statusCode}`
-            })
+            });
           }
         });
-      }).on('error', (err) => {
+      });
+      request.on('error', (err) => {
         discordClient.logger.log({
           level: 'error',
           timestamp: Date.now(),
           message: `${err}`
-        })
+        });
+      }); 
+      
+      //On Timeout use internal data
+      request.setTimeout(5000, async () => {
+        console.log('Sekai.best Timed out, using internal data');
+        try {
+
+          let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+            'WHERE (EventID=@eventID AND Tier=@tier)').all({
+              eventID: event.id,
+              tier: tier
+            });
+          let rankData = cutoffs.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+          console.log('Data Read, Generating Internal cutoff');
+          generateCutoff({
+            interaction: interaction,
+            event: event,
+            timestamp: timestamp,
+            tier: tier,
+            score: score,
+            rankData: rankData,
+            detailed: detailed,
+            discordClient: discordClient
+          });
+
+        } catch (err) {
+          console.log(err);
+          discordClient.logger.log({
+            level: 'error',
+            timestamp: Date.now(),
+            message: `Error parsing JSON data from cutoff: ${err}`
+          });
+        }
       });
     }, async (err) => {
       // Log the error
@@ -468,7 +513,7 @@ module.exports = {
         level: 'error',
         timestamp: Date.now(),
         message: err.toString()
-      })
+      });
       
       await interaction.editReply({
         embeds: [generateEmbed({
@@ -476,7 +521,7 @@ module.exports = {
           content: { type: 'error', message: err.toString() },
           client: discordClient.client
         })]
-      })
-    })
+      });
+    });
   }
 };
